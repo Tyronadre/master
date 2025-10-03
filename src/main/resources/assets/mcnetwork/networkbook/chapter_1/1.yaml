@@ -1,0 +1,91 @@
+title: Einführung in Anwendungsprotokolle
+content: |
+  # Einführung in Anwendungsprotokolle
+
+  ## 1. Einleitung
+
+  Anwendungsprotokolle bilden die **oberste Schicht der Kommunikation in Rechnernetzen**. Während sich die unteren Schichten des OSI- oder TCP/IP-Modells mit der Zustellung von Datenpaketen befassen, definieren Anwendungsprotokolle **die Regeln, nach denen Softwareanwendungen direkt miteinander kommunizieren**. Sie bestimmen nicht nur die Struktur der Daten, sondern auch deren Semantik, die Reihenfolge des Austauschs und das Verhalten bei Fehlern.
+
+  In dieser Vorlesung betrachten wir sowohl die **konzeptionellen Grundlagen** als auch konkrete Beispiele für Anwendungsprotokolle, um die Prinzipien der modernen Netzwerkkommunikation zu verstehen.
+
+  ---
+
+  ## 2. Historische Entwicklung
+
+  Die ersten Netzwerke in den 1960er und 1970er Jahren hatten primär experimentellen Charakter. Mit der Entwicklung des ARPANETs entstanden erste Protokolle für **Dateiübertragung, Fernzugriff und Nachrichtenaustausch**.  
+
+  - **FTP (File Transfer Protocol)**: Eines der ältesten Anwendungsprotokolle, entwickelt 1971, zur Dateiübertragung zwischen Hosts.  
+  - **SMTP (Simple Mail Transfer Protocol)**: Standardisierte den Austausch von E-Mails ab den 1980er Jahren.  
+  - **HTTP (Hypertext Transfer Protocol)**: Entstand Anfang der 1990er Jahre parallel zum World Wide Web und definierte die Kommunikation zwischen Browsern und Webservern.
+
+  Diese Entwicklungen zeigen, dass Anwendungsprotokolle **immer an konkrete Anwendungsfälle gebunden** waren. Sie sind nicht nur technische Artefakte, sondern auch Spiegel gesellschaftlicher und technologischer Anforderungen.
+
+  ---
+
+  ## 3. Grundlegende Konzepte
+
+  Anwendungsprotokolle bestehen aus drei zentralen Komponenten:
+
+  1. **Syntax**  
+     Die Syntax definiert die **formale Struktur der Nachrichten**. Dazu gehören Header-Felder, Body und optionale Steuerinformationen. Ein Beispiel aus HTTP:  
+     ```text
+     GET /index.html HTTP/1.1
+     Host: www.beispiel.de
+     User-Agent: BeispielBrowser/1.0
+        ```
+  Die Startzeile, die Header und der Body bilden zusammen die Syntax, die sowohl vom Sender als auch vom Empfänger strikt eingehalten werden muss.
+  2. **Semantik**
+  Die Semantik legt die **Bedeutung jeder Nachricht und jedes Feldes** fest. In HTTP bedeutet die Methode `GET`, dass der Client eine Ressource anfordert, während `POST` das Senden von Daten an den Server signalisiert. Die Semantik bestimmt also, wie die Nachrichten interpretiert werden.
+  Im SMTP-Protokoll bedeutet der Befehl `MAIL FROM:` die Angabe des Absenders einer E-Mail, während `RCPT TO:` den Empfänger spezifiziert.
+  3. ** Ablauf und Sequenz**
+  Die Reihenfolge der Nachrichten ist entscheidend. Manche Protokolle (z. B. FTP) benötigen einen **Session-Zustand**, bei dem mehrere Nachrichten zusammenhängend verarbeitet werden. Andere (z. B. HTTP/1.0) sind zustandslos: jede Anfrage wird unabhängig behandelt.
+  
+  ---
+  
+  ## 4. Eigenschaften von Anwengungsprotokollen
+  
+  - **Zustandslosigkeit vs. Zustandsbehaftung**
+  Zustandslose Protokolle wie HTTP/1.0 erleichtern die Skalierbarkeit, weil Server keine Session-Informationen speichern müssen. Zustandsbehaftete Protokolle (z. B. FTP) erlauben komplexe Interaktionen, erfordern jedoch Sitzungsmanagement.
+  - **Erweiterbarkeit**
+  Moderne Protokolle sind modular aufgebaut. Sie enthalten optionale Felder oder Versionierungsmechanismen, um neue Funktionalitäten hinzuzufügen, ohne bestehende Clients zu brechen.
+  - **Fehlerbehandlung und Zuverlässigkeit**
+  Anwendungsprotokolle müssen Strategien zur Fehlererkennung und -behandlung implementieren. Beispielsweise signalisisert SMTP Fehler über Statuscodes ('5xx' für permanente Fehler, '4xx' für temporäre Fehler). 
+    - **Sicherheit**
+  Protokolle können Authentifizierungs- und Verschlüsselungsmechanismen integrieren, um die **Vertraulichkeit, Integrität und Authentizität** der Kommunikation zu gewährleisten. Dabei bedeutet Vertraulichkeit, dass nur autorisierte Parteien die Daten lesen können. Integrität stellt sicher, dass die Daten während der Übertragung nicht unbemerkt verändert wurden. Authentizität bestätigt die Identität der Kommunikationspartner.
+  
+  ---
+  
+  ## 5. Beispiele und Praxis
+  
+  ** HTTP **
+  - Weit verbreitetes Protokoll für die Übertragung von Webseiten.
+  - Kommunikation erfolgt über Anfragen (GET, POST) und Antworten (Statuscodes).
+  - Erweiterungen wie HTTPS fügen Sicherheit durch TLS hinzu.
+  - Zustandslos, textbasiert, Header enthalten Metadaten über Client, Ressource und Inhalte.
+  - Cookies und Sessions ermöglichen zustandsbehaftete Interaktionen.
+  
+  ** SMTP **
+    - Standardprotokoll für den E-Mail-Versand.
+  - Anfragen sind kurz, Zustandslosigkeit ermöglicht hohe Skalierbarkeit.
+  - Da diese eins der ältesten Anwendungsprotokolle ist, ist es auch 'Human-readable', da es früher direkt von Menschen gelesen und geschrieben wurde.
+  
+  ** FTP **
+  - Dateiübertragungn über getrennte Kontroll- und Datenverbindungen.
+  - Zustandsbehaftet: Benutzer authentifizieren sich, öffnet Session und überträgt Dateien.
+  
+  ---
+  
+  ## 6. Zusammenspiel mit unteren Schichten
+  
+  Anwendungsprotokolle bauen auf den **Transport- und Netzwerkschichten** auf. Sie nutzen TCP oder UDP für die Zustellung der Daten. Dabei ergeben sich interessante Herausforderungen:
+  
+  - TCP garantiert Reihenfolge und Zuverlässigkeit, was Protokolle wie HTTP vereinfachen kann.
+  
+  - UDP ist leichtgewichtig, muss jedoch in der Anwendung fehlertolerant behandelt werden (z.B. DNS oder Streaming-Protokolle).
+  
+  ---
+  
+  7. Zusammenfassung
+  
+  Anwendungsprotokolle sind die **Schlüsselkomponente moderner Netzwerke**, weil sie die Brücke zwischen Softwareanwendungen und der Übertragungstechnologie bilden. Ihre **Designprinzipien** – Syntax, Semantik, Ablaufkontrolle, Zustandsverwaltung – sind grundlegend für das Verständnis von Kommunikationssystemen.
+  Im nächsten Abschnitt werden wir auf **HTTP/1.x** eingehen und die Mechanismen detailliert analysieren, die heute noch die Grundlage für Webkommunikation bilden.
