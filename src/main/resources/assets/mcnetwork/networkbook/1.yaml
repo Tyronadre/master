@@ -1,0 +1,117 @@
+title: "Einführung in Anwendungsprotokolle"
+icon: "icons/book_network_globe.png"
+
+summary: |
+  Dieses Kapitel führt in die grundlegenden Konzepte von Anwendungsprotokollen ein,
+  wie sie in modernen Netzwerken eingesetzt werden. Studierende lernen den Unterschied
+  zwischen Netzwerkanwendung und Anwendungsprotokoll, verstehen Anwendungsarchitekturen
+  (Client-Server, Peer-to-Peer), und lernen, wie Designentscheidungen (z. B. Wahl des
+  Transportprotokolls) die Effizienz, Zuverlässigkeit und Sicherheit beeinflussen.
+  Darüber hinaus behandelt das Kapitel die fundamentalen Designprinzipien, die bis heute
+  die Internetarchitektur prägen, einschließlich Postel’s Law und Erweiterbarkeitsstrategien.
+
+content: |
+  # Kapitel 1 — Einführung in Anwendungsprotokolle  
+  *Zielgruppe: Informatikstudierende (Universität).*  
+  *Vorlesungsformat: 90-Minuten-Einheit; dieser Text liefert die inhaltliche Basis, didaktische Struktur und ausführliche Diskussions-/Übungsaufgaben, sodass die Sitzung vollständig gefüllt werden kann.*
+
+  **Quellenhinweis.** Viele der folgenden Erklärungen, Beispiele und Definitionen stützen sich auf die bereitgestellten Vorlesungsfolien zu *Anwendungsprotokollen* (Björn Scheuermann).
+
+  ---
+
+  ## Lernziele
+  1. Sie können präzise definieren, was wir unter *Netzwerkanwendungen* und *Anwendungsprotokollen* verstehen.
+  2. Sie verstehen die grundlegenden Anwendungsarchitekturen (Client–Server vs. Peer-to-Peer).
+  3. Sie können die Kriterien zur Wahl einer Transportschicht erläutern.
+  4. Sie sind in der Lage, typische Entwurfsentscheidungen beim Protokolldesign zu begründen.
+
+  ---
+
+  ## 1. Was sind Netzwerkanwendungen?
+  Netzwerkanwendungen sind Programme, deren Hauptzweck in der kooperativen Kommunikation zwischen Rechnern zur Erbringung oder Nutzung eines Dienstes besteht. Eine Netzwerkanwendung besteht aus zwei eng verknüpften Teilen:
+  - dem *Anwendungszweck* (z. B. E-Mail, Web, Dateiübertragung)
+  - dem *Anwendungsprotokoll*, as die Regeln und Formate beschreibt, nach denen die beteiligten Programminstanzen miteinander kommunizieren.
+
+  Wichtig ist die Schichtenperspektive: Anwendungsprotokolle setzen auf einem Protokollstapel auf und nutzen die darunterliegenden Dienste (Transport, Netz, Link). Die Protokollarchitektur erlaubt Konzeption und Implementierung zu trennen: ein Protokoll formuliert semantische Erwartungen (z. B. „Sende zuerst HELO, erwarte Statuscode 250“), die Implementierung übersetzt diese in Bytes, die über die Netzschicht übertragen werden.
+  
+  **Beispielhafte Konsequenz**: Beim Entwurf einer Anwendung entscheidet man sehr früh, welche Dienste der Transportlayer liefern muss (Zuverlässigkeit? Reihenfolge?) — diese Entscheidung beeinflusst massiv die Komplexität des Anwendungsprotokolls.
+
+  ---
+
+  ## 2. Anwendungsarchitekturen: Client-Server vs. Peer-to-Peer
+
+  ### 2.1 Client-Server-Architektur
+  
+  **Definition:** Es existiert ein (oder mehrere) zentraler Knoten (Server), der permanent oder erwartbar verfügbar ist. Clients initiieren Anfragen, Server beantworten diese. Clients kommunizieren typischerweise nicht direkt untereinander.
+ 
+  **Charakteristika und Vorteile**
+  - *Zentrale Stelle für Datenhaltung / Konsistenz*: einfache Implementierung von Authorisierung, Logging, Backup.
+  - *Einfache Aktualisierung und Sichtensteuerung*: Inhalte und Richtlinien lassen sich serverseitig aktualisieren.
+  - *Besser handhabbare Sicherheitspolitik*: Zertifizierung, TLS-Termination usw. sind klar fokussiert.
+  - *Skalierung mittels Replikation und Lastverteilung*: CDNs, Load-Balancer, Caching.
+  
+  **Nachteile / Herausforderungen**
+  - Single point of failure (sofern nicht redundant aufgebaut).
+  - Kosten für zentralen Betrieb (Hosting, Bandbreite).
+  - Potentielle Skalierungsgrenzen — große Systeme erfordern oftmals komplexe Architekturergänzungen (sharding, replication, CDNs).
+  
+  **Beispiele:** HTTP (typischer Webserver), traditionelle E-Mail-Architekturen (Mail Transfer Agents, Mail Delivery Agents).
+
+  ### 2.2 Peer-to-Peer-Architektur
+  
+  **Definition:** Teilnehmer sind gleichberechtigt; jede Instanz kann Client- und Server-Funktion übernehmen. Kommunikation ist oft ad-hoc; es existiert keine feste Serverinstanz, die immer erreichbar ist.
+  
+  **Charakteristika und Vorteile**
+  - *Dezentralität*: keine zentralen Server notwendig.
+  - *Skalierungspotenzial bei hohem Datentransfer*: Da Daten direkt zwischen Peers fließen, reduziert sich zentraler Bandbreitenbedarf.
+  - *Resilienz*: gute Verfügbarkeit, sofern genügend Peers online sind.
+
+  **Nachteile / Herausforderungen:**
+  - *Komplexität im Design*: Verteilte Suche, Verbindungsmanagement, NAT Traversal, Incentivierung (wie verhinderte free-riding).
+  - *Konsistenz- und Vertrauensprobleme*: Wer garantiert Datenintegrität? Digitale Signaturen und DHT-Mechanismen sind nötig.
+  - *Performance-Vorhersagbarkeit eingeschränkt*: Varianz in Bandbreiten/Latenzen der Peers.
+  
+  **Beispiele:** BitTorrent (Dateiverteilung), Blockchain / Kryptowährungen (Verteilte Ledger), historische P2P-Dateisharing-Netze.
+  
+  ### 2.3 Vergleich und Auswahlkriterien
+  Die Entscheidung zwischen Client-Server und P2P ist kein ideologischer Automatismus, sondern folgt aus Anforderungen:
+  - Verfügbarkeit & Konsistenzanforderungen → tendenziell Client-Server.
+  - Große, verteilte Datenmengen (z. B. Media-Streaming unter Nutzern) -> P2P kann Kosten reduzieren.
+  - Sicherheitsanforderungen / regulatorische Anforderungen -> zentrale Kontrolle (Client-Server) ist häufig einfacher zu auditieren.
+  
+  Diskussion: Für viele moderne Dienste sieht man Client-Server Modelle, da diese in vielen Hinsichten einfach sind, und zu einer kommerziellen Plattform wesentlich besser passen. Werden die Daten zwischen Clients geteilt, so kann ein Unternehmen nicht direkt eingreifen.
+  Allerdings gibt es auch hybride Architekturen mit einer zentralisierte Steuerung (z. B. Authentifizierung, Verzeichnisdienste), während Datenübertragung dezentral erfolgen kann (z. B. WebRTC mit Signalisierungsservern). Diese Hybride kombinieren Vorteile beider Welten, schaffen zugleich neue Komplexitäten (z. B. zusätzliche Schnittstellen, Synchronisationsanforderungen).
+
+  ---
+
+  ## 3. Wahl der Transportschicht — Anforderungen und Konsequenzen
+  Anwendungsentwickler müssen früh entscheiden, welchen Transportmechanismus sie verwenden. Im Internet werden überwiegend TCP und UDP genutzt; beide bieten unterschiedliche Dienste. Die Auswahl beeinflusst direkt das Design des Anwendungsprotokolls.
+
+  ### 3.1 Dimenson der Auswahl
+  
+  | Kriterium         | Erklärung                                           | TCP                                | UDP                            |
+  |-------------------|-----------------------------------------------------|------------------------------------|--------------------------------|
+  | Durchsatz         | Verhalten bei hohen Datenmengen                     | Congestion Control                 | Nicht vorhanden                |
+  | Zuverlässigkeit   | Wird Verlust detektiert und erneut gesendet?        | Hoch (ACK, Retransmission)         | Keine                          |
+  | Reihenfolge       | Werden Pakete in Sendereihenfolge geliefert?        | Garantiert                         | Keine                          |
+  | Overhead          | Kopfzeilen, Verbindungsaufbau, Zustandspflege       | Hoch                               | Gering                         |
+  | Latenz            | RTT für die Übertragung eines Paketes               | Höher (Durch Kontrollmechanismen)  | Niedriger                      |
+  | Anwendungstypen   |                                                     | Datei, Web, E-Mail                 | Spiele, Streaming, VoIP        |
+
+  Die Transportschicht wird im nächten Kapitel ausführlich behandelt.
+
+  ### 3.2 Latenzen, RTT und Performance
+  
+  Oft ist nicht die Übertragungsgeschwindigkeit, sondern die Round Trip Times der dominierende Faktor für die wahrgenommene Performance einer Anwendung. 
+  Es ergibt sich daraus natürlich, dass Anwendungsprotokolle diesen Faktor zu minimieren versuchen. Wir werden dies später an der Entwicklung des HTTP-Protokolls sehen können. 
+  Grundsätzlich ist der limitierende Faktor immer, wie effektiv UDP oder TCP genutzt werden können, um den gewünschten Inhalt zu laden.
+    
+  ---
+
+  ## 4. Designprinzipien
+  - **Postel’s Law:** „Be conservative in what you send, liberal in what you accept.“
+  - **Erweiterbarkeit:** Trennung von Envelope und Message.
+  - **Lesbarkeit vs. Effizienz:** Textformate (Debugbarkeit) vs. Binärformate (Performance).
+  - **Zustandslosigkeit:** Protokolle wie HTTP skalieren, weil sie keine Verbindungshistorie erfordern.
+
+  **Beispiel SMTP:**

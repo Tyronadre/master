@@ -4,9 +4,15 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec2;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.Yaml;
 
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * Simple TopicManager. In production, load JSONs from resources (Gson/Jackson) and fill Topic/Subtopic objects.
@@ -15,12 +21,13 @@ import java.util.List;
 public class TopicManager {
 
     private static final ResourceLocation contentDir = ResourceLocation.parse("modid:networkbook/");
-    private static final String mainFile = "chapters.yaml";
     private static final TopicManager INSTANCE = new TopicManager();
+    private static final Logger log = LoggerFactory.getLogger(TopicManager.class);
     private final List<Topic> topics = new ArrayList<>();
 
 
     private TopicManager() {
+        loadAll();
     }
 
     public static TopicManager getInstance() {
@@ -28,10 +35,7 @@ public class TopicManager {
     }
 
     public void loadAll() {
-
-
-        // TODO: Replace with JSON loading. For blueprint, create mock topics.
-
+        loadChapter(contentDir.withSuffix("1.yaml"));
         topics.clear();
 
         Topic t1 = new Topic("E-Mail", "modid:textures/gui/icon_mail.png");
@@ -47,8 +51,15 @@ public class TopicManager {
         topics.add(t2);
     }
 
-    private void parseTopic() {
-
+    private void loadChapter(ResourceLocation location) {
+        try {
+            Map<String,Object> yaml = new Yaml().load(new InputStreamReader(Objects.requireNonNull(TopicManager.class.getResourceAsStream(location.getPath()))));
+            System.out.println(yaml);
+            var topic = new Topic(yaml.get("title").toString(), yaml.get("icon").toString());
+            System.out.println(topic);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
     }
 
     public List<Subtopic> findSubtopicByTitle(String title) {

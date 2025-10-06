@@ -4,6 +4,7 @@ import de.tyro.mcnetwork.block.BlockRegistry;
 import de.tyro.mcnetwork.block.entity.BlockEntityRegistry;
 import de.tyro.mcnetwork.gui.MenuRegistry;
 import de.tyro.mcnetwork.item.ItemRegistry;
+import de.tyro.mcnetwork.networkBook.data.TopicManager;
 import de.tyro.mcnetwork.tabs.TabRegistry;
 import org.slf4j.Logger;
 
@@ -58,6 +59,8 @@ public class MCNetwork {
     public MCNetwork(IEventBus modEventBus, ModContainer modContainer) {
         // Register the commonSetup method for modloading
         modEventBus.addListener(this::commonSetup);
+
+        TopicManager.getInstance();
 
         BlockRegistry.BLOCKS.register(modEventBus);
         BlockEntityRegistry.BLOCK_ENTITIES.register(modEventBus);
