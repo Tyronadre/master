@@ -55,6 +55,14 @@ public class MarkdownRenderer {
         this.codeBlockPadding = 6;
     }
 
+    public int getCodeBlockPadding() {
+        return codeBlockPadding;
+    }
+
+    public int getLineHeight() {
+        return lineHeight;
+    }
+
     // -------------------------
     // Public helper methods
     // -------------------------
@@ -63,23 +71,22 @@ public class MarkdownRenderer {
      * Render parsed document at given position and width.
      * Returns total height drawn (useful to setup scroll limits).
      */
-    public int render(GuiGraphics gg, ParsedDocument doc, int startX, int startY, int width, int clipX, int clipY, int clipW, int clipH) {
+    public int render(GuiGraphics gg, MarkdownDocument doc, int startX, int startY, int width, int clipX, int clipY, int clipW, int clipH) {
         // Enable scissor/clipping for the content area
         enableScissor(gg, clipX, clipY, clipW, clipH);
 
         int y = startY;
-        for (Block b : doc.blocks) {
+        for (MarkdownDocument.Node b : doc.getNodes()) {
             switch (b) {
-                case Heading h -> y += renderHeading(gg, h, startX, y, width);
-                case Paragraph p -> y += renderParagraph(gg, p, startX, y, width);
-                case CodeBlock c -> y += renderCodeBlock(gg, c, startX, y, width);
-                case ListBlock lb -> y += renderListBlock(gg, lb, startX, y, width);
-                case TableBlock tb -> y += renderTableBlock(gg, tb, startX, y, width);
-                case ImageBlock ib -> y += renderImageBlock(gg, ib, startX, y, width);
-                case HrBlock ignored -> y += renderHr(gg, startX, y, width);
-                case null, default -> y += renderParagraph(gg, new Paragraph(""), startX, y, width);
+                case MarkdownDocument.HeaderNode n -> y += renderHeading(gg, n, startX, y, width);
+                case MarkdownDocument.ParagraphNode n -> y += renderParagraph(gg, n, startX, y, width);
+                case MarkdownDocument.CodeNode n -> y += renderCodeBlock(gg, n, startX, y, width);
+                case MarkdownDocument.ListNode n -> y += renderListBlock(gg, n, startX, y, width);
+                case MarkdownDocument.TableNode n -> y += renderTableBlock(gg, n, startX, y, width);
+                case MarkdownDocument.ImageNode n -> y += renderImageBlock(gg, n, startX, y, width);
+                case MarkdownDocument.HrNode ignored -> y += renderHr(gg, startX, y, width);
             }
-            y += b instanceof Heading ? headingSpacing : paragraphSpacing;
+            y += b instanceof MarkdownDocument.HeaderNode ? headingSpacing : paragraphSpacing;
         }
 
         disableScissor();
@@ -377,6 +384,10 @@ public class MarkdownRenderer {
         return layoutWords(words, width);
     }
 
+    public List<StyledLine> layoutText(List<MarkdownDocument.TextNode> nodes, int width) {
+
+    }
+
     // Convert inline nodes to words with style preservation
     private List<StyledWord> inlineNodesToWords(List<InlineNode> nodes) {
         List<StyledWord> out = new ArrayList<>();
@@ -478,115 +489,6 @@ public class MarkdownRenderer {
             }
         }
         return s;
-    }
-
-    // -------------------------
-    // Document / Block / Inline model
-    // -------------------------
-
-    public static class ParsedDocument {
-        public final List<Block> blocks = new ArrayList<>();
-    }
-
-    static abstract class Block {
-    }
-
-    static class Heading extends Block {
-        public final int level;
-        public final String text;
-
-        public Heading(int level, String text) {
-            this.level = level;
-            this.text = text;
-        }
-    }
-
-    static class Paragraph extends Block {
-        public final List<InlineNode> inlineNodes;
-
-        public Paragraph(List<InlineNode> nodes) {
-            this.inlineNodes = nodes;
-        }
-
-        public Paragraph(String plain) {
-            this.inlineNodes = Collections.singletonList(new TextNode(plain));
-        }
-    }
-
-    static class ImageBlock extends Block {
-        public final String location;
-        public final String title;
-
-        public ImageBlock(String location, String title) {
-            this.location = location;
-            this.title = title;
-        }
-    }
-
-    static class CodeBlock extends Block {
-        public final String code;
-        public final String lang;
-
-        public CodeBlock(String code, String lang) {
-            this.code = code;
-            this.lang = lang;
-        }
-    }
-
-    static class ListBlock extends Block {
-        public final List<List<InlineNode>> items;
-        public final boolean ordered;
-
-        public ListBlock(List<List<InlineNode>> items, boolean ordered) {
-            this.items = items;
-            this.ordered = ordered;
-        }
-    }
-
-    static class TableBlock extends Block {
-        public final List<List<String>> rows;
-        public final boolean header;
-
-        public TableBlock(List<List<String>> rows, boolean header) {
-            this.rows = rows;
-            this.header = header;
-        }
-    }
-
-    static class HrBlock extends Block {
-    }
-
-    // Inline nodes
-    static abstract class InlineNode {
-        public String text;
-
-        public String getText() {
-            return text;
-        }
-    }
-
-    static class TextNode extends InlineNode {
-        public TextNode(String text) {
-            this.text = text;
-        }
-    }
-
-    static class BoldNode extends InlineNode {
-        public BoldNode(String t) {
-            this.text = t;
-        }
-    }
-
-    static class ItalicNode extends InlineNode {
-        public ItalicNode(String t) {
-            this.text = t;
-        }
-    }
-
-    static class InlineCodeNode extends InlineNode {
-        public InlineCodeNode(String t) {
-            this.text = t;
-        }
     }
 
     // -------------------------

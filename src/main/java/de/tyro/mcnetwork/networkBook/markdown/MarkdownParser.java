@@ -1,7 +1,6 @@
 package de.tyro.mcnetwork.networkBook.markdown;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -16,8 +15,7 @@ public class MarkdownParser {
     private static final Pattern orderedListItemPattern = Pattern.compile("\\d+\\.\\s+(.*)$");
     private static final Pattern imagePattern = Pattern.compile("!\\[.*?]\\(([\\w.]*)\\s*(\".*\")?.*\\)");
 
-    public static MarkdownRenderer.ParsedDocument parse(String markdown) {
-        MarkdownRenderer.ParsedDocument doc = new MarkdownRenderer.ParsedDocument();
+    public static MarkdownDocument parse(String markdown) {
 
         MarkdownDocument document = new MarkdownDocument();
         String[] lines = markdown.split("\\r?\\n", -1);
@@ -25,39 +23,40 @@ public class MarkdownParser {
         boolean inCode = false;
         StringBuilder codeBuf = new StringBuilder();
         String codeLang = null;
-        List<String> tableBuffer = new ArrayList<>();
-        List<String> listBuffer = new ArrayList<>();
 
         while (i < lines.length) {
             String line = lines[i];
 
-            //image
+            // Empty Line
+            if (line.trim().isEmpty()) {
+                i++;
+                continue;
+            }
+
+            // Image
             Matcher img = imagePattern.matcher(line);
             if (img.find()) {
-                doc.blocks.add(new MarkdownRenderer.ImageBlock(img.group(1), img.group(2)));
+                document.addNode(new MarkdownDocument.ImageNode(img.group(1), img.group(2)));
                 i++;
                 continue;
             }
 
-            // ordered list
+            // Ordered List
             Matcher oList = orderedListItemPattern.matcher(line);
             if (oList.matches()) {
-                listBuffer.add(oList.group(1));
-                i++;
-                // collect following ordered list items
-                while (i < lines.length) {
-                    Matcher oList2 = orderedListItemPattern.matcher(lines[i]);
-                    if (oList2.matches()) {
-                        listBuffer.add(oList2.group(1));
-                        i++;
-                    } else break;
-                }
-                flushListBuffer(listBuffer, doc, true);
+                var listNode = new MarkdownDocument.ListNode(true);
+                i = collectListItems(lines, i, oList, listNode);
                 continue;
             }
 
+            // Unordered List
+            Matcher li = listItemPattern.matcher(line);
+            if (li.matches()) {
+                var listNode = new MarkdownDocument.ListNode(false);
+                i = collectListItems(lines, i, oList, listNode);
+            }
 
-            // Fenced code block handling
+            // CodeBlock
             Matcher fence = fencedCodePattern.matcher(line);
             if (fence.matches()) {
                 if (!inCode) {
@@ -66,7 +65,7 @@ public class MarkdownParser {
                     codeLang = fence.group(1);
                 } else {
                     // end fenced code
-                    doc.blocks.add(new MarkdownRenderer.CodeBlock(codeBuf.toString(), codeLang));
+                    document.addNode(new MarkdownDocument.CodeNode(codeBuf.toString(), codeLang));
                     inCode = false;
                     codeLang = null;
                 }
@@ -79,117 +78,83 @@ public class MarkdownParser {
                 continue;
             }
 
-            // horizontal rule
+            // Horizontal rule
             if (hrPattern.matcher(line).matches()) {
-                flushTableBuffer(tableBuffer, doc);
-                doc.blocks.add(new MarkdownRenderer.HrBlock());
+                document.addNode(new MarkdownDocument.HrNode());
                 i++;
                 continue;
             }
 
-            // heading
+            // Header
             Matcher hm = headingPattern.matcher(line);
             if (hm.matches()) {
-                flushTableBuffer(tableBuffer, doc);
-                int level = hm.group(1).length();
-                String text = hm.group(2).trim();
-                doc.blocks.add(new MarkdownRenderer.Heading(level, text));
+                document.addNode(new MarkdownDocument.HeaderNode(hm.group(2).trim(), hm.group(1).length()));
                 i++;
                 continue;
             }
 
-            // table detection: sequence of lines with |...|
+            // Table
             if (tableLinePattern.matcher(line).matches()) {
-                // collect table lines until break
+                List<String> tableBuffer = new ArrayList<>();
                 tableBuffer.add(line.trim());
                 i++;
-                // continue collecting
                 while (i < lines.length && tableLinePattern.matcher(lines[i]).matches()) {
                     tableBuffer.add(lines[i].trim());
                     i++;
                 }
-                // flush now
-                flushTableBuffer(tableBuffer, doc);
+                parseTable(tableBuffer, document);
                 continue;
             }
 
-            // list item
-            Matcher li = listItemPattern.matcher(line);
-            if (li.matches()) {
-                listBuffer.add(li.group(1));
-                i++;
-                // collect following list items
-                while (i < lines.length) {
-                    Matcher li2 = listItemPattern.matcher(lines[i]);
-                    if (li2.matches()) {
-                        listBuffer.add(li2.group(1));
-                        i++;
-                    } else break;
-                }
-                flushListBuffer(listBuffer, doc, true);
-                continue;
-            }
-
-            // blank line -> paragraph separator
-            if (line.trim().isEmpty()) {
-                i++;
-                continue;
-            }
-
-            // otherwise paragraph: collect until blank or other block marker
+            // Paragraph: collect until blank or other block marker
             StringBuilder para = new StringBuilder();
             para.append(line);
             i++;
-            while (i < lines.length && !lines[i].trim().isEmpty() &&
-                    !headingPattern.matcher(lines[i]).matches() &&
-                    !listItemPattern.matcher(lines[i]).matches() &&
-                    !tableLinePattern.matcher(lines[i]).matches() &&
-                    !hrPattern.matcher(lines[i]).matches() &&
-                    !fencedCodePattern.matcher(lines[i]).matches()) {
+            while (i < lines.length && !lines[i].trim().isEmpty() && !headingPattern.matcher(lines[i]).matches() && !listItemPattern.matcher(lines[i]).matches() && !tableLinePattern.matcher(lines[i]).matches() && !hrPattern.matcher(lines[i]).matches() && !fencedCodePattern.matcher(lines[i]).matches()) {
                 para.append("\n").append(lines[i]);
                 i++;
             }
-            doc.blocks.add(new MarkdownRenderer.Paragraph(parseInline(para.toString())));
+            document.addNode(new MarkdownDocument.ParagraphNode(parseInline(para.toString())));
         }
 
-        // flush any remaining buffers
-        flushTableBuffer(tableBuffer, doc);
-
-        return doc;
+        return document;
     }
 
-    private static void flushTableBuffer(List<String> tableBuffer, MarkdownRenderer.ParsedDocument doc) {
+    private static int collectListItems(String[] lines, int i, Matcher oList, MarkdownDocument.ListNode listNode) {
+        listNode.addItem(parseInline(oList.group(1)));
+        i++;
+        while (i < lines.length) {
+            Matcher oList2 = orderedListItemPattern.matcher(lines[i]);
+            if (oList2.matches()) {
+                listNode.addItem(parseInline(oList2.group(1)));
+                i++;
+            } else break;
+        }
+        return i;
+    }
+
+    private static void parseTable(List<String> tableBuffer, MarkdownDocument doc) {
         if (tableBuffer.isEmpty()) return;
-        // parse tableBuffer lines into rows (split by |, trim)
-        List<List<String>> rows = new ArrayList<>();
+
+        List<List<List<MarkdownDocument.TextNode>>> rows = new ArrayList<>();
         for (String l : tableBuffer) {
-            // remove leading/trailing '|'
             String inner = l.trim();
             if (inner.startsWith("|")) inner = inner.substring(1);
             if (inner.endsWith("|")) inner = inner.substring(0, inner.length() - 1);
             String[] cells = inner.split("\\|");
             List<String> row = new ArrayList<>();
             for (String c : cells) row.add(c.trim());
-            rows.add(row);
+            rows.add(row.stream().map(MarkdownParser::parseInline).toList());
         }
-        boolean header = rows.size() > 0;
-        doc.blocks.add(new MarkdownRenderer.TableBlock(rows, header));
+        doc.addNode(new MarkdownDocument.TableNode(rows, true));
         tableBuffer.clear();
     }
 
-    private static void flushListBuffer(List<String> listBuffer, MarkdownRenderer.ParsedDocument doc, boolean ordered) {
-        if (listBuffer.isEmpty()) return;
-        MarkdownRenderer.ListBlock lb = new MarkdownRenderer.ListBlock(listBuffer.stream().map(MarkdownParser::parseInline).toList(), ordered);
-        doc.blocks.add(lb);
-        listBuffer.clear();
-    }
-
-    // ----- inline parsing: supports **bold**, *italic*, `code` -----
-    public static List<MarkdownRenderer.InlineNode> parseInline(String text) {
-        List<MarkdownRenderer.InlineNode> out = new ArrayList<>();
+    // TODO: nested styles, colors
+    static List<MarkdownDocument.TextNode> parseInline(String text) {
+        List<MarkdownDocument.TextNode> out = new ArrayList<>();
         if (text == null || text.isEmpty()) return out;
 
-        // We implement a small state machine scanning for backticks, **, *
         int i = 0;
         while (i < text.length()) {
             char c = text.charAt(i);
@@ -198,25 +163,22 @@ public class MarkdownParser {
                 int j = text.indexOf('`', i + 1);
                 if (j == -1) j = text.length();
                 String code = text.substring(i + 1, j);
-                out.add(new MarkdownRenderer.InlineCodeNode(code));
+                out.add(MarkdownDocument.TextNode.builder(code).code().build());
                 i = j + 1;
-                continue;
             } else if (c == '*' && i + 1 < text.length() && text.charAt(i + 1) == '*') {
                 // bold
                 int j = text.indexOf("**", i + 2);
                 if (j == -1) j = text.length();
                 String inner = text.substring(i + 2, j);
-                out.add(new MarkdownRenderer.BoldNode(inner));
+                out.add(MarkdownDocument.TextNode.builder(inner).bold().build());
                 i = j + 2;
-                continue;
             } else if (c == '*') {
                 // italic
                 int j = text.indexOf('*', i + 1);
                 if (j == -1) j = text.length();
                 String inner = text.substring(i + 1, j);
-                out.add(new MarkdownRenderer.ItalicNode(inner));
+                out.add(MarkdownDocument.TextNode.builder(inner).italic().build());
                 i = j + 1;
-                continue;
             } else {
                 // accumulate plain until next special char
                 int j = i;
@@ -227,7 +189,7 @@ public class MarkdownParser {
                     sb.append(cc);
                     j++;
                 }
-                out.add(new MarkdownRenderer.TextNode(sb.toString()));
+                out.add(MarkdownDocument.TextNode.builder(sb.toString()).build());
                 i = j;
             }
         }
