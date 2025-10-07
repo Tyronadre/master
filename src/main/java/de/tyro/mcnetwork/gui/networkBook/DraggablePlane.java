@@ -1,7 +1,6 @@
 package de.tyro.mcnetwork.gui.networkBook;
 
-import de.tyro.mcnetwork.networkBook.data.Subtopic;
-import net.minecraft.client.Minecraft;
+import de.tyro.mcnetwork.networkBook.data.SubTopic;
 import net.minecraft.client.gui.GuiGraphics;
 
 import java.util.ArrayList;
@@ -28,14 +27,14 @@ public class DraggablePlane {
         this.x = x; this.y = y; this.width = width; this.height = height;
     }
 
-    public void setSubtopics(List<Subtopic> subs) {
+    public void setSubtopics(List<SubTopic> subs) {
         tiles.clear();
         // simple grid layout: compute rows/cols based on available width
         int cols = Math.max(1, (width - 32) / (tileW + spacingX));
         int idx = 0;
         int startX = 16;
         int startY = 16;
-        for (Subtopic s : subs) {
+        for (SubTopic s : subs) {
             int col = idx % cols;
             int row = idx / cols;
             int tx = startX + col * (tileW + spacingX);

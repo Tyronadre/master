@@ -1,12 +1,10 @@
 package de.tyro.mcnetwork.gui.networkBook;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import de.tyro.mcnetwork.networkBook.data.Subtopic;
+import de.tyro.mcnetwork.networkBook.data.SubTopic;
+import de.tyro.mcnetwork.networkBook.markdown.MarkdownRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
-import net.minecraft.network.chat.Component;
 
 import java.util.function.Consumer;
 
@@ -19,11 +17,11 @@ import java.util.function.Consumer;
 public class ContentPane implements GuiEventListener {
 
     private final int x, y, w, h;
-    private final MarkdownRenderer renderer;
+    private final MarkdownRenderer renderer = new MarkdownRenderer(Minecraft.getInstance());
     private float scrollY = 0f;
-    private Subtopic subtopic;
+    private SubTopic subtopic;
     private Consumer<Void> onClose;
-    private Consumer<Subtopic> onComplete;
+    private Consumer<SubTopic> onComplete;
 
     // UI elements positions (simple)
     private final int closeBtnXOffset = 16;
@@ -31,18 +29,17 @@ public class ContentPane implements GuiEventListener {
     private final int bottomButtonHeight = 20;
     private boolean focused;
 
-    public ContentPane(int x, int y, int w, int h, MarkdownRenderer renderer) {
+    public ContentPane(int x, int y, int w, int h) {
         this.x = x; this.y = y; this.w = w; this.h = h;
-        this.renderer = renderer;
     }
 
-    public void setSubtopic(Subtopic s) {
+    public void setSubtopic(SubTopic s) {
         this.subtopic = s;
         this.scrollY = 0f; // reset scroll
     }
 
     public void setCloseListener(Consumer<Void> c) { this.onClose = c; }
-    public void setCompletionListener(Consumer<Subtopic> c) { this.onComplete = c; }
+    public void setCompletionListener(Consumer<SubTopic> c) { this.onComplete = c; }
 
     public void render(GuiGraphics gg, int mouseX, int mouseY, float partialTicks) {
         // background
@@ -59,7 +56,9 @@ public class ContentPane implements GuiEventListener {
             gg.pose().translate(0, -scrollY, 0);
 
             // draw content via markdown renderer (start at x+12,y+24)
-            renderer.render(gg, subtopic.getContent(), this.x + 12, this.y + 24);
+            var document = subtopic.getMarkdownDocument();
+            int height = renderer.estimateHeight(document, w - 16);
+            int drawn = renderer.render(gg, subtopic.getMarkdownDocument(), this.x + 8, (int) (this.y + 8 - scrollY), w - 16, x, y, w, h - 32);
 
             gg.pose().popPose();
 
@@ -116,7 +115,8 @@ public class ContentPane implements GuiEventListener {
 
     private void clampScroll() {
         // clamp scroll based on content height from renderer
-        int contentHeight = renderer.estimateHeight(subtopic == null ? "" : subtopic.getContent(), w - 32);
+        if (subtopic == null) return;
+        int contentHeight = renderer.estimateHeight(subtopic.getMarkdownDocument(), w - 32);
         if (contentHeight <= h - 60) {
             this.scrollY = 0;
             return;

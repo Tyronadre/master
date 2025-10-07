@@ -1,76 +1,76 @@
 package de.tyro.mcnetwork.networkBook.data;
 
+import com.mojang.logging.LogUtils;
+import de.tyro.mcnetwork.MCNetwork;
+import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.phys.Vec2;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * Simple TopicManager. In production, load JSONs from resources (Gson/Jackson) and fill Topic/Subtopic objects.
  * Also persist completion state per player (e.g. PlayerPersistentData / NBT).
  */
 public class TopicManager {
+    public static final Logger logger = LogUtils.getLogger();
+    public static final ResourceManager rm = Minecraft.getInstance().getResourceManager();
 
-    private static final ResourceLocation contentDir = ResourceLocation.parse("modid:networkbook/");
+    private static final String CHAPTER_FOLDER = "networkbook/";
     private static final TopicManager INSTANCE = new TopicManager();
-    private static final Logger log = LoggerFactory.getLogger(TopicManager.class);
     private final List<Topic> topics = new ArrayList<>();
 
 
     private TopicManager() {
-        loadAll();
+        loadTopics();
     }
 
     public static TopicManager getInstance() {
         return INSTANCE;
     }
 
-    public void loadAll() {
-        loadChapter(contentDir.withSuffix("1.yaml"));
-        topics.clear();
+    public void loadTopics() {
+        var location = ResourceLocation.fromNamespaceAndPath(MCNetwork.MODID, CHAPTER_FOLDER + "chapters.yaml");
+        var resourceO = rm.getResource(location);
+        if (resourceO.isEmpty()) return;
 
-        Topic t1 = new Topic("E-Mail", "modid:textures/gui/icon_mail.png");
-        t1.addSubtopic(new Subtopic("Grundlagen & Ablauf", "Hier steht der Inhalt zu SMTP...", new Vec2(0, 0)));
-        t1.addSubtopic(new Subtopic("SMTP-Befehle & Statuscodes", "220\nHELO ...", new Vec2(100, 50)));
-        t1.addSubtopic(new Subtopic("Header vs Envelope", "Header und Envelope Unterschiede...", new Vec2(200, 100)));
-
-        Topic t2 = new Topic("HTTP", "modid:textures/gui/icon_http.png");
-        t2.addSubtopic(new Subtopic("GET und POST", "GET/POST examples...", new Vec2(0, 0)));
-        t2.addSubtopic(new Subtopic("Cookies & Sessions", "Cookie Funktionsweise...", new Vec2(100, 50)));
-
-        topics.add(t1);
-        topics.add(t2);
-    }
-
-    private void loadChapter(ResourceLocation location) {
-        try {
-            Map<String,Object> yaml = new Yaml().load(new InputStreamReader(Objects.requireNonNull(TopicManager.class.getResourceAsStream(location.getPath()))));
-            System.out.println(yaml);
-            var topic = new Topic(yaml.get("title").toString(), yaml.get("icon").toString());
-            System.out.println(topic);
+        try (var r = resourceO.get().openAsReader()) {
+            List<Map<String, Object>> chapters = new Yaml().load(r);
+            for (var chapter : chapters) {
+                Topic topic = new Topic((String) chapter.get("title"), ResourceLocation.parse((String) chapter.get("icon")), ResourceLocation.fromNamespaceAndPath(MCNetwork.MODID, CHAPTER_FOLDER + chapter.get("path")));
+                loadTopic(topic);
+                topics.add(topic);
+            }
         } catch (Exception e) {
-            System.err.println(e.getMessage());
+            logger.error("Failed to load topics.", e);
         }
     }
 
-    public List<Subtopic> findSubtopicByTitle(String title) {
-        return topics.stream().flatMap(it -> it.getSubtopics().stream()).filter(it -> it.getTitle().equalsIgnoreCase(title)).toList();
+    private void loadTopic(Topic topic) {
+        topics.add(topic);
+
+        var files = rm.listResources(topic.getContent().getPath(), it ->it.getPath().endsWith(".yaml"));
+        for (var entry : files.entrySet()) {
+            try (var r = entry.getValue().openAsReader()) {
+                Map<String, Object> map = new Yaml().load(r);
+                new SubTopic(topic, (String) map.get("title"), (String) map.get("icon"), (String) map.get("content"), (int) map.get("posX"), (int) map.get("posY"));
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     public List<Topic> getTopics() {
         return topics;
     }
 
-    public void markCompleted(Player player, Subtopic subtopic) {
+    public void markCompleted(Player player, SubTopic subtopic) {
         // Example: store completion in player's persistent NBT under "networkbook_completed"
         if (player == null) return;
         CompoundTag tag = player.getPersistentData();
@@ -79,7 +79,7 @@ public class TopicManager {
         tag.put("mod_networkbook", mod);
     }
 
-    public boolean isCompleted(Player player, Subtopic subtopic) {
+    public boolean isCompleted(Player player, SubTopic subtopic) {
         if (player == null) return false;
         CompoundTag tag = player.getPersistentData();
         CompoundTag mod = tag.getCompound("mod_networkbook");

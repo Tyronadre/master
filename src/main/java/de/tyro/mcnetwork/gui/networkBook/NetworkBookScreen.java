@@ -1,12 +1,12 @@
 package de.tyro.mcnetwork.gui.networkBook;
 
 
-import de.tyro.mcnetwork.networkBook.data.Subtopic;
+import de.tyro.mcnetwork.networkBook.data.SubTopic;
 import de.tyro.mcnetwork.networkBook.data.Topic;
 import de.tyro.mcnetwork.networkBook.data.TopicManager;
+import de.tyro.mcnetwork.networkBook.markdown.MarkdownRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
@@ -38,7 +38,7 @@ public class NetworkBookScreen extends Screen {
 
     // state
     private Topic currentTopic;
-    private Subtopic currentSubtopic; // null if showing topic view
+    private SubTopic currentSubtopic; // null if showing topic view
 
     // animation helpers
     private float transitionProgress = 1.0f; // 0..1 for transitions
@@ -50,9 +50,6 @@ public class NetworkBookScreen extends Screen {
     @Override
     protected void init() {
         super.init();
-
-        // Load topics (from JSON/resource) - synchronous for blueprint; replace with async if heavy
-        topicManager.loadAll();
 
         // initialize UI components
         tabBar = new IconTabBar(8, 16, 40, this::onTabClicked);
@@ -67,7 +64,7 @@ public class NetworkBookScreen extends Screen {
         if (currentTopic != null) draggablePlane.setSubtopics(currentTopic.getSubtopics());
 
         // content pane (subtopic view)
-        contentPane = new ContentPane(64, 24, this.width - 64 - 18, this.height - 48, markdownRenderer);
+        contentPane = new ContentPane(64, 24, this.width - 64 - 18, this.height - 48);
         contentPane.setCloseListener(c -> closeSubtopic());
         contentPane.setCompletionListener(this::onMarkComplete);
 
@@ -88,7 +85,7 @@ public class NetworkBookScreen extends Screen {
         this.transitionProgress = 0.0f;
     }
 
-    private void onSubtopicClicked(Subtopic s) {
+    private void onSubtopicClicked(SubTopic s) {
         // open subtopic: start transition -> open contentPane with that subtopic
         this.currentSubtopic = s;
         contentPane.setSubtopic(s);
@@ -103,7 +100,7 @@ public class NetworkBookScreen extends Screen {
         this.transitionProgress = 0.0f;
     }
 
-    private void onMarkComplete(Subtopic s) {
+    private void onMarkComplete(SubTopic s) {
         topicManager.markCompleted(mc.player, s);
         // reflect visually on draggablePlane
         draggablePlane.refreshCompletionState();
@@ -155,20 +152,14 @@ public class NetworkBookScreen extends Screen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        if (currentSubtopic != null) {
+            return contentPane.mouseScrolled(mouseX, mouseY, scrollY) || super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+        }
         return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
 
-//    @Override
-//    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
-//        // only allow wheel when in subtopic view
-//        if (currentSubtopic != null) {
-//            return contentPane.mouseScrolled(mouseX, mouseY, delta) || super.mouseScrolled(mouseX, mouseY, delta);
-//        }
-//        return super.mouseScrolled(mouseX, mouseY, delta);
-//    }
-
     @Override
     public boolean isPauseScreen() {
-        return false; // not pausing the game
+        return true;
     }
 }

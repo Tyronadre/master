@@ -1,6 +1,6 @@
 package de.tyro.mcnetwork.gui.networkBook;
 
-import de.tyro.mcnetwork.networkBook.data.Subtopic;
+import de.tyro.mcnetwork.networkBook.data.SubTopic;
 import net.minecraft.client.gui.GuiGraphics;
 
 /**
@@ -12,10 +12,10 @@ import net.minecraft.client.gui.GuiGraphics;
 public class SubtopicTile {
 
     private final int x, y, w, h;
-    private final Subtopic subtopic;
+    private final SubTopic subtopic;
     private boolean completed = false;
 
-    public SubtopicTile(int x, int y, int w, int h, Subtopic subtopic) {
+    public SubtopicTile(int x, int y, int w, int h, SubTopic subtopic) {
         this.x = x; this.y = y; this.w = w; this.h = h; this.subtopic = subtopic;
     }
 
@@ -46,7 +46,7 @@ public class SubtopicTile {
     public int getWidth() { return w; }
     public int getHeight() { return h; }
 
-    public Subtopic getSubtopic() { return subtopic; }
+    public SubTopic getSubtopic() { return subtopic; }
 
     public void setCompleted(boolean c) { this.completed = c; }
 }

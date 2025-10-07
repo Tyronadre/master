@@ -1,5 +1,7 @@
 title: "Einführung in Anwendungsprotokolle"
 icon: "icons/book_network_globe.png"
+posX: 100
+posY: 100
 
 summary: |
   Dieses Kapitel führt in die grundlegenden Konzepte von Anwendungsprotokollen ein,
@@ -115,3 +117,5 @@ content: |
   - **Zustandslosigkeit:** Protokolle wie HTTP skalieren, weil sie keine Verbindungshistorie erfordern.
 
   **Beispiel SMTP:**
+  
+  ![SMTP Imgae](smtp.png "San Juan Mountains")

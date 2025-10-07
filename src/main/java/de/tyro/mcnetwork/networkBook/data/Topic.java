@@ -4,23 +4,25 @@ import net.minecraft.resources.ResourceLocation;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 /** Topic = main category */
 public class Topic {
 
     private final String title;
+    private final ResourceLocation content;
     private final ResourceLocation icon;
-    private final List<Subtopic> subtopics = new ArrayList<>();
+    private final List<SubTopic> subtopics = new ArrayList<>();
 
-    public Topic(String title, String iconPath) {
+    public Topic(String title, ResourceLocation icon, ResourceLocation content) {
         this.title = title;
-        this.icon = iconPath == null ? null : ResourceLocation.parse(iconPath);
+        this.icon = icon;
+        this.content = content;
     }
 
     public String getTitle() { return title; }
     public ResourceLocation getIcon() { return icon; }
+    public ResourceLocation getContent() { return content; }
 
-    public void addSubtopic(Subtopic s) { subtopics.add(s); }
-    public List<Subtopic> getSubtopics() { return subtopics; }
+    public void addSubtopic(SubTopic s) { subtopics.add(s); }
+    public List<SubTopic> getSubtopics() { return subtopics; }
 }

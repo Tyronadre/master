@@ -114,11 +114,7 @@ configurations {
 }
 
 dependencies {
-    jarJar(implementation("org.yaml:snakeyaml")) {
-        version {
-            prefer '2.5' // The version actually used in your dev workspace
-        }
-    }
+    jarJar(implementation("org.yaml:snakeyaml")) { version { prefer '2.5' } }
     additionalRuntimeClasspath "org.yaml:snakeyaml:2.5"
 }
 

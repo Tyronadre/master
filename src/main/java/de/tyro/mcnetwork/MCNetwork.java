@@ -6,6 +6,8 @@ import de.tyro.mcnetwork.gui.MenuRegistry;
 import de.tyro.mcnetwork.item.ItemRegistry;
 import de.tyro.mcnetwork.networkBook.data.TopicManager;
 import de.tyro.mcnetwork.tabs.TabRegistry;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
@@ -60,7 +62,6 @@ public class MCNetwork {
         // Register the commonSetup method for modloading
         modEventBus.addListener(this::commonSetup);
 
-        TopicManager.getInstance();
 
         BlockRegistry.BLOCKS.register(modEventBus);
         BlockEntityRegistry.BLOCK_ENTITIES.register(modEventBus);
@@ -97,4 +98,6 @@ public class MCNetwork {
         // Do something when the server starts
         LOGGER.info("HELLO from server starting");
     }
+
+
 }
