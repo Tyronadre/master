@@ -98,17 +98,22 @@ public class NetworkBookScreen extends Screen {
     public void render(GuiGraphics gg, int mouseX, int mouseY, float partialTicks) {
         super.render(gg, mouseX, mouseY, partialTicks);
 
+
         String title = currentTopic == null ? "No Topic" : currentTopic.getTitle();
         if (currentSubtopic != null) title += " - " + currentSubtopic.getTitle();
         gg.drawCenteredString(this.font, title, this.width / 2, 8, 0xFFFFFF);
 
         tabBar.render(gg, mouseX, mouseY, partialTicks);
 
+        gg.enableScissor(64, 24, this.width - 64 - 18, this.height - 48);
+
         if (currentSubtopic == null) {
             draggablePlane.render(gg, mouseX, mouseY, partialTicks, tile -> onSubtopicClicked(tile.getSubtopic()));
         } else {
             contentPane.render(gg, mouseX, mouseY, partialTicks);
         }
+
+        gg.disableScissor();
     }
 
     //TODO maybe we register the click, but only open the topic when a user releases ontop of it again. otherwise it might be a pain to drag
