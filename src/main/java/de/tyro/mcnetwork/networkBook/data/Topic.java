@@ -21,7 +21,7 @@ public class Topic {
 
     public String getTitle() { return title; }
     public ResourceLocation getIcon() { return icon; }
-    public ResourceLocation getContent() { return content; }
+    public ResourceLocation getContentLocation() { return content; }
 
     public void addSubtopic(SubTopic s) { subtopics.add(s); }
     public List<SubTopic> getSubtopics() { return subtopics; }

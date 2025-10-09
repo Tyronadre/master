@@ -2,12 +2,12 @@ package de.tyro.mcnetwork.networkBook.markdown;// Packagenamen an dein Projekt a
 
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
-import de.tyro.mcnetwork.MCNetwork;
+import de.tyro.mcnetwork.gui.networkBook.Scene3D.Scene3DRenderer;
+import de.tyro.mcnetwork.gui.networkBook.Scene3D.SceneDefinition;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
@@ -65,11 +65,12 @@ public class MarkdownRenderer {
      */
     public int render(GuiGraphics gg, ParsedDocument doc, int startX, int startY, int width, int clipX, int clipY, int clipW, int clipH) {
         // Enable scissor/clipping for the content area
-        enableScissor(gg, clipX, clipY, clipW, clipH);
+//        enableScissor(gg, clipX, clipY, clipW, clipH);
 
         int y = startY;
         for (Block b : doc.blocks) {
             switch (b) {
+                case AnimationBlock a -> y += renderAnimationBlock(gg, a, startX, y, width);
                 case Heading h -> y += renderHeading(gg, h, startX, y, width);
                 case Paragraph p -> y += renderParagraph(gg, p, startX, y, width);
                 case CodeBlock c -> y += renderCodeBlock(gg, c, startX, y, width);
@@ -93,32 +94,38 @@ public class MarkdownRenderer {
     public int estimateHeight(ParsedDocument doc, int width) {
         int y = 0;
         for (Block b : doc.blocks) {
-            if (b instanceof Heading) {
-                Heading h = (Heading) b;
-                y += estimateHeadingHeight(h, width);
-                y += headingSpacing;
-            } else if (b instanceof Paragraph) {
-                Paragraph p = (Paragraph) b;
-                y += estimateParagraphHeight(p, width);
-                y += paragraphSpacing;
-            } else if (b instanceof CodeBlock) {
-                CodeBlock c = (CodeBlock) b;
-                y += estimateCodeBlockHeight(c, width);
-                y += paragraphSpacing;
-            } else if (b instanceof ListBlock) {
-                ListBlock lb = (ListBlock) b;
-                y += estimateListBlockHeight(lb, width);
-                y += paragraphSpacing;
-            } else if (b instanceof TableBlock) {
-                TableBlock tb = (TableBlock) b;
-                y += estimateTableBlockHeight(tb, width);
-                y += paragraphSpacing;
-            } else if (b instanceof HrBlock) {
-                y += estimateHrHeight(width);
-                y += paragraphSpacing;
-            } else {
-                y += estimateParagraphHeight(new Paragraph(""), width);
-                y += paragraphSpacing;
+            switch (b) {
+                case AnimationBlock a -> {
+                    y += 600;
+                }
+                case Heading h -> {
+                    y += estimateHeadingHeight(h, width);
+                    y += headingSpacing;
+                }
+                case Paragraph p -> {
+                    y += estimateParagraphHeight(p, width);
+                    y += paragraphSpacing;
+                }
+                case CodeBlock c -> {
+                    y += estimateCodeBlockHeight(c, width);
+                    y += paragraphSpacing;
+                }
+                case ListBlock lb -> {
+                    y += estimateListBlockHeight(lb, width);
+                    y += paragraphSpacing;
+                }
+                case TableBlock tb -> {
+                    y += estimateTableBlockHeight(tb, width);
+                    y += paragraphSpacing;
+                }
+                case HrBlock hrBlock -> {
+                    y += estimateHrHeight(width);
+                    y += paragraphSpacing;
+                }
+                case null, default -> {
+                    y += estimateParagraphHeight(new Paragraph(""), width);
+                    y += paragraphSpacing;
+                }
             }
         }
         return y;
@@ -127,6 +134,18 @@ public class MarkdownRenderer {
     // -------------------------
     // Rendering primitives
     // -------------------------
+
+    private int renderAnimationBlock(GuiGraphics gg, AnimationBlock a, int x, int y, int width) {
+        try {
+            gg.fill(x,y, 500, 500, 0xFF224466);
+            gg.drawString(mc.font, "Test", x, y + 500, 0xFF0000);
+            a.renderer.render(gg, x, y, width, 500, Minecraft.getInstance().getFrameTimeNs());
+//            return 500;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
 
     private int renderHeading(GuiGraphics gg, Heading h, int x, int y, int width) {
         // Simple scaling: H1 large, H2 medium, others normal
@@ -210,27 +229,26 @@ public class MarkdownRenderer {
 
     private static final Map<ResourceLocation, int[]> IMAGE_SIZE_CACHE = new HashMap<>();
     private int renderImageBlock(GuiGraphics gg, ImageBlock img, int x, int y, int width) {
-        if (img == null || img.location == null || img.location.isEmpty()) return 0;
+        if (img == null || img.location == null) return 0;
 
         Minecraft mc = Minecraft.getInstance();
-        ResourceLocation texture = ResourceLocation.fromNamespaceAndPath(MCNetwork.MODID, img.location);
         int texW, texH;
 
-        int[] cached = IMAGE_SIZE_CACHE.get(texture);
+        int[] cached = IMAGE_SIZE_CACHE.get(img.location);
         if (cached != null) {
             texW = cached[0];
             texH = cached[1];
         } else {
             texW = texH = 128;
             try {
-                Resource res = mc.getResourceManager().getResource(texture).orElse(null);
+                Resource res = mc.getResourceManager().getResource(img.location).orElse(null);
                 if (res != null) {
                     try (InputStream in = res.open()) {
                         NativeImage imgData = NativeImage.read(in);
                         texW = imgData.getWidth();
                         texH = imgData.getHeight();
                         imgData.close();
-                        IMAGE_SIZE_CACHE.put(texture, new int[]{texW, texH});
+                        IMAGE_SIZE_CACHE.put(img.location, new int[]{texW, texH});
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
@@ -250,7 +268,7 @@ public class MarkdownRenderer {
 
         int drawX = x + (width - drawW) / 2;
 
-        gg.blit(texture, drawX, y, 0, 0, drawW, drawH, texW, texH);
+        gg.blit(img.location, drawX, y, 0, 0, drawW, drawH, texW, texH);
 
         int totalHeight = drawH;
 
@@ -514,10 +532,10 @@ public class MarkdownRenderer {
     }
 
     static class ImageBlock extends Block {
-        public final String location;
+        public final ResourceLocation location;
         public final String title;
 
-        public ImageBlock(String location, String title) {
+        public ImageBlock(ResourceLocation location, String title) {
             this.location = location;
             this.title = title;
         }
@@ -554,6 +572,14 @@ public class MarkdownRenderer {
     }
 
     static class HrBlock extends Block {
+    }
+
+    static class AnimationBlock extends Block {
+        public final Scene3DRenderer renderer;
+
+        public AnimationBlock(ResourceLocation location) {
+            this.renderer = new Scene3DRenderer(SceneDefinition.load(location));
+        }
     }
 
     // Inline nodes

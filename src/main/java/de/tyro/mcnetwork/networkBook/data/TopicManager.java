@@ -28,7 +28,6 @@ public class TopicManager {
 
 
     private TopicManager() {
-        loadTopics();
     }
 
     public static TopicManager getInstance() {
@@ -55,18 +54,21 @@ public class TopicManager {
     private void loadTopic(Topic topic) {
         topics.add(topic);
 
-        var files = rm.listResources(topic.getContent().getPath(), it ->it.getPath().endsWith(".yaml"));
+        var files = rm.listResources(topic.getContentLocation().getPath(), it ->it.getPath().endsWith(".yaml"));
         for (var entry : files.entrySet()) {
             try (var r = entry.getValue().openAsReader()) {
                 Map<String, Object> map = new Yaml().load(r);
-                new SubTopic(topic, (String) map.get("title"), (String) map.get("icon"), (String) map.get("content"), (int) map.get("posX"), (int) map.get("posY"));
+                new SubTopic(topic, (String) map.get("title"), (String) map.get("icon"), (String) map.get("content"), (int) map.get("posX"), (int) map.get("posY"), topic.getContentLocation());
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                logger.error("Failed to load topic at {}", entry.getKey().getPath(), e);
             }
+            logger.info("Loaded topic at {}", entry.getKey().getPath());
         }
     }
 
     public List<Topic> getTopics() {
+        topics.clear();
+        loadTopics();
         return topics;
     }
 

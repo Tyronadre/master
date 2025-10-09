@@ -1,0 +1,32 @@
+title: client-server
+posX: 200
+posY: 100
+content: |
+  # Client-Server-Architektur
+  In einer Client-Server-Architektur existiert ein (oder mehrere) zentraler Knoten (Server), der permanent oder erwartbar verfügbar ist.
+  Clients initiieren Anfragen, Server beantworten diese. Clients kommunizieren typischerweise nicht direkt untereinander. Es gibt ein fest definiertes Protokoll, das allen Teilnehmern bekannt ist, und das die Kommunikation regelt.
+  Ein Server verhält sich passiv, wartet auf Anfragen und antwortet darauf. Außerdem kann er meist mehrere Clients gleichzeitig bedienen.
+  Ein Client ist ein aktiver Teilnehmer, der eine aktive Anfrage an den Server sendet, und dann u.u. auf eine Antwort wartet.
+  
+  ---
+  
+  ## Charakteristika und Vorteile
+  - *Zentrale Stelle für Datenhaltung / Konsistenz*: einfache Implementierung von Authorisierung, Logging, Backup.
+  - *Einfache Aktualisierung und Sichtensteuerung*: Inhalte und Richtlinien lassen sich serverseitig aktualisieren.
+  - *Besser handhabbare Sicherheitspolitik*: Zertifizierung, TLS-Termination usw. sind klar fokussiert.
+  - *Skalierung mittels Replikation und Lastverteilung*: CDNs, Load-Balancer, Caching.
+  
+  ---
+  
+  ## Nachteile / Herausforderungen
+  - Single point of failure (sofern nicht redundant aufgebaut).
+  - Kosten für zentralen Betrieb (Hosting, Bandbreite).
+  - Potentielle Skalierungsgrenzen — große Systeme erfordern oftmals komplexe Architekturergänzungen (sharding, replication, CDNs).
+  
+  ---
+  
+  ## Beispiele
+  - HTTP (typischer Webserver)
+  - traditionelle E-Mail-Architekturen (Mail Transfer Agents, Mail Delivery Agents)
+  
+  @animation[s1]

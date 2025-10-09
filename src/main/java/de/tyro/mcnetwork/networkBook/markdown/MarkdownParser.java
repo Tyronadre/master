@@ -1,5 +1,10 @@
 package de.tyro.mcnetwork.networkBook.markdown;
 
+import de.tyro.mcnetwork.MCNetwork;
+import net.minecraft.client.Minecraft;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.ResourceManager;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -15,11 +20,13 @@ public class MarkdownParser {
     private static final Pattern fencedCodePattern = Pattern.compile("^```(?:\\s*(\\w+))?\\s*$");
     private static final Pattern orderedListItemPattern = Pattern.compile("\\d+\\.\\s+(.*)$");
     private static final Pattern imagePattern = Pattern.compile("!\\[.*?]\\(([\\w.]*)\\s*(\".*\")?.*\\)");
+    private static final Pattern animationPatter = Pattern.compile("@animation\\[(.*)]");
 
-    public static MarkdownRenderer.ParsedDocument parse(String markdown) {
+    private static final ResourceManager resourceManager = Minecraft.getInstance().getResourceManager();
+
+    public static MarkdownRenderer.ParsedDocument parse(String markdown, ResourceLocation resourceLocation) {
         MarkdownRenderer.ParsedDocument doc = new MarkdownRenderer.ParsedDocument();
 
-        MarkdownDocument document = new MarkdownDocument();
         String[] lines = markdown.split("\\r?\\n", -1);
         int i = 0;
         boolean inCode = false;
@@ -34,7 +41,14 @@ public class MarkdownParser {
             //image
             Matcher img = imagePattern.matcher(line);
             if (img.find()) {
-                doc.blocks.add(new MarkdownRenderer.ImageBlock(img.group(1), img.group(2)));
+                doc.blocks.add(new MarkdownRenderer.ImageBlock(resourceLocation.withSuffix("/" + img.group(1)), img.group(2)));
+                i++;
+                continue;
+            }
+
+            Matcher animation = animationPatter.matcher(line);
+            if (animation.find()) {
+                doc.blocks.add(new MarkdownRenderer.AnimationBlock(resourceLocation.withSuffix("/" +animation.group(1) + ".json")));
                 i++;
                 continue;
             }
@@ -140,12 +154,7 @@ public class MarkdownParser {
             StringBuilder para = new StringBuilder();
             para.append(line);
             i++;
-            while (i < lines.length && !lines[i].trim().isEmpty() &&
-                    !headingPattern.matcher(lines[i]).matches() &&
-                    !listItemPattern.matcher(lines[i]).matches() &&
-                    !tableLinePattern.matcher(lines[i]).matches() &&
-                    !hrPattern.matcher(lines[i]).matches() &&
-                    !fencedCodePattern.matcher(lines[i]).matches()) {
+            while (i < lines.length && !lines[i].trim().isEmpty() && !headingPattern.matcher(lines[i]).matches() && !listItemPattern.matcher(lines[i]).matches() && !tableLinePattern.matcher(lines[i]).matches() && !hrPattern.matcher(lines[i]).matches() && !fencedCodePattern.matcher(lines[i]).matches()) {
                 para.append("\n").append(lines[i]);
                 i++;
             }

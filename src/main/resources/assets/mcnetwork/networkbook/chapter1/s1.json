@@ -1,0 +1,43 @@
+{
+  "width": 180,
+  "height": 100,
+  "objects": [
+    {
+      "id": "server",
+      "type": "block",
+      "block": "minecraft:diamond_block",
+      "x": 120,
+      "y": 30,
+      "z": 10,
+      "label": "Server"
+    },
+    {
+      "id": "client",
+      "type": "block",
+      "block": "minecraft:gold_block",
+      "x": 20,
+      "y": 30,
+      "z": 10,
+      "label": "Client"
+    }
+  ],
+  "animations": [
+    {
+      "type": "packet_flight",
+      "from": "Client",
+      "to": "Server",
+      "duration": 80,
+      "color": "#00AAFF",
+      "label": "Request"
+    },
+    {
+      "type": "packet_flight",
+      "from": "Server",
+      "to": "Client",
+      "duration": 80,
+      "delay": 100,
+      "color": "#55FF55",
+      "label": "Response"
+    }
+  ]
+}

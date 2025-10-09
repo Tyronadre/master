@@ -2,6 +2,7 @@ package de.tyro.mcnetwork.networkBook.data;
 
 import de.tyro.mcnetwork.networkBook.markdown.MarkdownParser;
 import de.tyro.mcnetwork.networkBook.markdown.MarkdownRenderer;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.phys.Vec2;
 
 import java.util.ArrayList;
@@ -19,12 +20,12 @@ public class SubTopic {
     private final List<SubTopic> prerequisites = new ArrayList<>();
     private final MarkdownRenderer.ParsedDocument markdown;
 
-    public SubTopic(Topic topic, String title, String icon, String content, int posX, int posY) {
+    public SubTopic(Topic topic, String title, String icon, String content, int posX, int posY, ResourceLocation location) {
         this.id = UUID.randomUUID().toString();
         this.topic = topic;
         this.title = title;
         this.position = new Vec2(posX, posY);
-        markdown = MarkdownParser.parse(content);
+        markdown = MarkdownParser.parse(content, location);
         topic.addSubtopic(this);
     }
 

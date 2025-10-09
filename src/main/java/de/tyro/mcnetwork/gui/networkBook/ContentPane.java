@@ -57,9 +57,7 @@ public class ContentPane implements GuiEventListener {
 
             // draw content via markdown renderer (start at x+12,y+24)
             var document = subtopic.getMarkdownDocument();
-            int height = renderer.estimateHeight(document, w - 16);
-            int drawn = renderer.render(gg, subtopic.getMarkdownDocument(), this.x + 8, (int) (this.y + 8 - scrollY), w - 16, x, y, w, h - 32);
-
+            renderer.render(gg, subtopic.getMarkdownDocument(), this.x + 8, (int) (this.y + 8 - scrollY), w - 16, x, y, w, h - 32);
             gg.pose().popPose();
 
             // bottom action button (simple rectangle)
