@@ -19,6 +19,9 @@ public class NetworkBookScreen extends Screen {
 
     private final Minecraft mc = Minecraft.getInstance();
 
+    public static final int BACKGROUND_COLOR = 0xFF222228;
+    public static final int TEXT_COLOR = 0xFFFFFF;
+
     // Managers & renderers
     private final TopicManager topicManager = TopicManager.getInstance();
 
@@ -108,8 +111,10 @@ public class NetworkBookScreen extends Screen {
         }
     }
 
+    //TODO maybe we register the click, but only open the topic when a user releases ontop of it again. otherwise it might be a pain to drag
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (isDragging()) return false;
         if (tabBar.mouseClicked(mouseX, mouseY, button)) return true;
         if (currentSubtopic == null) {
             if (draggablePlane.mouseClicked(mouseX, mouseY, button)) return true;

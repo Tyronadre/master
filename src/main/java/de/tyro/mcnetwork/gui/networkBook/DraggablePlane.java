@@ -21,7 +21,7 @@ public class DraggablePlane {
     private Consumer<SubtopicTile> onTileClicked;
 
     // layout parameters
-    private final int tileW = 96, tileH = 96, spacingX = 24, spacingY = 24;
+    private final int tileW = 80, tileH = 80;
 
     public DraggablePlane(int x, int y, int width, int height) {
         this.x = x; this.y = y; this.width = width; this.height = height;
@@ -29,25 +29,14 @@ public class DraggablePlane {
 
     public void setSubtopics(List<SubTopic> subs) {
         tiles.clear();
-        // simple grid layout: compute rows/cols based on available width
-        int cols = Math.max(1, (width - 32) / (tileW + spacingX));
-        int idx = 0;
-        int startX = 16;
-        int startY = 16;
         for (SubTopic s : subs) {
-            int col = idx % cols;
-            int row = idx / cols;
-            int tx = startX + col * (tileW + spacingX);
-            int ty = startY + row * (tileH + spacingY);
-            SubtopicTile t = new SubtopicTile(tx, ty, tileW, tileH, s);
+            SubtopicTile t = new SubtopicTile(s.getPosition(), tileW, tileH, s);
             tiles.add(t);
-            idx++;
         }
     }
 
     public void render(GuiGraphics gg, int mouseX, int mouseY, float partialTicks, Consumer<SubtopicTile> onTileClicked) {
         this.onTileClicked = onTileClicked;
-        // background panel
         gg.fill(x, y, x + width, y + height, 0xFF111216);
 
         // save clip / scissor would be ideal; for blueprint we rely on drawing inside bounds

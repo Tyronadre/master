@@ -1,6 +1,8 @@
 title: client-server
-posX: 200
-posY: 100
+posX: 100
+posY: 0
+icon: minecraft:textures/item/book.png
+
 content: |
   # Client-Server-Architektur
   In einer Client-Server-Architektur existiert ein (oder mehrere) zentraler Knoten (Server), der permanent oder erwartbar verfügbar ist.

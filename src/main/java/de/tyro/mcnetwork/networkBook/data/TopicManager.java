@@ -57,7 +57,12 @@ public class TopicManager {
         for (var entry : files.entrySet()) {
             try (var r = entry.getValue().openAsReader()) {
                 Map<String, Object> map = new Yaml().load(r);
-                new SubTopic(topic, (String) map.get("title"), (String) map.get("icon"), (String) map.get("content"), (int) map.get("posX"), (int) map.get("posY"), topic.getContentLocation());
+                String title = map.get("title") == null ? "" : map.get("title").toString();
+                ResourceLocation icon = map.get("icon") == null ? null : ResourceLocation.parse((String) map.get("icon"));
+                String content = map.get("content") == null ? "" : map.get("content").toString();
+                int posx = map.get("posX") == null ? 0 : (int) map.get("posX");
+                int posy = map.get("posY") == null ? 0 : (int) map.get("posY");
+                new SubTopic(topic, title, icon, content, posx, posy);
             } catch (Exception e) {
                 logger.error("Failed to load topic at {}", entry.getKey().getPath(), e);
             }

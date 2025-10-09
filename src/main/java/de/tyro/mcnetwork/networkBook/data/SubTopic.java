@@ -2,6 +2,7 @@ package de.tyro.mcnetwork.networkBook.data;
 
 import de.tyro.mcnetwork.networkBook.markdown.MarkdownParser;
 import de.tyro.mcnetwork.networkBook.markdown.MarkdownRenderer;
+import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.phys.Vec2;
 
@@ -19,13 +20,15 @@ public class SubTopic {
     private final Vec2 position;
     private final List<SubTopic> prerequisites = new ArrayList<>();
     private final MarkdownRenderer markdown;
+    private final ResourceLocation icon;
 
-    public SubTopic(Topic topic, String title, String icon, String content, int posX, int posY, ResourceLocation location) {
+    public SubTopic(Topic topic, String title, ResourceLocation icon, String content, int posX, int posY) {
         this.id = UUID.randomUUID().toString();
         this.topic = topic;
         this.title = title;
         this.position = new Vec2(posX, posY);
-        markdown = MarkdownParser.parse(content, location);
+        this.icon = icon;
+        markdown = MarkdownParser.parse(content, topic.getContentLocation());
         topic.addSubtopic(this);
     }
 
@@ -53,5 +56,13 @@ public class SubTopic {
 
     public MarkdownRenderer getMarkdownRenderer() {
         return markdown;
+    }
+
+    public boolean isCompleted() {
+        return TopicManager.getInstance().isCompleted(Minecraft.getInstance().player, this);
+    }
+
+    public ResourceLocation getIcon() {
+        return icon;
     }
 }

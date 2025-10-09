@@ -30,7 +30,6 @@ public class IconTab {
         int bg = isMouseOver(mouseX, mouseY) ? 0xFF2A2A2A : 0xFF1A1A1A;
         gg.fill(x, y, x + w, y + h, bg);
 
-        // icon (placeholder: draw a colored box if icon == null)
         if (icon != null) {
             gg.blit(icon, x + 2, y + 2, w - 4, h - 4, 0, 0, w - 4, h - 4, w - 4, h - 4);
         } else {

@@ -1,7 +1,7 @@
 title: Peer to Peer
-icon: "icons/book_network_p2p.png"
-posX: 200
-posY: 200
+icon: minecraft:textures/item/book.png
+posX: 300
+posY: 0
 content: |
   In einem Peer-to-Peer (P2P) System sind alle Teilnehmer gleichberechtigt. Sie sind gleichzeitig Client und Server. Oft gibt es aber abstufungen, und nicht jeder Peer kann jede Anforderung oder Aufgabe übernehmen.
   

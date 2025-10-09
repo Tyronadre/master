@@ -1,7 +1,7 @@
 title: "Einführung in Anwendungsprotokolle"
-icon: "icons/book_network_globe.png"
-posX: 100
-posY: 100
+icon: minecraft:textures/item/book.png
+posX: 0
+posY: 0
 
 summary: |
   Dieses Kapitel führt in die grundlegenden Konzepte von Anwendungsprotokollen ein,

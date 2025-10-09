@@ -1,6 +1,6 @@
 title: Einführung
-posX: 100
-posY: 100
+posX: 200
+posY: 0
 icon: minecraft:textures/item/book.png
 content: |
   Im diesem Mod werden die Grundlegen Konzepte der TPC/IP Protokoll Suit behandelt. Dabei gibt es zum einen dieses GuideBook,

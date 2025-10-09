@@ -1,7 +1,7 @@
 title: "Einführung in Anwendungsprotokolle"
-icon: "icons/book_network_globe.png"
-posX: 100
-posY: 100
+icon: minecraft:textures/item/book.png
+posX: 200
+posY: 200
 content: |
   # Netzwerkanwendungen
   
