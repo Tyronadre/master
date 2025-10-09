@@ -18,7 +18,7 @@ public class SubTopic {
     private final String title;
     private final Vec2 position;
     private final List<SubTopic> prerequisites = new ArrayList<>();
-    private final MarkdownRenderer.ParsedDocument markdown;
+    private final MarkdownRenderer markdown;
 
     public SubTopic(Topic topic, String title, String icon, String content, int posX, int posY, ResourceLocation location) {
         this.id = UUID.randomUUID().toString();
@@ -47,7 +47,11 @@ public class SubTopic {
         return position;
     }
 
-    public MarkdownRenderer.ParsedDocument getMarkdownDocument() {
+    public MarkdownRenderer.MarkdownDocument getMarkdownDocument() {
+        return markdown.getDocument();
+    }
+
+    public MarkdownRenderer getMarkdownRenderer() {
         return markdown;
     }
 }

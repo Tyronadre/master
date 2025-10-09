@@ -1,3 +1,6 @@
 - title: Anwendungsprotokolle
   path: chapter1
   icon: minecraft:textures/item/book.png
+- title: Debug
+  path: debug
+  icon: minecraft:textures/item/redstone_dust.png

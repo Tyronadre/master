@@ -8,28 +8,19 @@ import de.tyro.mcnetwork.networkBook.markdown.MarkdownRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundEvents;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 
-/**
- * Main GUI screen for the Network Book.
- * - Left: IconTabBar (icons only)
- * - Right: single content window (either TopicView with DraggablePlane OR SubtopicView with ContentPane)
- *
- * State:
- * - currentTopic (selected main topic)
- * - currentSubtopic (optional; if present, show SubtopicView)
- *
- * Animations and hooks are modular and kept as placeholders (transitionProgress, etc.)
- */
 public class NetworkBookScreen extends Screen {
 
     private final Minecraft mc = Minecraft.getInstance();
 
     // Managers & renderers
     private final TopicManager topicManager = TopicManager.getInstance();
-    private final MarkdownRenderer markdownRenderer = new MarkdownRenderer(mc);
 
     // UI components
     private IconTabBar tabBar;
@@ -39,6 +30,7 @@ public class NetworkBookScreen extends Screen {
     // state
     private Topic currentTopic;
     private SubTopic currentSubtopic; // null if showing topic view
+    private boolean initialized;
 
     // animation helpers
     private float transitionProgress = 1.0f; // 0..1 for transitions
@@ -48,61 +40,54 @@ public class NetworkBookScreen extends Screen {
     }
 
     @Override
-    protected void init() {
+    public void init() {
         super.init();
+        if (this.initialized) return;
 
-        // initialize UI components
         tabBar = new IconTabBar(8, 16, 40, this::onTabClicked);
-        tabBar.setTopics(topicManager.getTopics());
+        var topics = topicManager.getTopics();
+        tabBar.setTopics(topics);
 
-        // default to first topic if available
-        Optional<Topic> maybe = topicManager.getTopics().stream().findFirst();
+        Optional<Topic> maybe = topics.stream().findFirst();
         currentTopic = maybe.orElse(null);
 
-        // create draggable plane (topic view)
         draggablePlane = new DraggablePlane(64, 24, this.width - 64 - 18, this.height - 48);
         if (currentTopic != null) draggablePlane.setSubtopics(currentTopic.getSubtopics());
 
-        // content pane (subtopic view)
         contentPane = new ContentPane(64, 24, this.width - 64 - 18, this.height - 48);
         contentPane.setCloseListener(c -> closeSubtopic());
         contentPane.setCompletionListener(this::onMarkComplete);
 
-        // add a simple button for debug/closing (optional)
-//        this.addRenderableWidget(Button.builder(Component.literal("Close GUI"), btn -> onClose()).bounds(this.width - 26, 6, 20, 20).build());
+        this.initialized = true;
     }
 
     private void onTabClicked(Topic clicked) {
-        // start transition animation
-        if (clicked == null || clicked.equals(currentTopic)) return;
+        if (clicked == null) return;
 
-        // set new topic, update draggable plane content
+        Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.BOOK_PAGE_TURN, 1.0f));
         this.currentTopic = clicked;
-        this.currentSubtopic = null; // ensure topic view
+        this.currentSubtopic = null;
         draggablePlane.setSubtopics(currentTopic.getSubtopics());
 
-        // play slide animation (placeholder)
         this.transitionProgress = 0.0f;
     }
 
     private void onSubtopicClicked(SubTopic s) {
-        // open subtopic: start transition -> open contentPane with that subtopic
         this.currentSubtopic = s;
         contentPane.setSubtopic(s);
-        // animation placeholder
+        Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0f));
+
         this.transitionProgress = 0.0f;
     }
 
     private void closeSubtopic() {
-        // close subtopic and return to topic view
         this.currentSubtopic = null;
-        // animation placeholder
         this.transitionProgress = 0.0f;
     }
 
     private void onMarkComplete(SubTopic s) {
         topicManager.markCompleted(mc.player, s);
-        // reflect visually on draggablePlane
+        Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.PLAYER_LEVELUP, 1.0f));
         draggablePlane.refreshCompletionState();
     }
 
@@ -110,27 +95,21 @@ public class NetworkBookScreen extends Screen {
     public void render(GuiGraphics gg, int mouseX, int mouseY, float partialTicks) {
         super.render(gg, mouseX, mouseY, partialTicks);
 
-        // Top-left title:
         String title = currentTopic == null ? "No Topic" : currentTopic.getTitle();
         if (currentSubtopic != null) title += " - " + currentSubtopic.getTitle();
         gg.drawCenteredString(this.font, title, this.width / 2, 8, 0xFFFFFF);
 
-        // left tab bar
         tabBar.render(gg, mouseX, mouseY, partialTicks);
 
-        // content: either DraggablePlane (topic view) or ContentPane (subtopic view)
         if (currentSubtopic == null) {
-            // Topic view shown
             draggablePlane.render(gg, mouseX, mouseY, partialTicks, tile -> onSubtopicClicked(tile.getSubtopic()));
         } else {
-            // Subtopic view shown (vertical scroll + close + bottom action)
             contentPane.render(gg, mouseX, mouseY, partialTicks);
         }
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        // delegate to left bar or content
         if (tabBar.mouseClicked(mouseX, mouseY, button)) return true;
         if (currentSubtopic == null) {
             if (draggablePlane.mouseClicked(mouseX, mouseY, button)) return true;

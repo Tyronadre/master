@@ -44,7 +44,6 @@ public class TopicManager {
             for (var chapter : chapters) {
                 Topic topic = new Topic((String) chapter.get("title"), ResourceLocation.parse((String) chapter.get("icon")), ResourceLocation.fromNamespaceAndPath(MCNetwork.MODID, CHAPTER_FOLDER + chapter.get("path")));
                 loadTopic(topic);
-                topics.add(topic);
             }
         } catch (Exception e) {
             logger.error("Failed to load topics.", e);

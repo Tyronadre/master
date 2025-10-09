@@ -53,9 +53,9 @@ public class SceneAnimator {
 
 //            VertexConsumer vc = buffer.getBuffer(RenderType.lines());
 //            vc.addVertex(pose.last().pose(), pos.x, pos.y, pos.z)
-//                    .setColor(p.color >> 16 & 255, p.color >> 8 & 255, p.color & 255, 255);
+//                    .setColor(p.yaml.color >> 16 & 255, p.yaml.color >> 8 & 255, p.yaml.color & 255, 255);
 //            vc.addVertex(pose.last().pose(), pos.x, pos.y + 0.2f, pos.z)
-//                    .setColor(p.color >> 16 & 255, p.color >> 8 & 255, p.color & 255, 255);
+//                    .setColor(p.yaml.color >> 16 & 255, p.yaml.color >> 8 & 255, p.yaml.color & 255, 255);
         }
     }
 }

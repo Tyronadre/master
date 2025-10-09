@@ -1,12 +1,10 @@
 package de.tyro.mcnetwork.networkBook.markdown;
 
-import de.tyro.mcnetwork.MCNetwork;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -24,8 +22,9 @@ public class MarkdownParser {
 
     private static final ResourceManager resourceManager = Minecraft.getInstance().getResourceManager();
 
-    public static MarkdownRenderer.ParsedDocument parse(String markdown, ResourceLocation resourceLocation) {
-        MarkdownRenderer.ParsedDocument doc = new MarkdownRenderer.ParsedDocument();
+    public static MarkdownRenderer parse(String markdown, ResourceLocation resourceLocation) {
+        MarkdownRenderer renderer = new MarkdownRenderer();
+        var doc = renderer.getDocument();
 
         String[] lines = markdown.split("\\r?\\n", -1);
         int i = 0;
@@ -41,24 +40,22 @@ public class MarkdownParser {
             //image
             Matcher img = imagePattern.matcher(line);
             if (img.find()) {
-                doc.blocks.add(new MarkdownRenderer.ImageBlock(resourceLocation.withSuffix("/" + img.group(1)), img.group(2)));
+                doc.addImageBlock(resourceLocation.withSuffix("/" + img.group(1)), img.group(2));
                 i++;
                 continue;
             }
 
             Matcher animation = animationPatter.matcher(line);
             if (animation.find()) {
-                doc.blocks.add(new MarkdownRenderer.AnimationBlock(resourceLocation.withSuffix("/" +animation.group(1) + ".json")));
+                doc.addAnimationBlock(resourceLocation.withSuffix("/" +animation.group(1) + ".json"));
                 i++;
                 continue;
             }
 
-            // ordered list
             Matcher oList = orderedListItemPattern.matcher(line);
             if (oList.matches()) {
                 listBuffer.add(oList.group(1));
                 i++;
-                // collect following ordered list items
                 while (i < lines.length) {
                     Matcher oList2 = orderedListItemPattern.matcher(lines[i]);
                     if (oList2.matches()) {
@@ -67,63 +64,6 @@ public class MarkdownParser {
                     } else break;
                 }
                 flushListBuffer(listBuffer, doc, true);
-                continue;
-            }
-
-
-            // Fenced code block handling
-            Matcher fence = fencedCodePattern.matcher(line);
-            if (fence.matches()) {
-                if (!inCode) {
-                    inCode = true;
-                    codeBuf.setLength(0);
-                    codeLang = fence.group(1);
-                } else {
-                    // end fenced code
-                    doc.blocks.add(new MarkdownRenderer.CodeBlock(codeBuf.toString(), codeLang));
-                    inCode = false;
-                    codeLang = null;
-                }
-                i++;
-                continue;
-            }
-            if (inCode) {
-                codeBuf.append(line).append("\n");
-                i++;
-                continue;
-            }
-
-            // horizontal rule
-            if (hrPattern.matcher(line).matches()) {
-                flushTableBuffer(tableBuffer, doc);
-                doc.blocks.add(new MarkdownRenderer.HrBlock());
-                i++;
-                continue;
-            }
-
-            // heading
-            Matcher hm = headingPattern.matcher(line);
-            if (hm.matches()) {
-                flushTableBuffer(tableBuffer, doc);
-                int level = hm.group(1).length();
-                String text = hm.group(2).trim();
-                doc.blocks.add(new MarkdownRenderer.Heading(level, text));
-                i++;
-                continue;
-            }
-
-            // table detection: sequence of lines with |...|
-            if (tableLinePattern.matcher(line).matches()) {
-                // collect table lines until break
-                tableBuffer.add(line.trim());
-                i++;
-                // continue collecting
-                while (i < lines.length && tableLinePattern.matcher(lines[i]).matches()) {
-                    tableBuffer.add(lines[i].trim());
-                    i++;
-                }
-                // flush now
-                flushTableBuffer(tableBuffer, doc);
                 continue;
             }
 
@@ -144,7 +84,54 @@ public class MarkdownParser {
                 continue;
             }
 
-            // blank line -> paragraph separator
+            Matcher codeBlock = fencedCodePattern.matcher(line);
+            if (codeBlock.matches()) {
+                if (!inCode) {
+                    inCode = true;
+                    codeBuf.setLength(0);
+                    codeLang = codeBlock.group(1);
+                } else {
+                    doc.addCodeBlock(codeBuf.toString(), codeLang);
+                    inCode = false;
+                    codeLang = null;
+                }
+                i++;
+                continue;
+            }
+            if (inCode) {
+                codeBuf.append(line).append("\n");
+                i++;
+                continue;
+            }
+
+            if (hrPattern.matcher(line).matches()) {
+                flushTableBuffer(tableBuffer, doc);
+                doc.addHrBlock();
+                i++;
+                continue;
+            }
+
+            Matcher headerBlock = headingPattern.matcher(line);
+            if (headerBlock.matches()) {
+                flushTableBuffer(tableBuffer, doc);
+                int level = headerBlock.group(1).length();
+                String text = headerBlock.group(2).trim();
+                doc.addHeaderBlock(level, text);
+                i++;
+                continue;
+            }
+
+            if (tableLinePattern.matcher(line).matches()) {
+                tableBuffer.add(line.trim());
+                i++;
+                while (i < lines.length && tableLinePattern.matcher(lines[i]).matches()) {
+                    tableBuffer.add(lines[i].trim());
+                    i++;
+                }
+                flushTableBuffer(tableBuffer, doc);
+                continue;
+            }
+
             if (line.trim().isEmpty()) {
                 i++;
                 continue;
@@ -158,16 +145,15 @@ public class MarkdownParser {
                 para.append("\n").append(lines[i]);
                 i++;
             }
-            doc.blocks.add(new MarkdownRenderer.Paragraph(parseInline(para.toString())));
+            doc.addParagraphBlock(parseInline(para.toString()));
         }
 
-        // flush any remaining buffers
         flushTableBuffer(tableBuffer, doc);
 
-        return doc;
+        return renderer;
     }
 
-    private static void flushTableBuffer(List<String> tableBuffer, MarkdownRenderer.ParsedDocument doc) {
+    private static void flushTableBuffer(List<String> tableBuffer, MarkdownRenderer.MarkdownDocument doc) {
         if (tableBuffer.isEmpty()) return;
         // parse tableBuffer lines into rows (split by |, trim)
         List<List<String>> rows = new ArrayList<>();
@@ -182,14 +168,13 @@ public class MarkdownParser {
             rows.add(row);
         }
         boolean header = rows.size() > 0;
-        doc.blocks.add(new MarkdownRenderer.TableBlock(rows, header));
+        doc.addTableBlock(rows, header);
         tableBuffer.clear();
     }
 
-    private static void flushListBuffer(List<String> listBuffer, MarkdownRenderer.ParsedDocument doc, boolean ordered) {
+    private static void flushListBuffer(List<String> listBuffer, MarkdownRenderer.MarkdownDocument doc, boolean ordered) {
         if (listBuffer.isEmpty()) return;
-        MarkdownRenderer.ListBlock lb = new MarkdownRenderer.ListBlock(listBuffer.stream().map(MarkdownParser::parseInline).toList(), ordered);
-        doc.blocks.add(lb);
+        doc.addListBlock(listBuffer.stream().map(MarkdownParser::parseInline).toList(), ordered);
         listBuffer.clear();
     }
 
@@ -198,7 +183,6 @@ public class MarkdownParser {
         List<MarkdownRenderer.InlineNode> out = new ArrayList<>();
         if (text == null || text.isEmpty()) return out;
 
-        // We implement a small state machine scanning for backticks, **, *
         int i = 0;
         while (i < text.length()) {
             char c = text.charAt(i);
@@ -209,7 +193,6 @@ public class MarkdownParser {
                 String code = text.substring(i + 1, j);
                 out.add(new MarkdownRenderer.InlineCodeNode(code));
                 i = j + 1;
-                continue;
             } else if (c == '*' && i + 1 < text.length() && text.charAt(i + 1) == '*') {
                 // bold
                 int j = text.indexOf("**", i + 2);
@@ -217,7 +200,6 @@ public class MarkdownParser {
                 String inner = text.substring(i + 2, j);
                 out.add(new MarkdownRenderer.BoldNode(inner));
                 i = j + 2;
-                continue;
             } else if (c == '*') {
                 // italic
                 int j = text.indexOf('*', i + 1);
@@ -225,7 +207,6 @@ public class MarkdownParser {
                 String inner = text.substring(i + 1, j);
                 out.add(new MarkdownRenderer.ItalicNode(inner));
                 i = j + 1;
-                continue;
             } else {
                 // accumulate plain until next special char
                 int j = i;
