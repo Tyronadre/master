@@ -11,7 +11,6 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 
@@ -31,8 +30,8 @@ public class NetworkBookScreen extends Screen {
     private ContentPane contentPane;
 
     // state
-    private Topic currentTopic;
-    private SubTopic currentSubtopic;
+    private static Topic currentTopic;
+    private static SubTopic currentSubtopic;
     private boolean initialized;
 
     // animation helpers
@@ -45,7 +44,6 @@ public class NetworkBookScreen extends Screen {
     @Override
     public void init() {
         super.init();
-        if (this.initialized) return;
 
         tabBar = new IconTabBar(8, 16, 40, this::onTabClicked);
         var topics = topicManager.getTopics();
@@ -104,7 +102,7 @@ public class NetworkBookScreen extends Screen {
 
         tabBar.render(gg, mouseX, mouseY, partialTicks);
 
-        gg.enableScissor(64, 24, this.width - 64 - 18, this.height - 48);
+        gg.enableScissor(64, 24, this.width - 18, this.height - 24);
 
         if (currentSubtopic == null) {
             draggablePlane.render(gg, mouseX, mouseY, partialTicks, tile -> onSubtopicClicked(tile.getSubtopic()));

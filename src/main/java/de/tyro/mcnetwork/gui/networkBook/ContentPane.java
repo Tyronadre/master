@@ -19,8 +19,8 @@ public class ContentPane implements GuiEventListener {
 
     private final int x, y, w, h;
     private float scrollY = 0f;
-    private SubTopic subtopic;
-    private MarkdownRenderer renderer;
+    private static SubTopic subtopic;
+    private static MarkdownRenderer renderer;
     private Consumer<Void> onClose;
     private Consumer<SubTopic> onComplete;
     private int contentHeight;
@@ -39,8 +39,8 @@ public class ContentPane implements GuiEventListener {
     }
 
     public void setSubtopic(SubTopic s) {
-        this.subtopic = s;
-        this.renderer = s.getMarkdownRenderer();
+        subtopic = s;
+        renderer = s.getMarkdownRenderer();
         this.scrollY = 0f; // reset scroll
     }
 
@@ -74,7 +74,7 @@ public class ContentPane implements GuiEventListener {
 
         // scrollbar
         var percentage = ((scrollY) / (contentHeight - h + 32));
-        int sy = y + 20 + (int) (percentage * (h- 117));
+        int sy = y + 20 + (int) (percentage * (h - 117));
         int sx = x + w - 12;
         int sy2 = sy + 64;
         gg.fill(sx, sy, sx + 6, sy2, 0xFFFFFFFF);

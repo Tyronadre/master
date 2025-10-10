@@ -1,11 +1,15 @@
 package de.tyro.mcnetwork.gui.networkBook;
 
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import de.tyro.mcnetwork.networkBook.data.SubTopic;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.RenderStateShard;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.RenderType;
 import org.joml.Matrix4f;
 
@@ -60,19 +64,19 @@ public class DraggablePlane {
         gg.pose().pushPose();
         gg.pose().translate(x + offsetX, y + offsetY, 0);
 
-        // draw connections
+        // draw connections between tile centers
         for (var destination : tiles.entrySet()) {
             var dTile = destination.getValue();
             for (var origin : destination.getKey().getPrerequisite()) {
                 var oTile = tiles.get(origin);
-//                VertexConsumer vertexconsumer = gg.bufferSource().getBuffer(renderType);
-//                var pose = gg.pose().last().pose();
-//                vertexconsumer.addVertex(pose, 100+ 10, 100 + 10, 0).setColor(CONNECTION_COLOR);
-//                vertexconsumer.addVertex(pose, 100 , 100 , 0).setColor(CONNECTION_COLOR);
-//                vertexconsumer.addVertex(pose, 200 -10, 200-10, 0).setColor(CONNECTION_COLOR);
-//                vertexconsumer.addVertex(pose, 200, 200, 0).setColor(CONNECTION_COLOR);
-//                gg.flush();
-                drawLine(gg, 100, 100, 150, 150, CONNECTION_COLOR);
+                VertexConsumer vertexconsumer = gg.bufferSource().getBuffer(renderType);
+                var pose = gg.pose().last().pose();
+                vertexconsumer.addVertex(pose, 100+ 10, 100 + 10, 0).setColor(CONNECTION_COLOR);
+                vertexconsumer.addVertex(pose, 100 , 100 , 0).setColor(CONNECTION_COLOR);
+                vertexconsumer.addVertex(pose, 200 -10, 200-10, 0).setColor(CONNECTION_COLOR);
+                vertexconsumer.addVertex(pose, 200, 200, 0).setColor(CONNECTION_COLOR);
+                gg.flush();
+//                drawLine(gg, 100, 100, 150, 150, CONNECTION_COLOR);
             }
         }
 
@@ -84,27 +88,35 @@ public class DraggablePlane {
         gg.pose().popPose();
     }
 
-    public void drawLine(GuiGraphics gg, int minX, int minY, int maxX, int maxY, int color) {
-        Matrix4f matrix4f = gg.pose().last().pose();
-        if (minX < maxX) {
-            int i = minX;
-            minX = maxX;
-            maxX = i;
-        }
+    private void drawConnection(GuiGraphics gg, int x1, int y1, int x2, int y2) {
+        Matrix4f pose = gg.pose().last().pose();
+        float dx = x2 - x1;
+        float dy = y2 - y1;
+        double len = Math.hypot(dx, dy);
+        if (len == 0) return;
 
-        if (minY < maxY) {
-            int j = minY;
-            minY = maxY;
-            maxY = j;
-        }
+        // normalised perpendicular for line width (4px here)
+        float nx = (float) (-dy / len) * 2f;
+        float ny = (float) (dx / len) * 2f;
 
-        VertexConsumer vertexconsumer = gg.bufferSource().getBuffer(renderType);
-        vertexconsumer.addVertex(matrix4f, (float)minX, (float)minY, 0).setColor(color);
-        vertexconsumer.addVertex(matrix4f, (float)minX, (float)maxY, 0).setColor(color);
-        vertexconsumer.addVertex(matrix4f, (float)maxX, (float)maxY, 0).setColor(color);
-        vertexconsumer.addVertex(matrix4f, (float)maxX, (float)minY, 0).setColor(color);
-        gg.flush();
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.setShader(GameRenderer::getPositionColorShader);
+
+        Tesselator tesselator = Tesselator.getInstance();
+        BufferBuilder buffer = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+
+        buffer.addVertex(pose, x1 + nx, y1 + ny, 0).setColor(CONNECTION_COLOR);
+        buffer.addVertex(pose, x1 - nx, y1 - ny, 0).setColor(CONNECTION_COLOR);
+        buffer.addVertex(pose, x2 - nx, y2 - ny, 0).setColor(CONNECTION_COLOR);
+        buffer.addVertex(pose, x2 + nx, y2 + ny, 0).setColor(CONNECTION_COLOR);
+
+
+        BufferUploader.drawWithShader(buffer.buildOrThrow());
+
+        RenderSystem.disableBlend();
     }
+
 
     public boolean mouseClicked(double mx, double my, int button) {
         // check click on tiles (transform coords to plane)
