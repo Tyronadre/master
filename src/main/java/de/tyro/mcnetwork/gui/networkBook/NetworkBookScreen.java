@@ -32,11 +32,11 @@ public class NetworkBookScreen extends Screen {
 
     // state
     private Topic currentTopic;
-    private SubTopic currentSubtopic; // null if showing topic view
+    private SubTopic currentSubtopic;
     private boolean initialized;
 
     // animation helpers
-    private float transitionProgress = 1.0f; // 0..1 for transitions
+    private float transitionProgress = 1.0f;
 
     public NetworkBookScreen() {
         super(Component.literal("Netzwerkhandbuch"));
@@ -91,7 +91,6 @@ public class NetworkBookScreen extends Screen {
     private void onMarkComplete(SubTopic s) {
         topicManager.markCompleted(mc.player, s);
         Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.PLAYER_LEVELUP, 1.0f));
-        draggablePlane.refreshCompletionState();
     }
 
     @Override

@@ -65,4 +65,8 @@ public class SubTopic {
     public ResourceLocation getIcon() {
         return icon;
     }
+
+    public List<SubTopic> getPrerequisite() {
+        return prerequisites;
+    }
 }

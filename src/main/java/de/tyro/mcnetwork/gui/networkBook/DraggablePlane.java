@@ -1,37 +1,55 @@
 package de.tyro.mcnetwork.gui.networkBook;
 
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import de.tyro.mcnetwork.networkBook.data.SubTopic;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderStateShard;
+import net.minecraft.client.renderer.RenderType;
+import org.joml.Matrix4f;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
-/**
- * 2D Draggable Plane that contains SubtopicTile elements laid out in a grid.
- * Dragging pans the plane; we clamp the translate so user can't move to meaningless area.
- */
+import static net.minecraft.client.renderer.RenderStateShard.*;
+
 public class DraggablePlane {
 
+    public static final int CONNECTION_COLOR = 0x2FF24466;
+
     private final int x, y, width, height;
-    private final List<SubtopicTile> tiles = new ArrayList<>();
+    private final Map<SubTopic, SubtopicTile> tiles = new HashMap<>();
     private float offsetX = 0, offsetY = 0; // pan offset
     private float lastDragMouseX, lastDragMouseY;
     private boolean dragging = false;
     private Consumer<SubtopicTile> onTileClicked;
-
-    // layout parameters
-    private final int tileW = 80, tileH = 80;
+    private final RenderType renderType;
 
     public DraggablePlane(int x, int y, int width, int height) {
-        this.x = x; this.y = y; this.width = width; this.height = height;
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+        this.renderType = RenderType.create(
+                "gui_2",
+                DefaultVertexFormat.POSITION_COLOR,
+                VertexFormat.Mode.QUADS,
+                786432,
+                RenderType.CompositeState.builder()
+                        .setShaderState(RENDERTYPE_GUI_SHADER)
+                        .setTransparencyState(TRANSLUCENT_TRANSPARENCY)
+                        .setDepthTestState(LEQUAL_DEPTH_TEST)
+                        .createCompositeState(false)
+        );
     }
 
     public void setSubtopics(List<SubTopic> subs) {
         tiles.clear();
         for (SubTopic s : subs) {
-            SubtopicTile t = new SubtopicTile(s.getPosition(), tileW, tileH, s);
-            tiles.add(t);
+            tiles.put(s, new SubtopicTile(s.getPosition(), 80, 80, s));
         }
     }
 
@@ -39,34 +57,60 @@ public class DraggablePlane {
         this.onTileClicked = onTileClicked;
         gg.fill(x, y, x + width, y + height, 0xFF111216);
 
-        // save clip / scissor would be ideal; for blueprint we rely on drawing inside bounds
         gg.pose().pushPose();
         gg.pose().translate(x + offsetX, y + offsetY, 0);
 
-        // draw connection lines (very simple: draw lines between sequential tiles)
-        for (int i = 0; i < tiles.size() - 1; i++) {
-            SubtopicTile a = tiles.get(i);
-            SubtopicTile b = tiles.get(i + 1);
-            int ax = a.getCenterX();
-            int ay = a.getCenterY();
-            int bx = b.getCenterX();
-            int by = b.getCenterY();
-            gg.fill(ax, ay - 1, bx, ay + 1, 0xFF555555);
+        // draw connections
+        for (var destination : tiles.entrySet()) {
+            var dTile = destination.getValue();
+            for (var origin : destination.getKey().getPrerequisite()) {
+                var oTile = tiles.get(origin);
+//                VertexConsumer vertexconsumer = gg.bufferSource().getBuffer(renderType);
+//                var pose = gg.pose().last().pose();
+//                vertexconsumer.addVertex(pose, 100+ 10, 100 + 10, 0).setColor(CONNECTION_COLOR);
+//                vertexconsumer.addVertex(pose, 100 , 100 , 0).setColor(CONNECTION_COLOR);
+//                vertexconsumer.addVertex(pose, 200 -10, 200-10, 0).setColor(CONNECTION_COLOR);
+//                vertexconsumer.addVertex(pose, 200, 200, 0).setColor(CONNECTION_COLOR);
+//                gg.flush();
+                drawLine(gg, 100, 100, 150, 150, CONNECTION_COLOR);
+            }
         }
 
         // draw tiles
-        for (SubtopicTile t : tiles) {
+        for (SubtopicTile t : tiles.values()) {
             t.render(gg, mouseX - x - offsetX, mouseY - y - offsetY);
         }
 
         gg.pose().popPose();
     }
 
+    public void drawLine(GuiGraphics gg, int minX, int minY, int maxX, int maxY, int color) {
+        Matrix4f matrix4f = gg.pose().last().pose();
+        if (minX < maxX) {
+            int i = minX;
+            minX = maxX;
+            maxX = i;
+        }
+
+        if (minY < maxY) {
+            int j = minY;
+            minY = maxY;
+            maxY = j;
+        }
+
+        VertexConsumer vertexconsumer = gg.bufferSource().getBuffer(renderType);
+        vertexconsumer.addVertex(matrix4f, (float)minX, (float)minY, 0).setColor(color);
+        vertexconsumer.addVertex(matrix4f, (float)minX, (float)maxY, 0).setColor(color);
+        vertexconsumer.addVertex(matrix4f, (float)maxX, (float)maxY, 0).setColor(color);
+        vertexconsumer.addVertex(matrix4f, (float)maxX, (float)minY, 0).setColor(color);
+        gg.flush();
+    }
+
     public boolean mouseClicked(double mx, double my, int button) {
         // check click on tiles (transform coords to plane)
         float localX = (float) (mx - x - offsetX);
         float localY = (float) (my - y - offsetY);
-        for (SubtopicTile t : tiles) {
+        for (SubtopicTile t : tiles.values()) {
             if (t.isMouseOver(localX, localY)) {
                 if (onTileClicked != null) onTileClicked.accept(t);
                 return true;
@@ -95,7 +139,7 @@ public class DraggablePlane {
         // clamp so plane cannot be dragged to show empty space:
         // compute content bounds
         int minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE, maxX = Integer.MIN_VALUE, maxY = Integer.MIN_VALUE;
-        for (SubtopicTile t : tiles) {
+        for (SubtopicTile t : tiles.values()) {
             minX = Math.min(minX, t.getX());
             minY = Math.min(minY, t.getY());
             maxX = Math.max(maxX, t.getX() + t.getWidth());
@@ -114,11 +158,4 @@ public class DraggablePlane {
         if (offsetY < minOffsetY) offsetY = minOffsetY;
         if (offsetY > maxOffsetY) offsetY = maxOffsetY;
     }
-
-    public void refreshCompletionState() {
-        // placeholder to refresh visual state from TopicManager
-    }
-
-    // getters for testing / hooks
-    public List<SubtopicTile> getTiles() { return tiles; }
 }

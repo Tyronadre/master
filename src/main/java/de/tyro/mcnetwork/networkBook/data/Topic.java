@@ -25,4 +25,11 @@ public class Topic {
 
     public void addSubtopic(SubTopic s) { subtopics.add(s); }
     public List<SubTopic> getSubtopics() { return subtopics; }
+
+    public SubTopic getSubTopicByTitle(String title) {
+        for (SubTopic s : subtopics) {
+            if (s.getTitle().equals(title)) { return s; }
+        }
+        return null;
+    }
 }

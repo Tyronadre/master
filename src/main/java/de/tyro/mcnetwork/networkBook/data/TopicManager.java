@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.yaml.snakeyaml.Yaml;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -53,6 +54,7 @@ public class TopicManager {
     private void loadTopic(Topic topic) {
         topics.add(topic);
 
+        var pres = new HashMap<SubTopic, List<String>>();
         var files = rm.listResources(topic.getContentLocation().getPath(), it ->it.getPath().endsWith(".yaml"));
         for (var entry : files.entrySet()) {
             try (var r = entry.getValue().openAsReader()) {
@@ -62,11 +64,24 @@ public class TopicManager {
                 String content = map.get("content") == null ? "" : map.get("content").toString();
                 int posx = map.get("posX") == null ? 0 : (int) map.get("posX");
                 int posy = map.get("posY") == null ? 0 : (int) map.get("posY");
-                new SubTopic(topic, title, icon, content, posx, posy);
+                var sub = new SubTopic(topic, title, icon, content, posx, posy);
+                if (map.get("pre") != null) {
+                    pres.put(sub, (List<String>) map.get("pre"));
+                }
             } catch (Exception e) {
                 logger.error("Failed to load topic at {}", entry.getKey().getPath(), e);
             }
             logger.info("Loaded topic at {}", entry.getKey().getPath());
+        }
+
+        //load pres
+        for (var entry : pres.entrySet()) {
+            var sub = entry.getKey();
+            for (var pre : entry.getValue()) {
+                var subtopic = topic.getSubTopicByTitle(pre);
+                if (subtopic == null) continue;
+                sub.addPrerequisite(subtopic);
+            }
         }
     }
 
