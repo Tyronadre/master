@@ -30,6 +30,8 @@ public class ContentPane implements GuiEventListener {
     private final int closeBtnYOffset = 8;
     private final int bottomButtonHeight = 20;
     private boolean focused;
+    private boolean scrollbarDragging = false;
+    private float scrollbarDragOffset = 0f;
 
     public ContentPane(int x, int y, int w, int h) {
         this.x = x;
@@ -41,7 +43,7 @@ public class ContentPane implements GuiEventListener {
     public void setSubtopic(SubTopic s) {
         subtopic = s;
         renderer = s.getMarkdownRenderer();
-        this.scrollY = 0f; // reset scroll
+        this.scrollY = 0f;
     }
 
     public void setCloseListener(Consumer<Void> c) {
@@ -73,11 +75,16 @@ public class ContentPane implements GuiEventListener {
         gg.drawCenteredString(Minecraft.getInstance().font, Component.literal("Thema verstanden"), x + w / 2, by + 4, 0xFFFFFFFF);
 
         // scrollbar
-        var percentage = ((scrollY) / (contentHeight - h + 32));
-        int sy = y + 20 + (int) (percentage * (h - 117));
-        int sx = x + w - 12;
-        int sy2 = sy + 64;
-        gg.fill(sx, sy, sx + 6, sy2, 0xFFFFFFFF);
+        if (contentHeight >= h - 32) {
+            float percentage = (scrollY) / (contentHeight - h + 32);
+            int sx = x + w - 12;
+            int thumbHeight = 64;
+            int trackTop = y + 20;
+            int trackRange = h - 117;
+            int sy = trackTop + (int) (percentage * Math.max(0, trackRange));
+            int sy2 = sy + thumbHeight;
+            gg.fill(sx, sy, sx + 6, sy2, 0xFFFFFFFF);
+        }
 
     }
 
@@ -98,12 +105,62 @@ public class ContentPane implements GuiEventListener {
             return true;
         }
 
+        // scrollbar thumb click -> start dragging
+        if (contentHeight >= h - 32) {
+            int sx = x + w - 12;
+            int thumbHeight = 64;
+            int trackTop = y + 20;
+            int trackRange = h - 117;
+            if (trackRange > 0) {
+                float range = (float) (contentHeight - h + 32);
+                int sy = trackTop + (int) ((scrollY / Math.max(1f, range)) * trackRange);
+                int sy2 = sy + thumbHeight;
+                if (mx >= sx && mx <= sx + 6 && my >= sy && my <= sy2) {
+                    scrollbarDragging = true;
+                    scrollbarDragOffset = (float) (my - sy);
+                    return true;
+                }
+            }
+        }
+
         // else click in content area: start drag (we optionally allow dragging content)
         return false;
     }
 
     public boolean mouseDragged(double mx, double my, int button, double dragX, double dragY) {
-        // implement drag to scroll if wanted (also allow wheel)
+        if (scrollbarDragging) {
+            int thumbHeight = 64;
+            int trackTop = y + 20;
+            int trackRange = h - 117;
+            if (trackRange <= 0) return true;
+
+            float thumbTop = (float) (my - scrollbarDragOffset);
+            float minTop = trackTop;
+            float maxTop = trackTop + trackRange;
+            if (thumbTop < minTop) thumbTop = minTop;
+            if (thumbTop > maxTop) thumbTop = maxTop;
+
+            float percentage = (thumbTop - trackTop) / (float) trackRange;
+            float contentRange = Math.max(0, contentHeight - h + 32);
+            this.scrollY = percentage * contentRange;
+
+            // clamp
+            if (scrollY < 0) scrollY = 0;
+            if (scrollY + h - 32 > contentHeight) scrollY = Math.max(0, contentHeight - h + 32);
+
+            return true;
+        }
+
+        // not dragging scrollbar
+        return false;
+    }
+
+    @Override
+    public boolean mouseReleased(double mx, double my, int button) {
+        if (scrollbarDragging) {
+            scrollbarDragging = false;
+            return true;
+        }
         return false;
     }
 
