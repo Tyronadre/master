@@ -20,4 +20,8 @@ public class RoutingTable<T extends RoutingEntry> {
     public T getEntry(UUID id) {
         return entries.get(id);
     }
+
+    public boolean hasEntry(UUID destination) {
+        return entries.containsKey(destination);
+    }
 }

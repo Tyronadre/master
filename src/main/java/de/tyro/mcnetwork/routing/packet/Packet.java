@@ -1,8 +1,9 @@
 package de.tyro.mcnetwork.routing.packet;
 
+import java.io.Serializable;
 import java.util.UUID;
 
-public abstract class Packet {
+public abstract class Packet implements Serializable {
     protected final UUID source;
     protected final UUID destination;
     protected int ttl;
@@ -25,4 +26,6 @@ public abstract class Packet {
     public int getTtl() {
         return ttl;
     }
+
+    public abstract Packet copy();
 }

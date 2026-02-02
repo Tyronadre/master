@@ -24,7 +24,7 @@ public class SimulationContollerItem extends Item {
 
     private void openMenu(Player player) {
         player.openMenu(new SimpleMenuProvider(
-                (id, inv, ply) -> new SimulationControllerMenu(id),
+                (id, inv, ply) -> new SimulationControllerMenu(id, inv),
                 Component.literal("Simulation Controller")
         ));
     }

@@ -5,7 +5,7 @@ import de.tyro.mcnetwork.routing.event.PacketForwardEvent;
 import de.tyro.mcnetwork.routing.event.PacketReceiveEvent;
 import de.tyro.mcnetwork.routing.node.SimNode;
 import de.tyro.mcnetwork.routing.packet.AodvRrepPacket;
-import de.tyro.mcnetwork.routing.packet.AodvRreqPacket;
+import de.tyro.mcnetwork.routing.packet.AodvRREQPacket;
 import de.tyro.mcnetwork.routing.packet.Packet;
 import de.tyro.mcnetwork.routing.routing.AodvRoutingEntry;
 import de.tyro.mcnetwork.routing.routing.AodvRoutingTable;
@@ -32,7 +32,7 @@ public class AodvProtocol implements RoutingProtocol {
     @Override
     public void onReceive(Packet packet, SimNode node, SimNode sender) {
 
-        if (packet instanceof AodvRreqPacket rreq) {
+        if (packet instanceof AodvRREQPacket rreq) {
             handleRreq(rreq, node, sender);
         }
 
@@ -51,7 +51,28 @@ public class AodvProtocol implements RoutingProtocol {
         return routingTable;
     }
 
-    private void handleRreq(AodvRreqPacket rreq, SimNode self, SimNode sender) {
+    @Override
+    public void discoverRoute(SimNode self, java.util.UUID destination) {
+        // Erzeuge ein neues RREQ-Paket
+        int rreqId = requestIdCounter++;
+        AodvRREQPacket rreq = new AodvRREQPacket(
+                self.getId(), // source
+                destination,  // destination
+                rreqId,
+                sequenceNumber,
+                0 // hopCount
+        );
+        // Markiere RREQ als gesehen
+        seenRreqs.add(self.getId() + ":" + rreqId);
+        // Sende RREQ an alle Nachbarn (hier: alle anderen Nodes im Netzwerk)
+        for (SimNode neighbor : engine.getNeighbors(self)) {
+            if (!neighbor.getId().equals(self.getId())) {
+                neighbor.receive(rreq);
+            }
+        }
+    }
+
+    private void handleRreq(AodvRREQPacket rreq, SimNode self, SimNode sender) {
 
         String key = rreq.getSource() + ":" + rreq.getRequestId();
         if (!seenRreqs.add(key)) return;
@@ -101,5 +122,3 @@ public class AodvProtocol implements RoutingProtocol {
 
 
 }
-
-

@@ -4,7 +4,6 @@ package de.tyro.mcnetwork.gui.networkBook;
 import de.tyro.mcnetwork.networkBook.data.SubTopic;
 import de.tyro.mcnetwork.networkBook.data.Topic;
 import de.tyro.mcnetwork.networkBook.data.TopicManager;
-import de.tyro.mcnetwork.networkBook.markdown.MarkdownRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;

@@ -1,0 +1,98 @@
+package de.tyro.mcnetwork.terminal;
+
+import de.tyro.mcnetwork.terminal.commands.*;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
+
+public class Terminal {
+
+    private final List<String> outputBuffer = new ArrayList<>();
+    private final Queue<String> inputQueue = new ConcurrentLinkedQueue<>();
+
+    private Thread runningCommandThread;
+    private Command runningCommand;
+
+    private final int maxLines = 200;
+
+    public Terminal() {
+    }
+
+    /* ---------------- Input ---------------- */
+
+    public void submitInput(String input) {
+        if (isBusy()) {
+            printLine("terminal busy – press Ctrl+C to abort");
+            return;
+        }
+        inputQueue.add(input);
+        processNextInput();
+    }
+
+    private void processNextInput() {
+        String input = inputQueue.poll();
+        if (input == null) return;
+
+        String[] split = input.trim().split("\\s+");
+        String cmdName = split[0].toLowerCase(Locale.ROOT);
+        String[] args = Arrays.copyOfRange(split, 1, split.length);
+
+        Command command = CommandRegistry.INSTANCE.get(cmdName, this, args);
+        if (command == null) {
+            printLine("command not found: " + cmdName);
+            return;
+        }
+        runningCommand = command;
+
+        runningCommandThread = new Thread(() -> {
+            try {
+                runningCommand.execute();
+            } catch (InterruptedException ignored) {
+                printLine("^C");
+            } finally {
+                runningCommand = null;
+                runningCommandThread = null;
+            }
+        });
+
+        runningCommandThread.start();
+    }
+
+    /* ---------------- Control ---------------- */
+
+    public void interrupt() {
+        if (runningCommand != null) {
+            runningCommand.cancel();
+            runningCommandThread.interrupt();
+        }
+    }
+
+    public boolean isBusy() {
+        return runningCommandThread != null;
+    }
+
+    /* ---------------- Output ---------------- */
+
+    public void printLine(String line) {
+        outputBuffer.add(line);
+        if (outputBuffer.size() > maxLines) {
+            outputBuffer.remove(0);
+        }
+    }
+
+    public void clear() {
+        outputBuffer.clear();
+    }
+
+    /* ---------------- Rendering API ---------------- */
+
+    public List<String> getVisibleLines() {
+        return Collections.unmodifiableList(outputBuffer);
+    }
+
+    public String getPrompt() {
+        return "$ ";
+    }
+
+}
+

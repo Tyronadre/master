@@ -12,17 +12,17 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import org.jetbrains.annotations.NotNull;
 
-public class ComputerMenu extends AbstractContainerMenu {
+public class TerminalMenu extends AbstractContainerMenu {
     private final ComputerBlockEntity computer;
     private final Level level;
 
-    public ComputerMenu(int id, Inventory playerInventory, BlockEntity computer) {
-        super(MenuRegistry.COMPUTER_MENU.get(), id);
+    public TerminalMenu(int containerId, Inventory playerInventory, BlockEntity computer) {
+        super(MenuRegistry.TERMINAL_MENU.get(), containerId);
         this.computer = (ComputerBlockEntity) computer;
         this.level = playerInventory.player.level();
     }
 
-    public ComputerMenu(int id, Inventory playerInventory, FriendlyByteBuf extraData) {
+    public TerminalMenu(int id, Inventory playerInventory, FriendlyByteBuf extraData) {
         this(id, playerInventory, playerInventory.player.level().getBlockEntity(extraData.readBlockPos()));
     }
 

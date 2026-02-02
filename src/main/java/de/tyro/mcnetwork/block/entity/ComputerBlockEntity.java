@@ -1,10 +1,15 @@
 package de.tyro.mcnetwork.block.entity;
 
-import de.tyro.mcnetwork.block.BlockRegistry;
-import de.tyro.mcnetwork.gui.ComputerMenu;
+import de.tyro.mcnetwork.gui.TerminalMenu;
 import de.tyro.mcnetwork.networking.EthernetFrame;
 import de.tyro.mcnetwork.networking.IPPacket;
 import de.tyro.mcnetwork.networking.NetworkUtils;
+import de.tyro.mcnetwork.networking.ip.IP;
+import de.tyro.mcnetwork.networking.ip.IPRegistry;
+import de.tyro.mcnetwork.routing.core.SimulationRegistry;
+import de.tyro.mcnetwork.routing.node.SimNode;
+import de.tyro.mcnetwork.routing.protocol.AodvProtocol;
+import de.tyro.mcnetwork.terminal.Terminal;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
@@ -18,20 +23,33 @@ import net.minecraft.world.level.block.state.BlockState;
 
 import java.io.ByteArrayInputStream;
 import java.io.ObjectInputStream;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
-public class ComputerBlockEntity extends BlockEntity implements MenuProvider {
+public class ComputerBlockEntity extends BlockEntity {
     private String macAddress;
-    private String ipAddress;
+    private IP ipAddress;
+    private final SimNode node;
+    private final Terminal terminal;
+
+    // Statische Registry für IP/MAC-Adressen
+    private static final ConcurrentHashMap<UUID, ComputerBlockEntity> macRegistry = new ConcurrentHashMap<>();
 
     public ComputerBlockEntity(BlockPos pos, BlockState state) {
         super(BlockEntityRegistry.COMPUTER_BE.get(), pos, state);
         this.macAddress = NetworkUtils.generateMAC();
-        this.ipAddress = "0.0.0.0";
-    }
-
-    @Override
-    public Component getDisplayName() {
-        return Component.literal("Computer");
+        this.ipAddress = IPRegistry.getNextFreeIP();
+        this.node = new SimNode(
+                UUID.randomUUID(),
+                null,
+                pos,
+                new AodvProtocol()
+        );
+        this.terminal = new Terminal();
+        SimulationRegistry.getEngine().addNode(node);
+        IPRegistry.register(this);
+        macRegistry.put(node.getId(), this);
     }
 
     @Override
@@ -44,11 +62,6 @@ public class ComputerBlockEntity extends BlockEntity implements MenuProvider {
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
         this.macAddress = tag.getString("macAddress");
-    }
-
-    @Override
-    public AbstractContainerMenu createMenu(int id, Inventory inv, Player player) {
-        return new ComputerMenu(id, inv, this);
     }
 
     public void receivePacket(EthernetFrame frame) {
@@ -67,16 +80,55 @@ public class ComputerBlockEntity extends BlockEntity implements MenuProvider {
         }
     }
 
+    public static UUID getMacByIp(IP ip) {
+        ComputerBlockEntity entity = IPRegistry.getByIP(ip);
+        return entity != null ? entity.node.getId() : null;
+    }
+
+    public static ComputerBlockEntity getByMac(UUID mac) {
+        return macRegistry.get(mac);
+    }
+
+    public void setIpAddress(IP ip) {
+        IPRegistry.register(this);
+        this.ipAddress = ip;
+    }
+
+    public void testConnection(IP zielIp) {
+        UUID zielMac = getMacByIp(zielIp);
+        if (zielMac == null) {
+            System.err.println("Keine MAC-Adresse für IP " + zielIp + " gefunden!");
+            return;
+        }
+        // Beispiel: 5 Pakete im Abstand von 5 Ticks
+        for (int i = 0; i < 5; i++) {
+            SimulationRegistry.getEngine().enqueueTestPacket(node, zielMac, i * 5);
+        }
+    }
+
+    public void open()  {
+
+    }
+
+    public SimNode getNode() {
+        return node;
+    }
+
+    public List<String> getRenderText() {
+        return List.of("Computer Node",
+                node.getId().toString(),
+                node.getProtocol().getType().toString());
+    }
 
     public String getMacAddress() {
         return macAddress;
     }
 
-    public String getIpAddress() {
+    public IP getIpAddress() {
         return ipAddress;
     }
 
-    public void setIpAddress(String ip) {
-        this.ipAddress = ip;
+    public Terminal getTerminal() {
+        return terminal;
     }
 }

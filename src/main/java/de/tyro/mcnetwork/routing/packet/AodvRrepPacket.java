@@ -29,4 +29,9 @@ public class AodvRrepPacket extends Packet {
     public PacketType getType() {
         return PacketType.RREP;
     }
+
+    @Override
+    public Packet copy() {
+        return new AodvRrepPacket(this.source, this.destination, this.destinationSequenceNumber, this.ttl);
+    }
 }

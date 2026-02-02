@@ -16,7 +16,4 @@ public class NetworkUtils {
         return sb.toString();
     }
 
-    public static boolean validateIp(String ip) {
-        return ip.matches("\\b(?:\\d{1,3}\\.){3}\\d{1,3}\\b");
-    }
 }

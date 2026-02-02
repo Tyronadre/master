@@ -2,6 +2,8 @@ package de.tyro.mcnetwork.block;
 
 import com.mojang.serialization.MapCodec;
 import de.tyro.mcnetwork.block.entity.ComputerBlockEntity;
+import de.tyro.mcnetwork.gui.TerminalScreen;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -32,12 +34,11 @@ public class ComputerBlock extends BaseEntityBlock {
 
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
-        if (!(level.getBlockEntity(pos) instanceof ComputerBlockEntity computerBE)) return InteractionResult.SUCCESS;
-
-        if (!level.isClientSide) {
-            player.openMenu(new SimpleMenuProvider(computerBE, Component.literal("Computer")), pos);
+        if (level.isClientSide && level.getBlockEntity(pos) instanceof ComputerBlockEntity computerBE) {
+            Minecraft.getInstance().setScreen(new TerminalScreen(computerBE));
+            return InteractionResult.CONSUME;
         }
-        return InteractionResult.SUCCESS;
+        return InteractionResult.PASS;
     }
 
     @Override

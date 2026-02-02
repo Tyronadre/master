@@ -5,6 +5,8 @@ import de.tyro.mcnetwork.block.entity.BlockEntityRegistry;
 import de.tyro.mcnetwork.gui.MenuRegistry;
 import de.tyro.mcnetwork.item.ItemRegistry;
 import de.tyro.mcnetwork.networkBook.data.TopicManager;
+import de.tyro.mcnetwork.networking.payload.Payloads;
+import de.tyro.mcnetwork.routing.core.SimulationRegistry;
 import de.tyro.mcnetwork.tabs.TabRegistry;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent;
@@ -68,11 +70,13 @@ public class MCNetwork {
         ItemRegistry.ITEMS.register(modEventBus);
         TabRegistry.CREATIVE_MODE_TABS.register(modEventBus);
         MenuRegistry.MENUS.register(modEventBus);
+        Payloads.register(modEventBus);
 
         // Register ourselves for server and other game events we are interested in.
         // Note that this is necessary if and only if we want *this* class (MCNetwork) to respond directly to events.
         // Do not add this line if there are no @SubscribeEvent-annotated functions in this class, like onServerStarting() below.
         NeoForge.EVENT_BUS.register(this);
+
 
 
         // Register our mod's ModConfigSpec so that FML can create and load the config file for us
@@ -90,6 +94,7 @@ public class MCNetwork {
         LOGGER.info("{}{}", Config.MAGIC_NUMBER_INTRODUCTION.get(), Config.MAGIC_NUMBER.getAsInt());
 
         Config.ITEM_STRINGS.get().forEach((item) -> LOGGER.info("ITEM >> {}", item));
+
     }
 
     // You can use SubscribeEvent and let the Event Bus discover methods to call

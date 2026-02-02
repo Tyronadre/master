@@ -1,6 +1,7 @@
 package de.tyro.mcnetwork.routing.core;
 
 import de.tyro.mcnetwork.routing.event.SimulationEvent;
+import de.tyro.mcnetwork.routing.event.TestPacketEvent;
 import de.tyro.mcnetwork.routing.node.SimNode;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.common.NeoForge;
@@ -19,7 +20,7 @@ public class SimulationEngine {
     private final TopologyManager topologyManager;
     private final List<SimNode> nodes = new ArrayList<>();
 
-    private SimulationMode mode = SimulationMode.PAUSED;
+    private SimulationMode mode = SimulationMode.RUNNING;
 
     private SimulationEngine(double radioRange) {
         NeoForge.EVENT_BUS.register(this);
@@ -39,9 +40,16 @@ public class SimulationEngine {
         eventQueue.add(event);
     }
 
+    // Testpaket mit Delay in die Event-Queue einreihen
+    public void enqueueTestPacket(SimNode sender, UUID zielAdresse, int delayTicks) {
+        eventQueue.add(new TestPacketEvent(sender, zielAdresse, delayTicks));
+    }
+
     public void stepOnce() {
         if (!eventQueue.isEmpty()) {
-            eventQueue.poll().execute();
+            var packet = eventQueue.poll();
+            System.out.println("Processing " + packet);
+            packet.execute();
         }
     }
 
@@ -64,7 +72,8 @@ public class SimulationEngine {
     }
 
     @SubscribeEvent
-    public static void onServerTick(ServerTickEvent.Post event) {
-        SimulationRegistry.getEngine().tick();
+    public void onServerTick(ServerTickEvent.Post event) {
+        tick();
     }
+
 }

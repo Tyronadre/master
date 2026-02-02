@@ -15,9 +15,5 @@ public class BlockEntityRegistry {
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES = DeferredRegister.create(BuiltInRegistries.BLOCK_ENTITY_TYPE, MODID);
 
     public static final Supplier<BlockEntityType<ComputerBlockEntity>> COMPUTER_BE = BLOCK_ENTITIES.register("computer_be", () -> BlockEntityType.Builder.of(ComputerBlockEntity::new, BlockRegistry.COMPUTER.get()).build(null));
-    public static final Supplier<BlockEntityType<NetworkNodeBlockEntity>> NODE_BE = BLOCK_ENTITIES.register("node_be", () -> BlockEntityType.Builder.of(NetworkNodeBlockEntity::new, BlockRegistry.NODE.get()).build(null));
 
-    public static void register(IEventBus bus) {
-        BLOCK_ENTITIES.register(bus);
-    }
 }
