@@ -27,7 +27,8 @@ public class PacketItemEntity extends ItemEntity {
         if (packet.tick()) {
             this.remove(RemovalReason.DISCARDED);
         } else {
-            this.setPos(packet.getX(), packet.getY() + 1.0, packet.getZ());
+            var pos = packet.getCurrentPosition();
+            this.setPos(pos.x(), pos.y(), pos.z());
         }
     }
 }

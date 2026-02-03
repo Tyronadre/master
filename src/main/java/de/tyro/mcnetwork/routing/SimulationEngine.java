@@ -85,8 +85,9 @@ public class SimulationEngine {
         var inFlightPacket = new InFlightPacket(from, to, packet);
         packets.add(inFlightPacket);
 
-        if (level.isClientSide) {
-            PacketItemEntity entity = new PacketItemEntity(level, from.getX(), from.getY(), from.getZ(), inFlightPacket);
+
+        if (level != null && level.isClientSide) {
+            PacketItemEntity entity = new PacketItemEntity(level, from.getX() + 0.5, from.getY() + .5, from.getZ() + 0.5, inFlightPacket);
             level.addEntity(entity);
         }
 

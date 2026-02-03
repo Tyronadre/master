@@ -13,6 +13,7 @@ import de.tyro.mcnetwork.terminal.Terminal;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -94,6 +95,11 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
     @Override
     public ApplicationMessageBus getApplicationBus() {
         return applicationMessageBus;
+    }
+
+    @Override
+    public Vec3 getPos() {
+        return new Vec3(getBlockPos().getX() + 0.5, getBlockPos().getY() + 0.5, getBlockPos().getZ() + 0.5);
     }
 
     public List<String> getRenderText() {

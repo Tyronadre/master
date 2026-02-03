@@ -25,9 +25,10 @@ public class InFlightPacketRenderer {
         if (sim == null) return;
 
         for (InFlightPacket packet : sim.getInFlightPackets()) {
-            double x = packet.getX();
-            double y = packet.getY();
-            double z = packet.getZ();
+            var pos = packet.getCurrentPosition();
+            double x = pos.x();
+            double y = pos.y();
+            double z = pos.z();
 
             ps.pushPose();
             ps.translate(x, y + 1.0, z); // leicht über der Node
