@@ -1,15 +1,10 @@
 package de.tyro.mcnetwork.gui;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import de.tyro.mcnetwork.MCNetwork;
-import de.tyro.mcnetwork.networking.payload.SimulationControlPacket;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.Minecraft;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 public class SimulationControllerScreen extends AbstractContainerScreen<SimulationControllerMenu> {
@@ -45,20 +40,20 @@ public class SimulationControllerScreen extends AbstractContainerScreen<Simulati
         int y = this.topPos + 30;
 
         // Start Button
-        this.addRenderableWidget(Button.builder(Component.literal("Start"), b -> sendControlPacket(SimulationControlPacket.Action.START))
-                .bounds(x, y, btnWidth, btnHeight).build());
-        // Stop Button
-        this.addRenderableWidget(Button.builder(Component.literal("Stop"), b -> sendControlPacket(SimulationControlPacket.Action.STOP))
-                .bounds(x, y + btnHeight + spacing, btnWidth, btnHeight).build());
-        // Reset Button
-        this.addRenderableWidget(Button.builder(Component.literal("Reset"), b -> sendControlPacket(SimulationControlPacket.Action.RESET))
-                .bounds(x, y + 2 * (btnHeight + spacing), btnWidth, btnHeight).build());
-        // Tick Button (optional)
-        this.addRenderableWidget(Button.builder(Component.literal("Tick"), b -> sendControlPacket(SimulationControlPacket.Action.TICK))
-                .bounds(x, y + 3 * (btnHeight + spacing), btnWidth, btnHeight).build());
+//        this.addRenderableWidget(Button.builder(Component.literal("Start"), b -> sendControlPacket(SimulationControlPacket.Action.START))
+//                .bounds(x, y, btnWidth, btnHeight).build());
+//        // Stop Button
+//        this.addRenderableWidget(Button.builder(Component.literal("Stop"), b -> sendControlPacket(SimulationControlPacket.Action.STOP))
+//                .bounds(x, y + btnHeight + spacing, btnWidth, btnHeight).build());
+//        // Reset Button
+//        this.addRenderableWidget(Button.builder(Component.literal("Reset"), b -> sendControlPacket(SimulationControlPacket.Action.RESET))
+//                .bounds(x, y + 2 * (btnHeight + spacing), btnWidth, btnHeight).build());
+//        // Tick Button (optional)
+//        this.addRenderableWidget(Button.builder(Component.literal("Tick"), b -> sendControlPacket(SimulationControlPacket.Action.TICK))
+//                .bounds(x, y + 3 * (btnHeight + spacing), btnWidth, btnHeight).build());
     }
-
-    private void sendControlPacket(SimulationControlPacket.Action action) {
-        PacketDistributor.sendToServer(new SimulationControlPacket(action));
-    }
+//
+//    private void sendControlPacket(SimulationControlPacket.Action action) {
+//        PacketDistributor.sendToServer(new SimulationControlPacket(action));
+//    }
 }

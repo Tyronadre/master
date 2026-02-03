@@ -1,20 +1,23 @@
 package de.tyro.mcnetwork.routing.protocol;
 
-import de.tyro.mcnetwork.routing.node.SimNode;
-import de.tyro.mcnetwork.routing.packet.Packet;
-import de.tyro.mcnetwork.routing.routing.RoutingTable;
 
-import java.util.UUID;
+import de.tyro.mcnetwork.routing.INetworkNode;
+import de.tyro.mcnetwork.routing.IP;
+import de.tyro.mcnetwork.routing.packet.NetworkPacket;
+
+import java.util.Collection;
 
 public interface RoutingProtocol {
 
-    void onReceive(Packet packet, SimNode self, SimNode sender);
+    void onPacketReceived(INetworkNode self, NetworkPacket packet);
 
-    void onTick(SimNode tvSimNode);
+    void sendData(INetworkNode self, NetworkPacket packet);
 
-    RoutingTable getRoutingTable();
+    void onSendRequest(INetworkNode self, IP destinationIp);
 
-    ProtocolType getType();
+    void tick(INetworkNode self);
 
-    void discoverRoute(SimNode self, UUID destination);
+    boolean hasRoute(IP destination);
+
+    Collection<String> renderData();
 }

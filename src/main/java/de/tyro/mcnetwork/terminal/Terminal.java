@@ -1,5 +1,7 @@
 package de.tyro.mcnetwork.terminal;
 
+import de.tyro.mcnetwork.routing.INetworkNode;
+import de.tyro.mcnetwork.routing.packet.NetworkPacket;
 import de.tyro.mcnetwork.terminal.commands.*;
 
 import java.util.*;
@@ -9,13 +11,15 @@ public class Terminal {
 
     private final List<String> outputBuffer = new ArrayList<>();
     private final Queue<String> inputQueue = new ConcurrentLinkedQueue<>();
+    private final INetworkNode node;
 
     private Thread runningCommandThread;
     private Command runningCommand;
 
     private final int maxLines = 200;
 
-    public Terminal() {
+    public Terminal(INetworkNode node) {
+        this.node = node;
     }
 
     /* ---------------- Input ---------------- */
@@ -94,5 +98,12 @@ public class Terminal {
         return "$ ";
     }
 
+    public INetworkNode getNode() {
+        return node;
+    }
+
+    public void recievePackage(NetworkPacket packet) {
+
+    }
 }
 

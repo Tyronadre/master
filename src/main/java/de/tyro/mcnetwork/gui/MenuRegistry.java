@@ -18,6 +18,5 @@ public class MenuRegistry {
         return MENUS.register(name, () -> IMenuTypeExtension.create(factory));
     }
 
-    public static final DeferredHolder<MenuType<?>, MenuType<TerminalMenu>> TERMINAL_MENU = registerMenuType("computer_menu", TerminalMenu::new);
     public static final DeferredHolder<MenuType<?>, MenuType<SimulationControllerMenu>> SIMULATION_MENU = registerMenuType("simulation_menu", (windowId, inv, data) -> new SimulationControllerMenu(windowId, inv));
 }

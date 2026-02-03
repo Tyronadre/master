@@ -4,18 +4,13 @@ import de.tyro.mcnetwork.block.BlockRegistry;
 import de.tyro.mcnetwork.block.entity.BlockEntityRegistry;
 import de.tyro.mcnetwork.gui.MenuRegistry;
 import de.tyro.mcnetwork.item.ItemRegistry;
-import de.tyro.mcnetwork.networkBook.data.TopicManager;
-import de.tyro.mcnetwork.networking.payload.Payloads;
-import de.tyro.mcnetwork.routing.core.SimulationRegistry;
+import de.tyro.mcnetwork.routing.SimulationEngine;
 import de.tyro.mcnetwork.tabs.TabRegistry;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
 
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.level.block.Blocks;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -24,7 +19,6 @@ import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 
 // The value here should match an entry in the META-INF/neoforge.mods.toml file
@@ -70,14 +64,12 @@ public class MCNetwork {
         ItemRegistry.ITEMS.register(modEventBus);
         TabRegistry.CREATIVE_MODE_TABS.register(modEventBus);
         MenuRegistry.MENUS.register(modEventBus);
-        Payloads.register(modEventBus);
 
         // Register ourselves for server and other game events we are interested in.
         // Note that this is necessary if and only if we want *this* class (MCNetwork) to respond directly to events.
         // Do not add this line if there are no @SubscribeEvent-annotated functions in this class, like onServerStarting() below.
         NeoForge.EVENT_BUS.register(this);
-
-
+        NeoForge.EVENT_BUS.register(SimulationEngine.INSTANCE);
 
         // Register our mod's ModConfigSpec so that FML can create and load the config file for us
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
