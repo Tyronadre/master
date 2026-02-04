@@ -1,9 +1,13 @@
 package de.tyro.mcnetwork.routing.packet;
 
+import com.mojang.blaze3d.vertex.PoseStack;
+import de.tyro.mcnetwork.MathUtil;
+import de.tyro.mcnetwork.client.RenderUtil;
 import de.tyro.mcnetwork.routing.INetworkNode;
 import de.tyro.mcnetwork.routing.IP;
-
-import java.util.List;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.world.phys.Vec2;
 
 public class AODVRREQPacket extends NetworkPacket implements IProtocolPaket {
     public final boolean joinFlag;
@@ -17,7 +21,7 @@ public class AODVRREQPacket extends NetworkPacket implements IProtocolPaket {
     public final int destinationSequenceNumber;
     public final int originatorSequenceNumber;
 
-    protected AODVRREQPacket(IP sourceIp, IP destinationIp, IP prev,  boolean joinFlag, boolean repairFlag, boolean gratuitousFlag, boolean destinationOnlyFlag, boolean unknownSeqFlag, int hopCount, int rreqId, int destinationSequenceNumber, int originatorSequenceNumber) {
+    protected AODVRREQPacket(IP sourceIp, IP destinationIp, IP prev, boolean joinFlag, boolean repairFlag, boolean gratuitousFlag, boolean destinationOnlyFlag, boolean unknownSeqFlag, int hopCount, int rreqId, int destinationSequenceNumber, int originatorSequenceNumber) {
         super(sourceIp, destinationIp, prev);
         this.joinFlag = joinFlag;
         this.repairFlag = repairFlag;
@@ -34,15 +38,47 @@ public class AODVRREQPacket extends NetworkPacket implements IProtocolPaket {
         this(sourceIp, destinationIp, prev, false, false, false, false, unknownSeqFlag, hopCount, rreqId, destinationSequenceNumber, originatorSequenceNumber);
     }
 
-    @Override
-    public List<String> getRenderContent() {
-        return List.of(
-                "Origin: " + sourceIp + " @ " + originatorSequenceNumber,
-                "Destination " + destinationIp + " @ " + destinationSequenceNumber
-        );
-    }
-
     public NetworkPacket hop(INetworkNode self) {
         return new AODVRREQPacket(sourceIp, destinationIp, self.getIP(), joinFlag, repairFlag, gratuitousFlag, destinationOnlyFlag, unknownSeqFlag, hopCount++, rreqId, destinationSequenceNumber, originatorSequenceNumber);
+    }
+
+    @Override
+    protected void renderPacketContent(PoseStack poseStack, MultiBufferSource buffer, int packedLight, float alpha, Font font, float width) {
+
+        poseStack.pushPose();
+        poseStack.scale(0.5F, 0.5F, 0.5F);
+        RenderUtil.drawString(RenderUtil.Align.LEFT, "Flags", RenderUtil.Color.MAGENTA.value, width * 2, 3, poseStack, buffer, packedLight);
+
+        RenderUtil.drawStringWithAlphaColor(RenderUtil.Align.RIGHT,"J|R|G|D|U", alpha, width * 2, 0, poseStack, buffer, packedLight);
+        RenderUtil.drawStringWithAlphaColor(RenderUtil.Align.RIGHT,(joinFlag ? 1 : 0) + "|" + (repairFlag ? 1 : 0) + "|" + (gratuitousFlag ? 1 : 0) + "|" + (destinationOnlyFlag ? 1 : 0) + "|" + (unknownSeqFlag ? 1 : 0), alpha, width * 2, 8, poseStack, buffer, packedLight);
+
+        poseStack.translate(0, 17, 0);
+        RenderUtil.renderHLine(alpha, width * 2, 0, poseStack, buffer, packedLight);
+        RenderUtil.drawString(RenderUtil.Align.LEFT, "Hops", RenderUtil.Color.MAGENTA.value, width * 2, 2, poseStack, buffer, packedLight);
+        RenderUtil.drawStringWithAlphaColor(RenderUtil.Align.RIGHT,String.valueOf(hopCount), alpha, width * 2, 2, poseStack, buffer, packedLight);
+
+        poseStack.translate(0, 11, 0);
+        RenderUtil.renderHLine(alpha, width * 2, 0, poseStack, buffer, packedLight);
+        RenderUtil.drawString(RenderUtil.Align.LEFT, "SQ Num", RenderUtil.Color.MAGENTA.value, width * 2, 3, poseStack, buffer, packedLight);
+        RenderUtil.drawStringWithAlphaColor(RenderUtil.Align.RIGHT, getSourceIp() + ": " + originatorSequenceNumber, alpha, width * 2, 2, poseStack, buffer, packedLight);
+        RenderUtil.drawStringWithAlphaColor(RenderUtil.Align.RIGHT,getDestinationIp() + ": " + (unknownSeqFlag ? "?" : destinationSequenceNumber), alpha, width * 2, 10, poseStack, buffer, packedLight);
+
+        poseStack.translate(0, 18, 0);
+        RenderUtil.renderHLine(alpha, width * 2, 0, poseStack, buffer, packedLight);
+        RenderUtil.drawString(RenderUtil.Align.LEFT, "RREQ ID", RenderUtil.Color.MAGENTA.value, width * 2, 2, poseStack, buffer, packedLight);
+        RenderUtil.drawStringWithAlphaColor(RenderUtil.Align.RIGHT, String.valueOf(rreqId), alpha, width * 2, 2, poseStack, buffer, packedLight);
+
+        poseStack.popPose();
+    }
+
+    @Override
+    protected Vec2 getContentSize(Font font) {
+        var width = MathUtil.max(font.width("SQ @ " + getDestinationIp() + ": " + (unknownSeqFlag ? "?" : destinationSequenceNumber)), font.width("SQ @ " + getSourceIp() + ": " + originatorSequenceNumber)) / 2;
+        return new Vec2(width, 28);
+    }
+
+    @Override
+    public INetworkPacket copy() {
+        return new AODVRREQPacket(sourceIp, destinationIp, previousHopIP, joinFlag, repairFlag, gratuitousFlag, destinationOnlyFlag, unknownSeqFlag, hopCount, rreqId, destinationSequenceNumber, originatorSequenceNumber);
     }
 }

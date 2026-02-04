@@ -2,14 +2,13 @@ package de.tyro.mcnetwork.routing.packet;
 
 import de.tyro.mcnetwork.routing.IP;
 
-import java.util.List;
 import java.util.UUID;
 
-public interface INetworkPacket {
+public interface INetworkPacket extends IPacketRenderable {
     UUID getId();
     IP getDestinationIp();
     IP getSourceIp();
     IP getPreviousHopIp();
-    List<String> getRenderContent();
     String getPacketTypeName();
+    INetworkPacket copy();
 }

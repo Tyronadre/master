@@ -88,7 +88,7 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
     @Override
     public void onApplicationPacketReceived(IApplicationPaket packet) {
         if (packet instanceof PingPacket ping) {
-            getRoutingProtocol().sendData(this, new PingRepPacket(getIP(), ping.sourceIp, ping.sendTime, SimulationEngine.INSTANCE.getSimTime(), ping.id));
+            getRoutingProtocol().sendData(this, new PingRepPacket(getIP(), ping.sourceIp, SimulationEngine.INSTANCE.getSimTime() - ping.sendStartTime, SimulationEngine.INSTANCE.getSimTime(), ping.id));
             return;
         }
 
@@ -114,7 +114,7 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
 //        }
 
         if (packet instanceof IProtocolPaket pp) routingProtocol.onProtocolPacketReceived(this, pp);
-        else if (packet instanceof IApplicationPaket ap) this.onApplicationPacketReceived(ap);
+        else if (packet instanceof IApplicationPaket ap && packet.getDestinationIp().equals(this.ipAddress)) this.onApplicationPacketReceived(ap);
         else routingProtocol.sendData(this, packet);
     }
 

@@ -1,8 +1,11 @@
 package de.tyro.mcnetwork.item.entity;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.tyro.mcnetwork.item.ItemRegistry;
 import de.tyro.mcnetwork.routing.InFlightPacket;
 import de.tyro.mcnetwork.routing.packet.INetworkPacket;
+import de.tyro.mcnetwork.routing.packet.IPacketRenderable;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
@@ -48,4 +51,5 @@ public class PacketItemEntity extends ItemEntity {
             this.setPos(pos.x(), pos.y(), pos.z());
         }
     }
+
 }

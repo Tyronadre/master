@@ -62,7 +62,7 @@ public class SimulationEngine {
 
     public void broadcast(INetworkNode from, INetworkPacket packet) {
         for (INetworkNode n : getNeighbors(from)) {
-            newPacket(from, n, packet);
+            newPacket(from, n, packet.copy());
         }
     }
 
@@ -105,5 +105,9 @@ public class SimulationEngine {
 
     public Iterable<InFlightPacket> getInFlightPackets() {
         return packets;
+    }
+
+    public double getSimulationSpeed() {
+        return 0.1;
     }
 }

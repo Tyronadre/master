@@ -17,4 +17,9 @@ public class AODVRERRPacket extends NetworkPacket implements IProtocolPaket {
     public void addUnreachable(IP ip, int seqNumber) {
         unreachable.put(ip, seqNumber);
     }
+
+    @Override
+    public INetworkPacket copy() {
+        return null;
+    }
 }

@@ -33,7 +33,7 @@ public class ComputerBlockEntityRenderer implements BlockEntityRenderer<Computer
         if (!RenderUtil.isPlayerLookingAtBlock(player, be.getBlockPos(), MAX_DISTANCE)) return;
 
         float alpha = RenderUtil.computeFadeAlpha(Math.sqrt(distanceSq), FADE_START_DISTANCE, MAX_DISTANCE);
-        if (alpha <= 0.01f) return;
+        if (alpha <= 0.05f) return;
 
         renderHud(be, poseStack, buffer, mc, packedLight, alpha);
     }
