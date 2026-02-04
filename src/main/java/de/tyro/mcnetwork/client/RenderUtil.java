@@ -46,8 +46,6 @@ public class RenderUtil {
         vc.addVertex(mat, width / 2F, y, 0).setColor(color);
     }
 
-
-
     static float computeFadeAlpha(double distance, double fadeStart, double maxDistance) {
         if (distance <= fadeStart) return 1.0f;
         if (distance >= maxDistance) return 0.0f;

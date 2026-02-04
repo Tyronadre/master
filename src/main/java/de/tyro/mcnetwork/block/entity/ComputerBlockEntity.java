@@ -52,7 +52,7 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
     @Override
     public void setRemoved() {
         super.setRemoved();
-        if (!level.isClientSide) {
+        if (level.isClientSide) {
             SimulationEngine.INSTANCE.unregisterNode(this);
         }
     }

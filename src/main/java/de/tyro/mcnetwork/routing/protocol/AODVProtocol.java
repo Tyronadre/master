@@ -21,9 +21,9 @@ public class AODVProtocol implements RoutingProtocol {
     //CONSTANTS
     private static final SimulationEngine simulator = SimulationEngine.getInstance();
 
-    private static final long ACTIVE_ROUTE_TIMEOUT = 5_000_000;
+    private static final long ACTIVE_ROUTE_TIMEOUT = 20_000;
     private static final long NET_TRAVERSAL_TIME = 2_000_000;
-    private static final long PATH_DISCOVERY_TIME = 3_000_000;
+    private static final long PATH_DISCOVERY_TIME = 20_000;
 
     //LOCAL STATE
     private int sequenceNumber = 0;
@@ -41,7 +41,7 @@ public class AODVProtocol implements RoutingProtocol {
 
     @Override
     public Collection<String> renderData() {
-        return routingTable.entrySet().stream().map(it -> it.getKey() + " | " + it.getValue().nextHop + " @ " + it.getValue().seqNumber).toList();
+        return routingTable.entrySet().stream().filter(it -> it.getValue().lifetime - SimulationEngine.getInstance().getSimTime() > 0).map(it -> it.getKey() + " | " + it.getValue().nextHop + " @ " + it.getValue().seqNumber + ", " + (it.getValue().lifetime - SimulationEngine.getInstance().getSimTime())).toList();
     }
 
     @Override

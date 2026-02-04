@@ -307,8 +307,7 @@ public class MarkdownRenderer {
 
         @Override
         protected int render(GuiGraphics gg, int x, int y, int width) {
-            // Simple scaling: H1 large, H2 medium, others normal
-            int textSize = Math.max(14, lineHeight + (4 - level) * 3); // approximate scaling
+            //TODO different sizes
             List<StyledLine> lines = layoutInlineWords(text, width, ChatFormatting.BOLD, false);
             int curY = y;
             for (StyledLine sl : lines) {
