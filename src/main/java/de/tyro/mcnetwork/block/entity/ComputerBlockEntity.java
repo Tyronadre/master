@@ -4,9 +4,11 @@ import de.tyro.mcnetwork.routing.ApplicationMessageBus;
 import de.tyro.mcnetwork.routing.INetworkNode;
 import de.tyro.mcnetwork.routing.IP;
 import de.tyro.mcnetwork.routing.SimulationEngine;
-import de.tyro.mcnetwork.routing.packet.NetworkPacket;
+import de.tyro.mcnetwork.routing.packet.IApplicationPaket;
+import de.tyro.mcnetwork.routing.packet.INetworkPacket;
 import de.tyro.mcnetwork.routing.packet.PingPacket;
 import de.tyro.mcnetwork.routing.packet.PingRepPacket;
+import de.tyro.mcnetwork.routing.packet.IProtocolPaket;
 import de.tyro.mcnetwork.routing.protocol.AODVProtocol;
 import de.tyro.mcnetwork.routing.protocol.RoutingProtocol;
 import de.tyro.mcnetwork.terminal.Terminal;
@@ -26,6 +28,7 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
     //client
     private Terminal terminal;
     private ApplicationMessageBus applicationMessageBus;
+    private ReceiveWindow receiveWindow;
 
     public ComputerBlockEntity(BlockPos pos, BlockState state) {
         super(BlockEntityRegistry.COMPUTER_BE.get(), pos, state);
@@ -42,6 +45,7 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
 //        } else {
             terminal = new Terminal(this);
             applicationMessageBus = new ApplicationMessageBus();
+            receiveWindow = new ReceiveWindow(5, 1);
         }
     }
 
@@ -82,7 +86,7 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
     }
 
     @Override
-    public void onApplicationPacketReceived(NetworkPacket packet) {
+    public void onApplicationPacketReceived(IApplicationPaket packet) {
         if (packet instanceof PingPacket ping) {
             getRoutingProtocol().sendData(this, new PingRepPacket(getIP(), ping.sourceIp, ping.sendTime, SimulationEngine.INSTANCE.getSimTime(), ping.id));
             return;
@@ -99,7 +103,19 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
 
     @Override
     public Vec3 getPos() {
-        return new Vec3(getBlockPos().getX() + 0.5, getBlockPos().getY() + 0.5, getBlockPos().getZ() + 0.5);
+        return Vec3.atCenterOf(getBlockPos());
+    }
+
+    @Override
+    public void onPacketReceived(INetworkPacket packet) {
+//        if (!receiveWindow.tryAccept()) {
+//            System.out.println("Received packet but not accepted by the client, interferred");
+//            return;
+//        }
+
+        if (packet instanceof IProtocolPaket pp) routingProtocol.onProtocolPacketReceived(this, pp);
+        else if (packet instanceof IApplicationPaket ap) this.onApplicationPacketReceived(ap);
+        else routingProtocol.sendData(this, packet);
     }
 
     public List<String> getRenderText() {
@@ -109,4 +125,33 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
 
         return list;
     }
+
+
+    static class ReceiveWindow {
+        private final long windowTicks;
+        private final int maxPackets;
+
+        private long windowStartTick = -1;
+        private int count = 0;
+
+        public ReceiveWindow(long windowTicks, int maxPackets) {
+            this.windowTicks = windowTicks;
+            this.maxPackets = maxPackets;
+        }
+
+        public boolean tryAccept() {
+            var currentTick = SimulationEngine.INSTANCE.getSimTime();
+
+            if (windowStartTick == -1 || currentTick - windowStartTick >= windowTicks) {
+                windowStartTick = currentTick;
+                count = 0;
+            }
+
+            count++;
+            return count <= maxPackets;
+        }
+    }
+
+
 }
+

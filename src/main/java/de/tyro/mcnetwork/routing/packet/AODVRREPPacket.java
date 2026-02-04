@@ -3,7 +3,7 @@ package de.tyro.mcnetwork.routing.packet;
 import de.tyro.mcnetwork.routing.INetworkNode;
 import de.tyro.mcnetwork.routing.IP;
 
-public class AODVRREPPacket extends NetworkPacket {
+public class AODVRREPPacket extends NetworkPacket implements IProtocolPaket {
 
     public final boolean repairFlag;
     public final boolean ackRequired;

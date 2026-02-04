@@ -60,8 +60,8 @@ public class MCNetwork {
 
 
         BlockRegistry.BLOCKS.register(modEventBus);
-        BlockEntityRegistry.BLOCK_ENTITIES.register(modEventBus);
-        ItemRegistry.ITEMS.register(modEventBus);
+        BlockEntityRegistry.register(modEventBus);
+        ItemRegistry.register(modEventBus);
         TabRegistry.CREATIVE_MODE_TABS.register(modEventBus);
         MenuRegistry.MENUS.register(modEventBus);
 

@@ -2,10 +2,19 @@ package de.tyro.mcnetwork;
 
 import de.tyro.mcnetwork.block.entity.BlockEntityRegistry;
 import de.tyro.mcnetwork.client.ComputerBlockEntityRenderer;
+import de.tyro.mcnetwork.client.PacketItemEntityRenderer;
 import de.tyro.mcnetwork.gui.MenuRegistry;
 import de.tyro.mcnetwork.gui.SimulationControllerScreen;
 import de.tyro.mcnetwork.gui.TerminalScreen;
+import de.tyro.mcnetwork.item.ItemRegistry;
+import de.tyro.mcnetwork.item.entity.PacketItemEntity;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.entity.EntityRenderer;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.client.renderer.item.ItemProperties;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
@@ -31,14 +40,12 @@ public class MCNetworkClient {
 
     @SubscribeEvent
     static void onClientSetup(FMLClientSetupEvent event) {
-        // Some client setup code
-        MCNetwork.LOGGER.info("HELLO FROM CLIENT SETUP");
-        MCNetwork.LOGGER.info("MINECRAFT NAME >> {}", Minecraft.getInstance().getUser().getName());
     }
 
     @SubscribeEvent
     public static void registerEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerBlockEntityRenderer(BlockEntityRegistry.COMPUTER_BE.get(), ComputerBlockEntityRenderer::new);
+        event.registerEntityRenderer(ItemRegistry.PACKET_ITEM_ENTITY_TYPE.get(), PacketItemEntityRenderer::new);
     }
 
     @SubscribeEvent

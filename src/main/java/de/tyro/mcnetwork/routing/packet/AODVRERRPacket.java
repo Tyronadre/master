@@ -5,7 +5,7 @@ import de.tyro.mcnetwork.routing.IP;
 import java.util.HashMap;
 import java.util.Map;
 
-public class AODVRERRPacket extends NetworkPacket{
+public class AODVRERRPacket extends NetworkPacket implements IProtocolPaket {
     public final boolean noDelete;
     public final Map<IP, Integer> unreachable = new HashMap<IP, Integer>();
 

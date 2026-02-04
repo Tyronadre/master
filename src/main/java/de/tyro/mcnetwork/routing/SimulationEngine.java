@@ -1,9 +1,8 @@
 package de.tyro.mcnetwork.routing;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.tyro.mcnetwork.client.InFlightPacketRenderer;
 import de.tyro.mcnetwork.item.entity.PacketItemEntity;
-import de.tyro.mcnetwork.routing.packet.NetworkPacket;
+import de.tyro.mcnetwork.routing.packet.INetworkPacket;
 import net.minecraft.client.Minecraft;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
@@ -27,7 +26,6 @@ public class SimulationEngine {
 
     private final List<INetworkNode> nodes = new ArrayList<>();
     private final List<InFlightPacket> packets = new CopyOnWriteArrayList<>();
-    private final InFlightPacketRenderer inFlightPacketRenderer = new InFlightPacketRenderer();
 
     private long simulationTimeMs = 0;
     private static final long TICK_DURATION_MS = 50;
@@ -41,13 +39,6 @@ public class SimulationEngine {
         return simulationTimeMs;
     }
 
-
-
-    @SubscribeEvent
-    public void onGameRender(RenderFrameEvent.Post event) {
-        inFlightPacketRenderer.render(new PoseStack(), Minecraft.getInstance().renderBuffers().bufferSource(), event.getPartialTick().getGameTimeDeltaTicks());
-    }
-
     @SubscribeEvent
     public void onClientTickEvent(ClientTickEvent.Pre event) {
         simulationTimeMs += TICK_DURATION_MS;
@@ -55,7 +46,7 @@ public class SimulationEngine {
 
         for (var p : packets) {
             if (p.tick()) {
-                p.to.getRoutingProtocol().onPacketReceived(p.to, p.packet);
+                p.to.onPacketReceived(p.packet);
                 packets.remove(p);
             }
         }
@@ -69,18 +60,18 @@ public class SimulationEngine {
         return nodes.stream().filter(n -> n != node).filter(n -> distance(node, n) <= COMM_RADIUS).toList();
     }
 
-    public void broadcast(INetworkNode from, NetworkPacket packet) {
+    public void broadcast(INetworkNode from, INetworkPacket packet) {
         for (INetworkNode n : getNeighbors(from)) {
             newPacket(from, n, packet);
         }
     }
 
-    public void sendUnicast(INetworkNode from, INetworkNode to, NetworkPacket packet) {
+    public void sendUnicast(INetworkNode from, INetworkNode to, INetworkPacket packet) {
         if (distance(from, to) > COMM_RADIUS) return; // out of range
         newPacket(from, to, packet);
     }
 
-    private void newPacket(INetworkNode from, INetworkNode to, NetworkPacket packet) {
+    private void newPacket(INetworkNode from, INetworkNode to, INetworkPacket packet) {
         var level = Minecraft.getInstance().level;
         var inFlightPacket = new InFlightPacket(from, to, packet);
         packets.add(inFlightPacket);

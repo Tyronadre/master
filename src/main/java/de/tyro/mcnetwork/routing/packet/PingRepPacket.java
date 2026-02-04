@@ -5,7 +5,7 @@ import de.tyro.mcnetwork.routing.IP;
 import java.util.StringJoiner;
 import java.util.UUID;
 
-public class PingRepPacket extends NetworkPacket{
+public class PingRepPacket extends NetworkPacket implements IApplicationPaket {
     public final long sendTime;
     public final long returnTime;
     public final UUID replyUUID;
@@ -19,12 +19,6 @@ public class PingRepPacket extends NetworkPacket{
 
     @Override
     public String toString() {
-        return new StringJoiner(", ", PingRepPacket.class.getSimpleName() + "[", "]")
-                .add("sendTime=" + sendTime)
-                .add("returnTime=" + returnTime)
-                .add("id=" + id)
-                .add("sourceIp=" + sourceIp)
-                .add("destinationIp=" + destinationIp)
-                .toString();
+        return new StringJoiner(", ", PingRepPacket.class.getSimpleName() + "[", "]").add("sendTime=" + sendTime).add("returnTime=" + returnTime).add("id=" + id).add("sourceIp=" + sourceIp).add("destinationIp=" + destinationIp).toString();
     }
 }

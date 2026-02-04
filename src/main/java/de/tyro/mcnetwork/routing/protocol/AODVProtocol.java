@@ -5,7 +5,9 @@ import de.tyro.mcnetwork.routing.IP;
 import de.tyro.mcnetwork.routing.SimulationEngine;
 import de.tyro.mcnetwork.routing.packet.AODVRREPPacket;
 import de.tyro.mcnetwork.routing.packet.AODVRREQPacket;
+import de.tyro.mcnetwork.routing.packet.INetworkPacket;
 import de.tyro.mcnetwork.routing.packet.NetworkPacket;
+import de.tyro.mcnetwork.routing.packet.IProtocolPaket;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,7 +30,7 @@ public class AODVProtocol implements RoutingProtocol {
     private int rreqId = 0;
     private final Map<IP, RouteEntry> routingTable = new HashMap<>();
     private final Map<String, Long> seenRreqs = new HashMap<>(); // originIP + RREQ_ID -> Arrival Time
-    private final Map<IP, List<NetworkPacket>> pendingData = new HashMap<>();
+    private final Map<IP, List<INetworkPacket>> pendingData = new HashMap<>();
 
 
     @Override
@@ -39,8 +41,7 @@ public class AODVProtocol implements RoutingProtocol {
 
     @Override
     public Collection<String> renderData() {
-        return routingTable.entrySet().stream().map(it ->
-                it.getKey() + " | " + it.getValue().nextHop + " @ " + it.getValue().seqNumber).toList();
+        return routingTable.entrySet().stream().map(it -> it.getKey() + " | " + it.getValue().nextHop + " @ " + it.getValue().seqNumber).toList();
     }
 
     @Override
@@ -60,27 +61,9 @@ public class AODVProtocol implements RoutingProtocol {
     }
 
     @Override
-    public void onPacketReceived(INetworkNode self, NetworkPacket packet) {
-
-        //Handle AODV Packets first
-        if (packet instanceof AODVRREQPacket rreq) {
-            handleRREQ(self, rreq);
-            return;
-        }
-
-        if (packet instanceof AODVRREPPacket rrep) {
-            handleRREP(self, rrep);
-            return;
-        }
-
-        //now we handle all other packets that have this node as destination
-        if (self.getIP().equals(packet.destinationIp)) {
-            self.onApplicationPacketReceived(packet);
-            return;
-        }
-
-        //Unicast the package to the next hop
-        sendData(self, packet);
+    public void onProtocolPacketReceived(INetworkNode self, IProtocolPaket packet) {
+        if (packet instanceof AODVRREQPacket rreq) handleRREQ(self, rreq);
+        else if (packet instanceof AODVRREPPacket rrep) handleRREP(self, rrep);
     }
 
     private void handleRREP(INetworkNode self, AODVRREPPacket rrep) {
@@ -161,18 +144,18 @@ public class AODVProtocol implements RoutingProtocol {
     }
 
     @Override
-    public void sendData(INetworkNode self, NetworkPacket packet) {
-        if (hasRoute(packet.destinationIp)) {
+    public void sendData(INetworkNode self, INetworkPacket packet) {
+        if (hasRoute(packet.getDestinationIp())) {
             forwardData(self, packet);
             return;
         }
 
-        pendingData.computeIfAbsent(packet.destinationIp, k -> new ArrayList<>()).add(packet);
-        onSendRequest(self, packet.destinationIp);
+        pendingData.computeIfAbsent(packet.getDestinationIp(), k -> new ArrayList<>()).add(packet);
+        onSendRequest(self, packet.getDestinationIp());
     }
 
-    private void forwardData(INetworkNode self, NetworkPacket packet) {
-        var entry = routingTable.get(packet.destinationIp);
+    private void forwardData(INetworkNode self, INetworkPacket packet) {
+        var entry = routingTable.get(packet.getDestinationIp());
         if (entry == null || !entry.valid) return;
 
         entry.lifetime = simulator.getSimTime() + ACTIVE_ROUTE_TIMEOUT;

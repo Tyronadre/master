@@ -1,17 +1,17 @@
 package de.tyro.mcnetwork.routing;
 
-import de.tyro.mcnetwork.routing.packet.NetworkPacket;
+import de.tyro.mcnetwork.routing.packet.INetworkPacket;
 import net.minecraft.world.phys.Vec3;
 
 public class InFlightPacket {
     public final INetworkNode from;
     public final INetworkNode to;
-    public final NetworkPacket packet;
+    public final INetworkPacket packet;
 
     private double traveled = 0;
-    private static final double SPEED = 0.25; // pro tick
+    private static final double SPEED = 0.05; // pro tick
 
-    public InFlightPacket(INetworkNode from, INetworkNode to, NetworkPacket packet) {
+    public InFlightPacket(INetworkNode from, INetworkNode to, INetworkPacket packet) {
         this.from = from;
         this.to = to;
         this.packet = packet;

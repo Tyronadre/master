@@ -6,7 +6,7 @@ import de.tyro.mcnetwork.routing.IP;
 import java.util.List;
 import java.util.StringJoiner;
 
-public class PingPacket extends NetworkPacket {
+public class PingPacket extends NetworkPacket implements IApplicationPaket {
 
     public final long sendTime;
 
@@ -26,7 +26,7 @@ public class PingPacket extends NetworkPacket {
     }
 
     @Override
-    public Iterable<String> getRenderContent() {
+    public List<String> getRenderContent() {
         return List.of(toString().split(","));
     }
 }

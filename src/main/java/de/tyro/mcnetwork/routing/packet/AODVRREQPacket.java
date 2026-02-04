@@ -5,7 +5,7 @@ import de.tyro.mcnetwork.routing.IP;
 
 import java.util.List;
 
-public class AODVRREQPacket extends NetworkPacket {
+public class AODVRREQPacket extends NetworkPacket implements IProtocolPaket {
     public final boolean joinFlag;
     public final boolean repairFlag;
     public final boolean gratuitousFlag;
@@ -35,7 +35,7 @@ public class AODVRREQPacket extends NetworkPacket {
     }
 
     @Override
-    public Iterable<String> getRenderContent() {
+    public List<String> getRenderContent() {
         return List.of(
                 "Origin: " + sourceIp + " @ " + originatorSequenceNumber,
                 "Destination " + destinationIp + " @ " + destinationSequenceNumber

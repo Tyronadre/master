@@ -15,7 +15,6 @@ import static de.tyro.mcnetwork.item.ItemRegistry.ITEMS;
 public class BlockRegistry {
     public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(MODID);
 
-
     public static final DeferredBlock<Block> COMPUTER = register("computer", (properties) -> new ComputerBlock(properties.strength(3.0F).mapColor(MapColor.STONE)));
 
 
@@ -28,6 +27,8 @@ public class BlockRegistry {
     private static <T extends Block> void registerBlockItem(String name, DeferredBlock<T> block) {
         ITEMS.registerItem(name, (properties) -> new BlockItem(block.get(), properties));
     }
+
+
 
 
 }

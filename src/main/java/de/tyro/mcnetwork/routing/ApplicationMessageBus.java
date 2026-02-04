@@ -1,6 +1,6 @@
 package de.tyro.mcnetwork.routing;
 
-import de.tyro.mcnetwork.routing.packet.NetworkPacket;
+import de.tyro.mcnetwork.routing.packet.IApplicationPaket;
 
 import java.util.*;
 import java.util.concurrent.locks.*;
@@ -8,14 +8,14 @@ import java.util.function.Function;
 
 public class ApplicationMessageBus {
 
-    private final List<NetworkPacket> packets = new ArrayList<>();
+    private final List<IApplicationPaket> packets = new ArrayList<>();
     private final ReentrantLock lock = new ReentrantLock();
     private final Condition newPacket = lock.newCondition();
 
     /**
      * Neue Pakete vom Netzwerk kommen hier an.
      */
-    public void handle(NetworkPacket packet) {
+    public void handle(IApplicationPaket packet) {
         lock.lock();
         try {
             packets.add(packet);
@@ -30,7 +30,7 @@ public class ApplicationMessageBus {
      * Wartet blockierend auf ein Paket vom Typ T, das das filter-Kriterium erfüllt.
      * Liefert direkt das Paket zurück, löscht es aber nicht aus der Queue.
      */
-    public <T extends NetworkPacket> T waitFor(
+    public <T extends IApplicationPaket> T waitFor(
             Class<T> type,
             Function<T, Boolean> filter,
             long timeoutMs
@@ -40,7 +40,7 @@ public class ApplicationMessageBus {
         try {
             while (true) {
                 // Prüfe zuerst vorhandene Pakete
-                for (NetworkPacket p : packets) {
+                for (IApplicationPaket p : packets) {
                     if (type.isInstance(p) && filter.apply(type.cast(p))) {
                         return type.cast(p);
                     }
@@ -61,7 +61,7 @@ public class ApplicationMessageBus {
     /**
      * Entfernt gezielt Pakete eines Typs
      */
-    public <T extends NetworkPacket> void clear(Class<T> packetClass) {
+    public <T extends IApplicationPaket> void clear(Class<T> packetClass) {
         lock.lock();
         try {
             packets.removeIf(p -> packetClass.isInstance(p));
@@ -73,11 +73,11 @@ public class ApplicationMessageBus {
     /**
      * Gibt alle Pakete eines bestimmten Typs zurück, ohne sie zu löschen.
      */
-    public <T extends NetworkPacket> List<T> getAll(Class<T> type) {
+    public <T extends IApplicationPaket> List<T> getAll(Class<T> type) {
         lock.lock();
         try {
             List<T> result = new ArrayList<>();
-            for (NetworkPacket p : packets) {
+            for (IApplicationPaket p : packets) {
                 if (type.isInstance(p)) result.add(type.cast(p));
             }
             return result;
