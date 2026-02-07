@@ -25,8 +25,8 @@ public class PingPacket extends NetworkPacket implements IApplicationPaket {
         return new StringJoiner(", ", PingPacket.class.getSimpleName() + "[", "]")
                 .add("sendTime=" + sendStartTime)
                 .add("id=" + id)
-                .add("sourceIp=" + sourceIp)
-                .add("destinationIp=" + destinationIp)
+                .add("sourceIp=" + originatorIP)
+                .add("destinationIp=" + destinationIP)
                 .toString();
     }
 
@@ -44,6 +44,6 @@ public class PingPacket extends NetworkPacket implements IApplicationPaket {
 
     @Override
     public INetworkPacket copy() {
-        return new PingPacket(sourceIp, destinationIp, sendStartTime);
+        return new PingPacket(originatorIP, destinationIP, sendStartTime);
     }
 }

@@ -6,19 +6,22 @@ import de.tyro.mcnetwork.routing.IP;
 import de.tyro.mcnetwork.routing.SimulationEngine;
 import de.tyro.mcnetwork.routing.packet.IApplicationPaket;
 import de.tyro.mcnetwork.routing.packet.INetworkPacket;
+import de.tyro.mcnetwork.routing.packet.IProtocolPaket;
 import de.tyro.mcnetwork.routing.packet.PingPacket;
 import de.tyro.mcnetwork.routing.packet.PingRepPacket;
-import de.tyro.mcnetwork.routing.packet.IProtocolPaket;
 import de.tyro.mcnetwork.routing.protocol.AODVProtocol;
 import de.tyro.mcnetwork.routing.protocol.RoutingProtocol;
 import de.tyro.mcnetwork.terminal.Terminal;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
     //server
@@ -29,6 +32,7 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
     private Terminal terminal;
     private ApplicationMessageBus applicationMessageBus;
     private ReceiveWindow receiveWindow;
+    private Deque<PingPacket> scheduledPackages;
 
     public ComputerBlockEntity(BlockPos pos, BlockState state) {
         super(BlockEntityRegistry.COMPUTER_BE.get(), pos, state);
@@ -40,12 +44,13 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
 
         if (level.isClientSide) {
             ipAddress = IP.getNextFreeIP();
-            routingProtocol = new AODVProtocol();
+            routingProtocol = new AODVProtocol(this);
             SimulationEngine.INSTANCE.registerNode(this);
 //        } else {
             terminal = new Terminal(this);
             applicationMessageBus = new ApplicationMessageBus();
             receiveWindow = new ReceiveWindow(5, 1);
+            scheduledPackages = new ConcurrentLinkedDeque<>();
         }
     }
 
@@ -54,6 +59,7 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
         super.setRemoved();
         if (level.isClientSide) {
             SimulationEngine.INSTANCE.unregisterNode(this);
+            terminal.interrupt();
         }
     }
 
@@ -88,12 +94,18 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
     @Override
     public void onApplicationPacketReceived(IApplicationPaket packet) {
         if (packet instanceof PingPacket ping) {
-            getRoutingProtocol().sendData(this, new PingRepPacket(getIP(), ping.sourceIp, SimulationEngine.INSTANCE.getSimTime() - ping.sendStartTime, SimulationEngine.INSTANCE.getSimTime(), ping.id));
+            routingProtocol.unicast(new PingRepPacket(getIP(), ping.originatorIP, SimulationEngine.INSTANCE.getSimTime() - ping.sendStartTime, SimulationEngine.INSTANCE.getSimTime(), ping.id));
             return;
         }
 
         //relay to the message bus, where other apps can handle it
         applicationMessageBus.handle(packet);
+    }
+
+    @Override
+    public void unicast(PingPacket packet) {
+        if (!Minecraft.getInstance().isSameThread()) this.scheduledPackages.add(packet);
+        else routingProtocol.unicast(packet);
     }
 
     @Override
@@ -113,9 +125,9 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
 //            return;
 //        }
 
-        if (packet instanceof IProtocolPaket pp) routingProtocol.onProtocolPacketReceived(this, pp);
-        else if (packet instanceof IApplicationPaket ap && packet.getDestinationIp().equals(this.ipAddress)) this.onApplicationPacketReceived(ap);
-        else routingProtocol.sendData(this, packet);
+        if (packet instanceof IProtocolPaket pp) routingProtocol.onProtocolPacketReceived(pp);
+        else if (packet instanceof IApplicationPaket ap && packet.getDestinationIP().equals(this.ipAddress)) this.onApplicationPacketReceived(ap);
+        else routingProtocol.unicast(packet);
     }
 
     public List<String> getRenderText() {
@@ -126,6 +138,23 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
         return list;
     }
 
+
+
+
+    @Override
+    public void tick() {
+        this.scheduledPackages.forEach(p -> routingProtocol.unicast(p));
+        scheduledPackages.clear();
+
+        routingProtocol.tick();
+        applicationMessageBus.tick();
+
+    }
+
+    @Override
+    public double distanceTo(INetworkNode to) {
+        return this.getPos().distanceTo(to.getPos());
+    }
 
     static class ReceiveWindow {
         private final long windowTicks;

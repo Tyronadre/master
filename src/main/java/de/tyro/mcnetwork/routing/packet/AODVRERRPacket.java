@@ -7,10 +7,10 @@ import java.util.Map;
 
 public class AODVRERRPacket extends NetworkPacket implements IProtocolPaket {
     public final boolean noDelete;
-    public final Map<IP, Integer> unreachable = new HashMap<IP, Integer>();
+    public final Map<IP, Integer> unreachable = new HashMap<>();
 
-    protected AODVRERRPacket(IP sourceIp, IP destinationIp, IP previousHopIp, boolean noDelete) {
-        super(sourceIp, destinationIp, previousHopIp);
+    protected AODVRERRPacket(IP sourceIp, IP destinationIp, boolean noDelete) {
+        super(sourceIp, destinationIp);
         this.noDelete = noDelete;
     }
 

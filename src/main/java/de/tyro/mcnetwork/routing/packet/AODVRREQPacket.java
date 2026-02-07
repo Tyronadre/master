@@ -18,11 +18,11 @@ public class AODVRREQPacket extends NetworkPacket implements IProtocolPaket {
 
     public int hopCount;
     public final int rreqId;
-    public final int destinationSequenceNumber;
-    public final int originatorSequenceNumber;
+    public int destinationSequenceNumber;
+    public int originatorSequenceNumber;
 
-    protected AODVRREQPacket(IP sourceIp, IP destinationIp, IP prev, boolean joinFlag, boolean repairFlag, boolean gratuitousFlag, boolean destinationOnlyFlag, boolean unknownSeqFlag, int hopCount, int rreqId, int destinationSequenceNumber, int originatorSequenceNumber) {
-        super(sourceIp, destinationIp, prev);
+    public AODVRREQPacket(IP sourceIp, IP destinationIp, boolean joinFlag, boolean repairFlag, boolean gratuitousFlag, boolean destinationOnlyFlag, boolean unknownSeqFlag, int hopCount, int rreqId, int destinationSequenceNumber, int originatorSequenceNumber) {
+        super(sourceIp, destinationIp);
         this.joinFlag = joinFlag;
         this.repairFlag = repairFlag;
         this.gratuitousFlag = gratuitousFlag;
@@ -34,12 +34,12 @@ public class AODVRREQPacket extends NetworkPacket implements IProtocolPaket {
         this.originatorSequenceNumber = originatorSequenceNumber;
     }
 
-    public AODVRREQPacket(IP sourceIp, IP destinationIp, IP prev, boolean unknownSeqFlag, int destinationSequenceNumber, int originatorSequenceNumber, int rreqId, int hopCount) {
-        this(sourceIp, destinationIp, prev, false, false, false, false, unknownSeqFlag, hopCount, rreqId, destinationSequenceNumber, originatorSequenceNumber);
+    public AODVRREQPacket(IP sourceIp, IP destinationIp, boolean unknownSeqFlag, int destinationSequenceNumber, int originatorSequenceNumber, int rreqId, int hopCount) {
+        this(sourceIp, destinationIp, false, false, false, false, unknownSeqFlag, hopCount, rreqId, destinationSequenceNumber, originatorSequenceNumber);
     }
 
     public NetworkPacket hop(INetworkNode self) {
-        return new AODVRREQPacket(sourceIp, destinationIp, self.getIP(), joinFlag, repairFlag, gratuitousFlag, destinationOnlyFlag, unknownSeqFlag, hopCount++, rreqId, destinationSequenceNumber, originatorSequenceNumber);
+        return new AODVRREQPacket(originatorIP, destinationIP, joinFlag, repairFlag, gratuitousFlag, destinationOnlyFlag, unknownSeqFlag, hopCount++, rreqId, destinationSequenceNumber, originatorSequenceNumber);
     }
 
     @Override
@@ -60,8 +60,8 @@ public class AODVRREQPacket extends NetworkPacket implements IProtocolPaket {
         poseStack.translate(0, 11, 0);
         RenderUtil.renderHLine(alpha, width * 2, 0, poseStack, buffer, packedLight);
         RenderUtil.drawString(RenderUtil.Align.LEFT, "SQ Num", RenderUtil.Color.MAGENTA.value, width * 2, 3, poseStack, buffer, packedLight);
-        RenderUtil.drawStringWithAlphaColor(RenderUtil.Align.RIGHT, getSourceIp() + ": " + originatorSequenceNumber, alpha, width * 2, 2, poseStack, buffer, packedLight);
-        RenderUtil.drawStringWithAlphaColor(RenderUtil.Align.RIGHT,getDestinationIp() + ": " + (unknownSeqFlag ? "?" : destinationSequenceNumber), alpha, width * 2, 10, poseStack, buffer, packedLight);
+        RenderUtil.drawStringWithAlphaColor(RenderUtil.Align.RIGHT, getOriginatorIP() + ": " + originatorSequenceNumber, alpha, width * 2, 2, poseStack, buffer, packedLight);
+        RenderUtil.drawStringWithAlphaColor(RenderUtil.Align.RIGHT, getDestinationIP() + ": " + (unknownSeqFlag ? "?" : destinationSequenceNumber), alpha, width * 2, 10, poseStack, buffer, packedLight);
 
         poseStack.translate(0, 18, 0);
         RenderUtil.renderHLine(alpha, width * 2, 0, poseStack, buffer, packedLight);
@@ -73,12 +73,12 @@ public class AODVRREQPacket extends NetworkPacket implements IProtocolPaket {
 
     @Override
     protected Vec2 getContentSize(Font font) {
-        var width = MathUtil.max(font.width("SQ @ " + getDestinationIp() + ": " + (unknownSeqFlag ? "?" : destinationSequenceNumber)), font.width("SQ @ " + getSourceIp() + ": " + originatorSequenceNumber)) / 2;
+        var width = MathUtil.max(font.width("SQ @ " + getDestinationIP() + ": " + (unknownSeqFlag ? "?" : destinationSequenceNumber)), font.width("SQ @ " + getOriginatorIP() + ": " + originatorSequenceNumber)) / 2;
         return new Vec2(width, 28);
     }
 
     @Override
     public INetworkPacket copy() {
-        return new AODVRREQPacket(sourceIp, destinationIp, previousHopIP, joinFlag, repairFlag, gratuitousFlag, destinationOnlyFlag, unknownSeqFlag, hopCount, rreqId, destinationSequenceNumber, originatorSequenceNumber);
+        return new AODVRREQPacket(originatorIP, destinationIP, joinFlag, repairFlag, gratuitousFlag, destinationOnlyFlag, unknownSeqFlag, hopCount, rreqId, destinationSequenceNumber, originatorSequenceNumber);
     }
 }

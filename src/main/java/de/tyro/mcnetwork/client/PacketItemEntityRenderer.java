@@ -1,7 +1,7 @@
 package de.tyro.mcnetwork.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.tyro.mcnetwork.item.entity.PacketItemEntity;
+import de.tyro.mcnetwork.item.entity.NetworkFrameItemEntity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -11,7 +11,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 
-public class PacketItemEntityRenderer extends EntityRenderer<PacketItemEntity> {
+public class PacketItemEntityRenderer extends EntityRenderer<NetworkFrameItemEntity> {
     private static final double MAX_DISTANCE = 32.0;
     private static final double FADE_START_DISTANCE = 12.0;
 
@@ -20,13 +20,13 @@ public class PacketItemEntityRenderer extends EntityRenderer<PacketItemEntity> {
     }
 
     @Override
-    public @NotNull ResourceLocation getTextureLocation(@NotNull PacketItemEntity entity) {
+    public @NotNull ResourceLocation getTextureLocation(@NotNull NetworkFrameItemEntity entity) {
         return ResourceLocation.withDefaultNamespace("paper");
     }
 
 
     @Override
-    public void render(@NotNull PacketItemEntity packet, float entityYaw, float partialTick, @NotNull PoseStack poseStack, @NotNull MultiBufferSource bufferSource, int packedLight) {
+    public void render(@NotNull NetworkFrameItemEntity packet, float entityYaw, float partialTick, @NotNull PoseStack poseStack, @NotNull MultiBufferSource bufferSource, int packedLight) {
         super.render(packet, entityYaw, partialTick, poseStack, bufferSource, packedLight);
 
         Minecraft mc = Minecraft.getInstance();

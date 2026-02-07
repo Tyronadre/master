@@ -2,6 +2,7 @@ package de.tyro.mcnetwork.routing;
 
 import de.tyro.mcnetwork.routing.packet.IApplicationPaket;
 import de.tyro.mcnetwork.routing.packet.INetworkPacket;
+import de.tyro.mcnetwork.routing.packet.PingPacket;
 import de.tyro.mcnetwork.routing.protocol.RoutingProtocol;
 import net.minecraft.world.phys.Vec3;
 
@@ -38,4 +39,9 @@ public interface INetworkNode {
      */
     void onApplicationPacketReceived(IApplicationPaket packet);
 
+    void unicast(PingPacket ping);
+
+    void tick();
+
+    double distanceTo(INetworkNode to);
 }

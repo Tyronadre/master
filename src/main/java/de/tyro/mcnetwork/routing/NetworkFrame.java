@@ -9,26 +9,42 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.world.phys.Vec3;
 
-public class InFlightPacket implements IPacketRenderable {
+public class NetworkFrame implements IPacketRenderable {
+    private static final SimulationEngine sim = SimulationEngine.getInstance();
+    public final double movementPerTick = 0.1;
     public final INetworkNode from;
     public final INetworkNode to;
     public final INetworkPacket packet;
+    public final int ttl;
 
+    private double lastTick;
     private double traveled = 0;
+    private boolean arrived = false;
 
-    public InFlightPacket(INetworkNode from, INetworkNode to, INetworkPacket packet) {
+    public NetworkFrame(INetworkNode from, INetworkNode to, INetworkPacket packet, int ttl) {
         this.from = from;
         this.to = to;
         this.packet = packet;
+        this.ttl = ttl;
+        packet.setFrame(this);
+        lastTick = sim.getExactSimTime();
     }
 
     public boolean tick() {
-        traveled += SimulationEngine.getInstance().getSimulationSpeed();
-        return traveled >= from.getPos().distanceTo(to.getPos());
+        traveled += movementPerTick * (sim.getExactSimTime() - lastTick);
+        lastTick = sim.getExactSimTime();
+        return hasArrived();
+    }
+
+    public boolean hasArrived() {
+        if (!arrived) {
+            arrived = traveled >= from.distanceTo(to);
+        }
+        return arrived;
     }
 
     public Vec3 getCurrentPosition() {
-        double total = from.getPos().distanceTo(to.getPos());
+        double total = from.distanceTo(to);
         double t = Math.min(1.0, traveled / total);
         return from.getPos().lerp(to.getPos(), t);
     }
@@ -46,7 +62,7 @@ public class InFlightPacket implements IPacketRenderable {
         poseStack.pushPose();
         poseStack.scale(0.5f, 0.5f, 0.5f);
 
-        RenderUtil.drawStringWithAlphaColor(RenderUtil.Align.CENTER, "UDP @ " + from.getIP().toString() + " -> " + to.getIP().toString(), alpha, 0, -15, poseStack, bufferSource, packedLight);
+        RenderUtil.drawStringWithAlphaColor(RenderUtil.Align.CENTER, "UDP @ " + from.getIP().toString() + " -> " + to.getIP().toString() + " TTL: " + ttl, alpha, 0, -15, poseStack, bufferSource, packedLight);
 
         poseStack.popPose();
 
@@ -54,4 +70,10 @@ public class InFlightPacket implements IPacketRenderable {
 
         poseStack.popPose();
     }
+
+    public IP fromIP() {
+        return from.getIP();
+    }
+
+
 }

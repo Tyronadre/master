@@ -1,10 +1,9 @@
 package de.tyro.mcnetwork.item;
 
-import de.tyro.mcnetwork.item.entity.PacketItemEntity;
+import de.tyro.mcnetwork.item.entity.NetworkFrameItemEntity;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
-import net.minecraft.world.level.Level;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredItem;
@@ -20,9 +19,9 @@ public class ItemRegistry {
     public static final DeferredItem<PacketItem> PACKET_ITEM = ITEMS.registerItem("packet_item", PacketItem::new);
 
     public static final DeferredRegister<EntityType<?>> ITEM_ENTITIES = DeferredRegister.create(BuiltInRegistries.ENTITY_TYPE, MODID);
-    public static final DeferredHolder<EntityType<?>, EntityType<PacketItemEntity>> PACKET_ITEM_ENTITY_TYPE = ITEM_ENTITIES.register(
+    public static final DeferredHolder<EntityType<?>, EntityType<NetworkFrameItemEntity>> PACKET_ITEM_ENTITY_TYPE = ITEM_ENTITIES.register(
             "packet_item_entity",
-            () -> EntityType.Builder.<PacketItemEntity>of((entityType, level) -> new PacketItemEntity(level), MobCategory.MISC)
+            () -> EntityType.Builder.<NetworkFrameItemEntity>of((entityType, level) -> new NetworkFrameItemEntity(level), MobCategory.MISC)
                     .sized(0.25F, 0.25F)
                     .eyeHeight(0.2125F)
                     .clientTrackingRange(6)

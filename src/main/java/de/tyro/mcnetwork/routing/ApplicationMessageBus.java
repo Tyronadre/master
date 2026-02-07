@@ -1,5 +1,7 @@
 package de.tyro.mcnetwork.routing;
 
+import de.tyro.mcnetwork.routing.exceptions.DestinationUnreachableException;
+import de.tyro.mcnetwork.routing.packet.DestinationUnreachablePacket;
 import de.tyro.mcnetwork.routing.packet.IApplicationPaket;
 
 import java.util.*;
@@ -10,7 +12,7 @@ public class ApplicationMessageBus {
 
     private final List<IApplicationPaket> packets = new ArrayList<>();
     private final ReentrantLock lock = new ReentrantLock();
-    private final Condition newPacket = lock.newCondition();
+    private final Condition stateChanged = lock.newCondition();
 
     /**
      * Neue Pakete vom Netzwerk kommen hier an.
@@ -19,8 +21,7 @@ public class ApplicationMessageBus {
         lock.lock();
         try {
             packets.add(packet);
-            // Benachrichtige alle wartenden Threads sofort
-            newPacket.signalAll();
+            stateChanged.signalAll();
         } finally {
             lock.unlock();
         }
@@ -34,25 +35,50 @@ public class ApplicationMessageBus {
             Class<T> type,
             Function<T, Boolean> filter,
             long timeoutMs
-    ) throws InterruptedException {
-        long deadline = System.currentTimeMillis() + timeoutMs;
+    ) throws InterruptedException, DestinationUnreachableException {
+
+        SimulationEngine sim = SimulationEngine.getInstance();
+        long startSimTime = sim.getSimTime();
+        long deadlineSimTime = startSimTime + timeoutMs;
+
         lock.lock();
         try {
             while (true) {
-                // Prüfe zuerst vorhandene Pakete
+
+
                 for (IApplicationPaket p : packets) {
-                    if (type.isInstance(p) && filter.apply(type.cast(p))) {
-                        return type.cast(p);
+                    //check destination unreachable packets
+                    if (p instanceof DestinationUnreachablePacket du) {
+                        throw new DestinationUnreachableException(du.getDestinationIP());
+                    }
+
+                    //check other packets
+                    if (type.isInstance(p)) {
+                        T cast = type.cast(p);
+                        if (filter.apply(cast)) {
+                            return cast;
+                        }
                     }
                 }
 
-                // Berechne Restzeit
-                long waitTime = deadline - System.currentTimeMillis();
-                if (waitTime <= 0) return null;
+                // check timeout
+                long now = sim.getSimTime();
+                if (now >= deadlineSimTime) {
+                    return null;
+                }
 
-                // Warte bis ein neues Paket ankommt oder Timeout
-                newPacket.awaitNanos(waitTime * 1_000_000);
+                // go back to waiting
+                stateChanged.await();
             }
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public void tick() {
+        lock.lock();
+        try {
+            stateChanged.signalAll();
         } finally {
             lock.unlock();
         }
@@ -64,7 +90,7 @@ public class ApplicationMessageBus {
     public <T extends IApplicationPaket> void clear(Class<T> packetClass) {
         lock.lock();
         try {
-            packets.removeIf(p -> packetClass.isInstance(p));
+            packets.removeIf(packetClass::isInstance);
         } finally {
             lock.unlock();
         }

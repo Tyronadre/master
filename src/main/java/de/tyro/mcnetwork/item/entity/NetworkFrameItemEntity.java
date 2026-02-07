@@ -1,42 +1,33 @@
 package de.tyro.mcnetwork.item.entity;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.tyro.mcnetwork.item.ItemRegistry;
-import de.tyro.mcnetwork.routing.InFlightPacket;
-import de.tyro.mcnetwork.routing.packet.INetworkPacket;
-import de.tyro.mcnetwork.routing.packet.IPacketRenderable;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.world.entity.EntityType;
+import de.tyro.mcnetwork.routing.NetworkFrame;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
-public class PacketItemEntity extends ItemEntity {
+public class NetworkFrameItemEntity extends ItemEntity {
 
-    private final InFlightPacket packet;
+    private final NetworkFrame networkFrame;
 
-    public PacketItemEntity(Level level, double x, double y, double z, InFlightPacket packet) {
+    public NetworkFrameItemEntity(Level level, double x, double y, double z, NetworkFrame networkFrame) {
         super(ItemRegistry.PACKET_ITEM_ENTITY_TYPE.get(), level);
         this.setPos(x, y, z);
         this.setDeltaMovement(0, 0, 0);
         this.setItem(new ItemStack(ItemRegistry.PACKET_ITEM.get()));
-        this.packet = packet;
+        this.networkFrame = networkFrame;
 
         this.setNeverPickUp();
         this.noPhysics = true;
         this.lifespan = Integer.MAX_VALUE;
     }
 
-    public PacketItemEntity(Level level) {
+    public NetworkFrameItemEntity(Level level) {
         this(level, 0, 0, 0, null);
     }
 
-    public InFlightPacket getInFlightPacket() {
-        return packet;
-    }
-
-    public INetworkPacket getNetworkPacket() {
-        return packet.packet;
+    public NetworkFrame getInFlightPacket() {
+        return networkFrame;
     }
 
     @Override
@@ -44,10 +35,10 @@ public class PacketItemEntity extends ItemEntity {
         super.tick();
 
         // Move towards destination
-        if (packet.tick()) {
+        if (networkFrame.hasArrived()) {
             this.remove(RemovalReason.DISCARDED);
         } else {
-            var pos = packet.getCurrentPosition();
+            var pos = networkFrame.getCurrentPosition();
             this.setPos(pos.x(), pos.y(), pos.z());
         }
     }
