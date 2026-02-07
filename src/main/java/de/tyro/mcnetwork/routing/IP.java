@@ -27,7 +27,7 @@ public class IP {
     public static IP getNextFreeIP() {
         int[] ip = new int[4];
         for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 129; j++) {
+            for (int j = 0; j < 255; j++) {
                 ip[3 - i] = j;
                 var ipO = new IP(ip);
                 if (SimulationEngine.INSTANCE.getNodeList().stream().noneMatch(it -> it.getIP().equals(ipO)))
