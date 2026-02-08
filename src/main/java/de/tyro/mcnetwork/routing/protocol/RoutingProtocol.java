@@ -1,6 +1,7 @@
 package de.tyro.mcnetwork.routing.protocol;
 
 
+import de.tyro.mcnetwork.routing.INetworkNode;
 import de.tyro.mcnetwork.routing.IP;
 import de.tyro.mcnetwork.routing.packet.INetworkPacket;
 import de.tyro.mcnetwork.routing.packet.IProtocolPaket;
@@ -11,7 +12,7 @@ public interface RoutingProtocol {
 
     void onProtocolPacketReceived(IProtocolPaket packet);
 
-    void unicast(INetworkPacket packet);
+    void send(INetworkPacket packet, int ttl);
 
     void discoverRoute(IP destinationIp);
 
@@ -20,4 +21,5 @@ public interface RoutingProtocol {
     boolean hasRoute(IP destination);
 
     Collection<String> renderData();
+
 }

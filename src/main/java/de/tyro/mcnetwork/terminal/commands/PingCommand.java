@@ -41,7 +41,7 @@ public class PingCommand extends Command {
             long sendTime = sim.getSimTime();
             var ping = new PingPacket(terminal.getNode().getIP(), destIP, sendTime);
 
-            terminal.getNode().unicast(ping);
+            terminal.getNode().send(ping, Integer.MAX_VALUE);
 
             // Warten auf Echo
             PingRepPacket rep;

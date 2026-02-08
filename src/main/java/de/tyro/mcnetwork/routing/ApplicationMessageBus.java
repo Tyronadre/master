@@ -5,12 +5,13 @@ import de.tyro.mcnetwork.routing.packet.DestinationUnreachablePacket;
 import de.tyro.mcnetwork.routing.packet.IApplicationPaket;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.locks.*;
 import java.util.function.Function;
 
 public class ApplicationMessageBus {
 
-    private final List<IApplicationPaket> packets = new ArrayList<>();
+    private final Deque<IApplicationPaket> packets = new ConcurrentLinkedDeque<>();
     private final ReentrantLock lock = new ReentrantLock();
     private final Condition stateChanged = lock.newCondition();
 
@@ -46,20 +47,21 @@ public class ApplicationMessageBus {
             while (true) {
 
 
-                for (IApplicationPaket p : packets) {
-                    //check destination unreachable packets
-                    if (p instanceof DestinationUnreachablePacket du) {
-                        throw new DestinationUnreachableException(du.getDestinationIP());
-                    }
+                var packet = packets.poll();
 
-                    //check other packets
-                    if (type.isInstance(p)) {
-                        T cast = type.cast(p);
-                        if (filter.apply(cast)) {
-                            return cast;
-                        }
+                //check destination unreachable packets
+                if (packet instanceof DestinationUnreachablePacket du) {
+                    throw new DestinationUnreachableException(du.getDestinationIP());
+                }
+
+                //check other packets
+                if (type.isInstance(packet)) {
+                    T cast = type.cast(packet);
+                    if (filter.apply(cast)) {
+                        return cast;
                     }
                 }
+
 
                 // check timeout
                 long now = sim.getSimTime();

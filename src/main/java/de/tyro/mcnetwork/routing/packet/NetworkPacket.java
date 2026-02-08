@@ -15,8 +15,8 @@ import java.util.UUID;
 public abstract class NetworkPacket implements INetworkPacket {
 
     public final UUID id = UUID.randomUUID();
-    public final IP originatorIP;
-    public final IP destinationIP;
+    IP originatorIP;
+    IP destinationIP;
     private NetworkFrame frame;
 
     protected NetworkPacket(IP originatorIP, IP destinationIP) {
@@ -102,10 +102,14 @@ public abstract class NetworkPacket implements INetworkPacket {
 
         RenderUtil.drawString(RenderUtil.Align.LEFT, getClass().getSimpleName(), 0xAAFFAA, width, 0, poseStack, buffer, packedLight);
         RenderUtil.drawString(RenderUtil.Align.RIGHT, id.toString().substring(0, 8), 0xAAAAAA, width, 0, poseStack, buffer, packedLight);
-        RenderUtil.drawStringWithAlphaColor(RenderUtil.Align.LEFT, originatorIP.toString(), alpha, width, 8, poseStack, buffer, packedLight);
+        RenderUtil.drawStringWithAlphaColor(RenderUtil.Align.LEFT, originatorIP == null ? "?" : originatorIP.toString(), alpha, width, 8, poseStack, buffer, packedLight);
         RenderUtil.drawStringWithAlphaColor(RenderUtil.Align.CENTER, "->", alpha, width, 8, poseStack, buffer, packedLight);
-        RenderUtil.drawStringWithAlphaColor(RenderUtil.Align.RIGHT, destinationIP.toString(), alpha, width, 8, poseStack, buffer, packedLight);
+        RenderUtil.drawStringWithAlphaColor(RenderUtil.Align.RIGHT, destinationIP == null ? "?" : destinationIP.toString(), alpha, width, 8, poseStack, buffer, packedLight);
 
         poseStack.popPose();
+    }
+
+    public void setDestinationIP(IP destination) {
+        this.destinationIP = destination;
     }
 }

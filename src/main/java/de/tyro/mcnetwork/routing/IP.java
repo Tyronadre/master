@@ -4,6 +4,8 @@ import java.util.Arrays;
 import java.util.stream.Collectors;
 
 public class IP {
+    public static final IP ZERO = new IP(new int[]{0, 0, 0, 0});
+    public static final IP BROADCAST = new IP(new int[]{255, 255, 255, 255});
     int[] address;
 
     public IP(int[] address) {
@@ -30,8 +32,9 @@ public class IP {
             for (int j = 0; j < 255; j++) {
                 ip[3 - i] = j;
                 var ipO = new IP(ip);
-                if (SimulationEngine.INSTANCE.getNodeList().stream().noneMatch(it -> it.getIP().equals(ipO)))
-                    return ipO;
+
+                if (ipO.equals(ZERO) || ipO.equals(BROADCAST)) continue;
+                if (SimulationEngine.INSTANCE.getNodeList().stream().noneMatch(it -> it.getIP().equals(ipO))) return ipO;
             }
         }
         throw new IllegalStateException("No free IP address found!");

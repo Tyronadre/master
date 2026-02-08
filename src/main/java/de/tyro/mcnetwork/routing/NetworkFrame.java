@@ -11,7 +11,7 @@ import net.minecraft.world.phys.Vec3;
 
 public class NetworkFrame implements IPacketRenderable {
     private static final SimulationEngine sim = SimulationEngine.getInstance();
-    public final double movementPerTick = 0.1;
+    public final double movementPerTick = 0.01;
     public final INetworkNode from;
     public final INetworkNode to;
     public final INetworkPacket packet;

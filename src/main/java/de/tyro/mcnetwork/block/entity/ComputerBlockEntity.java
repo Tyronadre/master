@@ -1,9 +1,12 @@
 package de.tyro.mcnetwork.block.entity;
 
+import com.mojang.datafixers.util.Pair;
 import de.tyro.mcnetwork.routing.ApplicationMessageBus;
 import de.tyro.mcnetwork.routing.INetworkNode;
 import de.tyro.mcnetwork.routing.IP;
+import de.tyro.mcnetwork.routing.NetworkFrame;
 import de.tyro.mcnetwork.routing.SimulationEngine;
+import de.tyro.mcnetwork.routing.packet.DestinationUnreachablePacket;
 import de.tyro.mcnetwork.routing.packet.IApplicationPaket;
 import de.tyro.mcnetwork.routing.packet.INetworkPacket;
 import de.tyro.mcnetwork.routing.packet.IProtocolPaket;
@@ -17,6 +20,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Deque;
@@ -32,7 +36,7 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
     private Terminal terminal;
     private ApplicationMessageBus applicationMessageBus;
     private ReceiveWindow receiveWindow;
-    private Deque<PingPacket> scheduledPackages;
+    private Deque<Pair<INetworkPacket, Integer>> scheduledPackages;
 
     public ComputerBlockEntity(BlockPos pos, BlockState state) {
         super(BlockEntityRegistry.COMPUTER_BE.get(), pos, state);
@@ -94,18 +98,12 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
     @Override
     public void onApplicationPacketReceived(IApplicationPaket packet) {
         if (packet instanceof PingPacket ping) {
-            routingProtocol.unicast(new PingRepPacket(getIP(), ping.originatorIP, SimulationEngine.INSTANCE.getSimTime() - ping.sendStartTime, SimulationEngine.INSTANCE.getSimTime(), ping.id));
+            routingProtocol.send(new PingRepPacket(getIP(), ping.getOriginatorIP(), SimulationEngine.INSTANCE.getSimTime() - ping.sendStartTime, SimulationEngine.INSTANCE.getSimTime(), ping.id), Integer.MAX_VALUE);
             return;
         }
 
         //relay to the message bus, where other apps can handle it
         applicationMessageBus.handle(packet);
-    }
-
-    @Override
-    public void unicast(PingPacket packet) {
-        if (!Minecraft.getInstance().isSameThread()) this.scheduledPackages.add(packet);
-        else routingProtocol.unicast(packet);
     }
 
     @Override
@@ -119,15 +117,17 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
     }
 
     @Override
-    public void onPacketReceived(INetworkPacket packet) {
+    public void onFrameReceive(NetworkFrame frame) {
 //        if (!receiveWindow.tryAccept()) {
 //            System.out.println("Received packet but not accepted by the client, interferred");
 //            return;
 //        }
 
+        var packet = frame.packet;
+
         if (packet instanceof IProtocolPaket pp) routingProtocol.onProtocolPacketReceived(pp);
         else if (packet instanceof IApplicationPaket ap && packet.getDestinationIP().equals(this.ipAddress)) this.onApplicationPacketReceived(ap);
-        else routingProtocol.unicast(packet);
+        else routingProtocol.send(packet, frame.ttl - 1);
     }
 
     public List<String> getRenderText() {
@@ -139,21 +139,24 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
     }
 
 
-
-
     @Override
     public void tick() {
-        this.scheduledPackages.forEach(p -> routingProtocol.unicast(p));
+        this.scheduledPackages.forEach(p -> routingProtocol.send(p.getFirst(), p.getSecond()));
         scheduledPackages.clear();
 
         routingProtocol.tick();
         applicationMessageBus.tick();
-
     }
 
     @Override
-    public double distanceTo(INetworkNode to) {
+    public double distanceTo(@NotNull INetworkNode to) {
         return this.getPos().distanceTo(to.getPos());
+    }
+
+    @Override
+    public void send(INetworkPacket packet, int ttl) {
+        if (!Minecraft.getInstance().isSameThread()) this.scheduledPackages.add(new Pair<>(packet, ttl));
+        else routingProtocol.send(packet, ttl);
     }
 
     static class ReceiveWindow {

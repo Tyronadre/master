@@ -2,16 +2,18 @@ package de.tyro.mcnetwork.routing;
 
 import de.tyro.mcnetwork.routing.packet.IApplicationPaket;
 import de.tyro.mcnetwork.routing.packet.INetworkPacket;
-import de.tyro.mcnetwork.routing.packet.PingPacket;
 import de.tyro.mcnetwork.routing.protocol.RoutingProtocol;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.NotNull;
 
 public interface INetworkNode {
 
     IP getIP();
 
     double getX();
+
     double getY();
+
     double getZ();
 
     /**
@@ -30,18 +32,30 @@ public interface INetworkNode {
     Vec3 getPos();
 
     /**
-     * Called when a packet is delivered to this node
+     * Called when a frame is delivered to this node
      */
-    void onPacketReceived(INetworkPacket packet);
+    void onFrameReceive(NetworkFrame packet);
 
     /**
      * Called when an application packed should be processed by this node
      */
     void onApplicationPacketReceived(IApplicationPaket packet);
 
-    void unicast(PingPacket ping);
-
     void tick();
 
-    double distanceTo(INetworkNode to);
+    /**
+     * Calculates the euclidean distance to another node
+     *
+     * @param to the other node
+     * @return the distance
+     */
+    double distanceTo(@NotNull INetworkNode to);
+
+    /**
+     * Routes a packet to the destination address of it
+     *
+     * @param packet the packet to send
+     * @param ttl    the time to life for frame that will be send
+     */
+    void send(INetworkPacket packet, int ttl);
 }
