@@ -2,7 +2,6 @@ package de.tyro.mcnetwork.item;
 
 import de.tyro.mcnetwork.gui.networkBook.NetworkBookScreen;
 import net.minecraft.client.Minecraft;
-import net.minecraft.stats.Stats;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;

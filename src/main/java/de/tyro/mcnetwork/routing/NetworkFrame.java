@@ -7,11 +7,11 @@ import de.tyro.mcnetwork.routing.packet.INetworkPacket;
 import de.tyro.mcnetwork.routing.packet.IPacketRenderable;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.world.phys.Vec3;
 
 public class NetworkFrame implements IPacketRenderable {
     private static final SimulationEngine sim = SimulationEngine.getInstance();
-    public final double movementPerTick = 0.01;
     public final INetworkNode from;
     public final INetworkNode to;
     public final INetworkPacket packet;
@@ -31,7 +31,7 @@ public class NetworkFrame implements IPacketRenderable {
     }
 
     public boolean tick() {
-        traveled += movementPerTick * (sim.getExactSimTime() - lastTick);
+        traveled += sim.getFrameMovementPerTick() * (sim.getExactSimTime() - lastTick);
         lastTick = sim.getExactSimTime();
         return hasArrived();
     }

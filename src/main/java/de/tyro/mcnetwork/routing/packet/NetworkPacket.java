@@ -1,19 +1,25 @@
 package de.tyro.mcnetwork.routing.packet;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.tyro.mcnetwork.MCNetwork;
 import de.tyro.mcnetwork.MathUtil;
 import de.tyro.mcnetwork.client.RenderUtil;
 import de.tyro.mcnetwork.routing.NetworkFrame;
 import de.tyro.mcnetwork.routing.IP;
+import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.phys.Vec2;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
 
 public abstract class NetworkPacket implements INetworkPacket {
-
     public final UUID id = UUID.randomUUID();
     IP originatorIP;
     IP destinationIP;
@@ -111,5 +117,15 @@ public abstract class NetworkPacket implements INetworkPacket {
 
     public void setDestinationIP(IP destination) {
         this.destinationIP = destination;
+    }
+
+    @Override
+    public @NotNull Type<? extends INetworkPacket> type() {
+        return new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(MCNetwork.MODID, getClass().getSimpleName()));
+    }
+
+    @Override
+    public StreamCodec<ByteBuf, ? extends INetworkPacket> getStreamCodec() {
+        return null;
     }
 }

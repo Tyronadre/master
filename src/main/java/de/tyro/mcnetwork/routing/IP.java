@@ -1,9 +1,18 @@
 package de.tyro.mcnetwork.routing;
 
+import com.mojang.datafixers.util.Function4;
+import de.tyro.mcnetwork.MCNetwork;
+import io.netty.buffer.ByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.NotNull;
+
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-public class IP {
+public class IP implements CustomPacketPayload {
     public static final IP ZERO = new IP(new int[]{0, 0, 0, 0});
     public static final IP BROADCAST = new IP(new int[]{255, 255, 255, 255});
     int[] address;
@@ -55,5 +64,20 @@ public class IP {
     @Override
     public int hashCode() {
         return Arrays.hashCode(address);
+    }
+
+    public static final CustomPacketPayload.Type<IP> TYPE = new CustomPacketPayload.Type<IP>(ResourceLocation.fromNamespaceAndPath(MCNetwork.MODID, "ip"));
+
+    public static final StreamCodec<ByteBuf, IP> STREAM_CODEC = StreamCodec.composite(
+            ByteBufCodecs.INT, (IP ip) -> ip.address[0],
+            ByteBufCodecs.INT, (IP ip) -> ip.address[1],
+            ByteBufCodecs.INT, (IP ip) -> ip.address[2],
+            ByteBufCodecs.INT, (IP ip) -> ip.address[3],
+            (ip0, ip1, ip2, ip3) -> new IP(new int[]{ip0, ip1, ip2, ip3})
+    );
+
+    @Override
+    public @NotNull Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 }

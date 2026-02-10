@@ -5,8 +5,11 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.tyro.mcnetwork.client.RenderUtil;
 import de.tyro.mcnetwork.routing.IP;
 import de.tyro.mcnetwork.routing.SimulationEngine;
+import io.netty.buffer.ByteBuf;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.phys.Vec2;
 
 import java.util.StringJoiner;
@@ -45,5 +48,10 @@ public class PingPacket extends NetworkPacket implements IApplicationPaket {
     @Override
     public INetworkPacket copy() {
         return new PingPacket(originatorIP, destinationIP, sendStartTime);
+    }
+
+    @Override
+    public StreamCodec<ByteBuf, ? extends INetworkPacket> getStreamCodec() {
+        return null;
     }
 }

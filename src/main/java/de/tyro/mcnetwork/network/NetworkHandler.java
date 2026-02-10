@@ -1,0 +1,45 @@
+package de.tyro.mcnetwork.network;
+
+import de.tyro.mcnetwork.MCNetwork;
+import de.tyro.mcnetwork.network.configuration.SimulationConfigurationTask;
+import de.tyro.mcnetwork.network.payload.ConfigAckPayload;
+import de.tyro.mcnetwork.network.payload.ConfigSimulationEngineInitPayload;
+import de.tyro.mcnetwork.network.payload.SimulationEngineSpeedPayload;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.network.event.RegisterConfigurationTasksEvent;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+import net.neoforged.neoforge.network.registration.PayloadRegistrar;
+
+@EventBusSubscriber(modid = MCNetwork.MODID)
+public class NetworkHandler {
+
+    @SubscribeEvent
+    public static void register(RegisterPayloadHandlersEvent event) {
+        final PayloadRegistrar registrar = event.registrar(MCNetwork.MODID).versioned("1");
+
+        // ---------- CONFIG ---------- //
+
+        registrar.configurationToServer(
+                ConfigAckPayload.TYPE,
+                ConfigAckPayload.STREAM_CODEC,
+                ConfigAckPayload::handle
+        );
+        registrar.configurationToClient(
+                ConfigSimulationEngineInitPayload.TYPE,
+                ConfigSimulationEngineInitPayload.STREAM_CODEC,
+                ConfigSimulationEngineInitPayload::handle
+        );
+
+        registrar.playBidirectional(
+                SimulationEngineSpeedPayload.TYPE,
+                SimulationEngineSpeedPayload.STREAM_CODEC,
+                SimulationEngineSpeedPayload::handle);
+
+    }
+
+    @SubscribeEvent
+    public static void register(RegisterConfigurationTasksEvent event) {
+        event.register(new SimulationConfigurationTask(event.getListener()));
+    }
+}

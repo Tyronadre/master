@@ -20,6 +20,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -155,7 +156,9 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
 
     @Override
     public void send(INetworkPacket packet, int ttl) {
-        if (!Minecraft.getInstance().isSameThread()) this.scheduledPackages.add(new Pair<>(packet, ttl));
+        //ensure we handle this on the server main thread from here on.
+        if (level == null) return;
+        if (!level.isClientSide()) PacketDistributor.sendToServer(packet);
         else routingProtocol.send(packet, ttl);
     }
 

@@ -1,5 +1,6 @@
 package de.tyro.mcnetwork.routing;
 
+import de.tyro.mcnetwork.MCNetwork;
 import de.tyro.mcnetwork.item.entity.NetworkFrameItemEntity;
 import de.tyro.mcnetwork.routing.packet.INetworkPacket;
 import net.minecraft.client.Minecraft;
@@ -18,6 +19,7 @@ public class SimulationEngine {
 
     public static final SimulationEngine INSTANCE = new SimulationEngine(10);
     private static final Logger log = LogManager.getLogger(SimulationEngine.class);
+    private double frameMovementPerTick = 0.01;
 
     public static SimulationEngine getInstance() {
         return INSTANCE;
@@ -100,10 +102,9 @@ public class SimulationEngine {
     private void newPacket(INetworkNode from, INetworkNode to, INetworkPacket packet, int ttl) {
         var level = Minecraft.getInstance().level;
         var inFlightPacket = new NetworkFrame(from, to, packet, ttl);
-        frames.add(inFlightPacket);
 
-
-        if (level != null && level.isClientSide) {
+        if (level != null) {
+            frames.add(inFlightPacket);
             NetworkFrameItemEntity entity = new NetworkFrameItemEntity(level, from.getX() + 0.5, from.getY() + .5, from.getZ() + 0.5, inFlightPacket);
             level.addEntity(entity);
         }
@@ -140,10 +141,22 @@ public class SimulationEngine {
 
     public void setSimSpeed(double speed) {
         simulationSpeed = speed;
-        System.out.println("set sim speed : " + simulationSpeed);
+        MCNetwork.LOGGER.info(String.format("Setting simulation speed to: %f", speed));
     }
 
     public boolean nodeExists(IP ip) {
         return nodes.containsKey(ip);
+    }
+
+    public double getFrameMovementPerTick() {
+        return frameMovementPerTick;
+    }
+
+    public void setFrameMovementPerTick(double movementPerTick) {
+        this.frameMovementPerTick = movementPerTick;
+    }
+
+    public void setSimTime(double simulationTime) {
+        this.simulationTimeMs = simulationTime;
     }
 }
