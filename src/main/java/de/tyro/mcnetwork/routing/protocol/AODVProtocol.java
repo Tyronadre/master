@@ -1,6 +1,7 @@
 package de.tyro.mcnetwork.routing.protocol;
 
 import com.mojang.datafixers.util.Pair;
+import de.tyro.mcnetwork.network.payload.routing.NewNetworkPacketPayload;
 import de.tyro.mcnetwork.routing.INetworkNode;
 import de.tyro.mcnetwork.routing.IP;
 import de.tyro.mcnetwork.routing.SimulationEngine;
@@ -11,6 +12,7 @@ import de.tyro.mcnetwork.routing.packet.DestinationUnreachablePacket;
 import de.tyro.mcnetwork.routing.packet.IApplicationPaket;
 import de.tyro.mcnetwork.routing.packet.INetworkPacket;
 import de.tyro.mcnetwork.routing.packet.IProtocolPaket;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -230,7 +232,7 @@ public class AODVProtocol implements RoutingProtocol {
     }
 
     private void notifyDestinationUnreachable(IP destIp) {
-        node.onApplicationPacketReceived(new DestinationUnreachablePacket(destIp));
+        PacketDistributor.sendToAllPlayers(new NewNetworkPacketPayload(new DestinationUnreachablePacket(destIp), 1, this.node.getBlockPos()));
     }
 
     private void dropBufferedPackets(IP destIp) {
@@ -249,7 +251,7 @@ public class AODVProtocol implements RoutingProtocol {
         //  prefix matching) for a route to the previous hop.  If needed, a route
         //  is created for the previous hop, but without a valid sequence number
         //  (see section 6.2).
-        var previousIP = rrep.getNetworkFrame().fromIP();
+        var previousIP = rrep.getNetworkFrame().getFrom().getIP();
         var previousHopEntry = routingTable.get(previousIP);
         if (previousHopEntry == null) {
             previousHopEntry = new RouteEntry(previousIP);
@@ -348,7 +350,7 @@ public class AODVProtocol implements RoutingProtocol {
         var nextHopEntry = routingTable.get(nextHopToOriginator);
         nextHopEntry.precursors.add(destinationEntry.nextHop);
 
-        simulator.unicast(node, simulator.getNode(nextHopToOriginator), rrep, rrep.getNetworkFrame().ttl - 1);
+        simulator.unicast(node, simulator.getNode(nextHopToOriginator), rrep, rrep.getNetworkFrame().getTtl() - 1);
     }
 
     private void generateRREP(AODVRREQPacket rreq) {
@@ -423,7 +425,7 @@ public class AODVProtocol implements RoutingProtocol {
             rrep.hopCount = destinationEntry.hopCount;
             rrep.lifetime = simulator.getSimTime() - destinationEntry.lifetime;
 
-            destinationEntry.precursors.add(rreq.getNetworkFrame().fromIP());
+            destinationEntry.precursors.add(rreq.getNetworkFrame().getFrom().getIP());
             originatorEntry.precursors.add(destinationEntry.nextHop);
         }
 
@@ -475,7 +477,7 @@ public class AODVProtocol implements RoutingProtocol {
     private void handleRREQ(AODVRREQPacket rreq) {
         // When a node receives a RREQ, it first creates or updates a route to
         // the previous hop without a valid sequence number (see section 6.2)
-        var lastHop = rreq.getNetworkFrame().fromIP();
+        var lastHop = rreq.getNetworkFrame().getFrom().getIP();
         var reverseEntry = routingTable.computeIfAbsent(lastHop, RouteEntry::new);
         reverseEntry.seqValid = false;
         reverseEntry.nextHop = lastHop;
@@ -595,13 +597,13 @@ public class AODVProtocol implements RoutingProtocol {
         // the destination sequence number, even if the value received in the
         // incoming RREQ is larger than the value currently maintained by the
         // forwarding node.
-        if (rreq.getNetworkFrame().ttl <= 1) return;
+        if (rreq.getNetworkFrame().getTtl() <= 1) return;
 
         if (destRoute != null && destRoute.valid) {
             rreq.destinationSequenceNumber = Math.max(rreq.destinationSequenceNumber, destRoute.seqNumber);
         }
 
-        simulator.broadcast(node, rreq.hop(node), rreq.getNetworkFrame().ttl - 1);
+        simulator.broadcast(node, rreq.hop(node), rreq.getNetworkFrame().getTtl() - 1);
     }
 
     private void handleRERR(int rerrType, IP unreachableNode, AODVRERRPacket rerr) {
@@ -669,7 +671,7 @@ public class AODVProtocol implements RoutingProtocol {
         } else if (rerrType == 2) {
             unreachableEntries = List.of(routingTable.get(unreachableNode));
         } else if (rerrType == 3) {
-            unreachableEntries = routingTable.values().stream().filter(entry -> rerr.unreachable.containsKey(entry.destination) && entry.nextHop == rerr.getNetworkFrame().fromIP()).toList();
+            unreachableEntries = routingTable.values().stream().filter(entry -> rerr.unreachable.containsKey(entry.destination) && entry.nextHop == rerr.getNetworkFrame().getFrom().getIP()).toList();
         }
 
         // Some of the unreachable destinations in the list could be used by

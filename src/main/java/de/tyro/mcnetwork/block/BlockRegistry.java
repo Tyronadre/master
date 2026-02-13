@@ -4,6 +4,7 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
+import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
@@ -29,6 +30,7 @@ public class BlockRegistry {
     }
 
 
-
-
+    public static void register(IEventBus modEventBus) {
+        BLOCKS.register(modEventBus);
+    }
 }

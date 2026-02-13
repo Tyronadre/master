@@ -1,11 +1,8 @@
 package de.tyro.mcnetwork.routing.packet;
 
-import de.tyro.mcnetwork.MCNetwork;
 import de.tyro.mcnetwork.routing.IP;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -29,11 +26,6 @@ public class AODVRERRPacket extends NetworkPacket implements IProtocolPaket {
 
     @Override
     public INetworkPacket copy() {
-        return null;
-    }
-
-    @Override
-    public StreamCodec<ByteBuf, AODVRERRPacket> getStreamCodec() {
         return null;
     }
 

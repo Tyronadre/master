@@ -24,6 +24,13 @@ public class PingRepPacket extends NetworkPacket implements IApplicationPaket {
         this.replyUUID = replyUUID;
     }
 
+    public PingRepPacket(UUID uuid, IP originatorIP, IP destinationIP, long returnStartTime, long l, UUID uuid1) {
+        super(uuid, originatorIP, destinationIP);
+        this.returnStartTime = returnStartTime;
+        this.sendTime = l;
+        this.replyUUID = uuid1;
+    }
+
     @Override
     public String toString() {
         return new StringJoiner(", ", PingRepPacket.class.getSimpleName() + "[", "]").add("sendTime=" + sendTime).add("returnTime=" + returnStartTime).add("id=" + id).add("sourceIp=" + originatorIP).add("destinationIp=" + destinationIP).toString();

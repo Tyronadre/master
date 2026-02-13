@@ -34,18 +34,13 @@ public record SimulationEngineSpeedPayload(double newSimulationSpeed, int player
         Player player = context.player();
         if (context.flow().isClientbound()) {
             if (player.getId() != this.playerID()) {
-                MCNetwork.LOGGER.info("another player did something {}", this);
                 SimulationEngine.getInstance().setSimSpeed(newSimulationSpeed());
                 if (Minecraft.getInstance().screen instanceof SimulationControllerScreen simScreen) {
                     simScreen.simulationSpeedSlider.setValueExternal(newSimulationSpeed);
                 }
 
             }
-            else {
-                MCNetwork.LOGGER.info("we send this to ourself {}", this);
-            }
         } else {
-            MCNetwork.LOGGER.info("received on server {}", this);
             SimulationEngine.getInstance().setSimSpeed(newSimulationSpeed());
             PacketDistributor.sendToAllPlayers(this);
         }

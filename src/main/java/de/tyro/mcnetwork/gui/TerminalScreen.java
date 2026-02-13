@@ -9,6 +9,7 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 
@@ -19,6 +20,7 @@ public class TerminalScreen extends Screen {
 
     private final ComputerBlockEntity computer;
     private final Terminal terminal;
+    private final Player player;
 
     /* -------- Input state -------- */
 
@@ -40,16 +42,24 @@ public class TerminalScreen extends Screen {
     private static final int LINE_HEIGHT = 10;
     private static final long CURSOR_BLINK_INTERVAL_MS = 500;
 
-    public TerminalScreen(ComputerBlockEntity computer) {
+    public TerminalScreen(ComputerBlockEntity computer, Player player) {
         super(Component.literal("Terminal"));
         this.computer = computer;
         this.terminal = computer.getTerminal();
+        this.player = player;
     }
 
     @Override
     protected void init() {
         super.init();
         this.setFocused(true);
+        terminal.registerPlayer(player);
+    }
+
+    @Override
+    public void onClose() {
+        super.onClose();
+        terminal.unregisterPlayer(player);
     }
 
     /* ============================================================

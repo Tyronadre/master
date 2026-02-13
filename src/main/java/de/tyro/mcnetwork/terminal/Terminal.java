@@ -1,8 +1,10 @@
 package de.tyro.mcnetwork.terminal;
 
 import de.tyro.mcnetwork.routing.INetworkNode;
-import de.tyro.mcnetwork.routing.packet.NetworkPacket;
 import de.tyro.mcnetwork.terminal.commands.*;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.world.entity.player.Player;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -11,6 +13,7 @@ public class Terminal {
 
     private final List<String> outputBuffer = new ArrayList<>();
     private final Queue<String> inputQueue = new ConcurrentLinkedQueue<>();
+    private List<Player> registeredPlayers = new ArrayList<>();
     private final INetworkNode node;
 
     private Thread runningCommandThread;
@@ -80,7 +83,7 @@ public class Terminal {
     public void printLine(String line) {
         outputBuffer.add(line);
         if (outputBuffer.size() > maxLines) {
-            outputBuffer.remove(0);
+            outputBuffer.removeFirst();
         }
     }
 
@@ -102,8 +105,19 @@ public class Terminal {
         return node;
     }
 
-    public void recievePackage(NetworkPacket packet) {
 
+    public void notifyPlayers(CustomPacketPayload payload) {
+        for (Player watcher : registeredPlayers) {
+//            PacketDistributor.sendToPlayer(watcher, payload);
+        }
+    }
+
+    public void registerPlayer(Player player) {
+        registeredPlayers.add(player);
+    }
+
+    public void unregisterPlayer(Player player) {
+        registeredPlayers.remove(player);
     }
 }
 

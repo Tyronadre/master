@@ -3,6 +3,7 @@ package de.tyro.mcnetwork.gui;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
+import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.common.extensions.IMenuTypeExtension;
 import net.neoforged.neoforge.network.IContainerFactory;
 import net.neoforged.neoforge.registries.DeferredHolder;
@@ -19,4 +20,8 @@ public class MenuRegistry {
     }
 
     public static final DeferredHolder<MenuType<?>, MenuType<SimulationControllerMenu>> SIMULATION_MENU = registerMenuType("simulation_menu", (windowId, inv, data) -> new SimulationControllerMenu(windowId, inv));
+
+    public static void register(IEventBus modEventBus) {
+        MENUS.register(modEventBus);
+    }
 }

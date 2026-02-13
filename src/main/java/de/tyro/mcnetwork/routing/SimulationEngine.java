@@ -1,11 +1,16 @@
 package de.tyro.mcnetwork.routing;
 
 import de.tyro.mcnetwork.MCNetwork;
-import de.tyro.mcnetwork.item.entity.NetworkFrameItemEntity;
+import de.tyro.mcnetwork.entity.NetworkFrameEntity;
+import de.tyro.mcnetwork.network.payload.routing.NetworkPacketCodecRegistry;
+import de.tyro.mcnetwork.network.payload.routing.NewNetworkFramePayload;
+import de.tyro.mcnetwork.routing.packet.IApplicationPaket;
 import de.tyro.mcnetwork.routing.packet.INetworkPacket;
-import net.minecraft.client.Minecraft;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
+import net.neoforged.neoforge.network.PacketDistributor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -13,14 +18,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 public class SimulationEngine {
 
     public static final SimulationEngine INSTANCE = new SimulationEngine(10);
     private static final Logger log = LogManager.getLogger(SimulationEngine.class);
-    private double frameMovementPerTick = 0.01;
-
     public static SimulationEngine getInstance() {
         return INSTANCE;
     }
@@ -29,11 +31,12 @@ public class SimulationEngine {
         COMM_RADIUS = commRadius;
     }
 
+
     private final Map<IP, INetworkNode> nodes = new ConcurrentHashMap<>();
-    private final List<NetworkFrame> frames = new CopyOnWriteArrayList<>();
 
     private double simulationTimeMs = 0;
-    private double simulationSpeed = 1;
+    private double simulationSpeed = 0.05;
+    private double frameMovementPerTick = 1;
     private boolean simulationPaused = false;
     private static final long TICK_DURATION_MS = 50;
     private final double COMM_RADIUS;
@@ -56,25 +59,20 @@ public class SimulationEngine {
 
         simulationTimeMs += TICK_DURATION_MS * simulationSpeed;
 
-        for (var frame : frames) {
-            if (frame.tick()) {
-                try {
-                    frame.to.onFrameReceive(frame);
-                } catch (Exception e) {
-                    log.warn(e.toString());
-                } finally {
-                    frames.remove(frame);
-                }
-            }
-        }
+        nodes.values().forEach(INetworkNode::tick);
+    }
 
-        for (INetworkNode node : nodes.values()) {
-            node.tick();
-        }
+    @SubscribeEvent
+    public void onServerTickEvent(ServerTickEvent.Pre event) {
+        if (simulationPaused) return;
+
+        simulationTimeMs += TICK_DURATION_MS * simulationSpeed;
+
+        nodes.values().forEach(INetworkNode::tick);
     }
 
     public List<INetworkNode> getNeighbors(INetworkNode node) {
-        return nodes.values().stream().filter(n -> n != node).filter(n -> node.distanceTo(n) <= COMM_RADIUS).toList();
+        return nodes.values().stream().filter(n -> !n.getIP().equals(node.getIP())).filter(n -> node.distanceTo(n) <= COMM_RADIUS).toList();
     }
 
     /**
@@ -86,8 +84,9 @@ public class SimulationEngine {
      */
     public void broadcast(INetworkNode from, INetworkPacket packet, int ttl) {
         if (ttl <= 0) return;
-        for (INetworkNode n : getNeighbors(from)) {
-            newPacket(from, n, packet, ttl);
+        for (INetworkNode to : getNeighbors(from)) {
+            log.debug("Broadcasting {} from {} to {}", packet, from, to);
+            newPacket(from, to, packet, ttl);
         }
     }
 
@@ -100,18 +99,33 @@ public class SimulationEngine {
     }
 
     private void newPacket(INetworkNode from, INetworkNode to, INetworkPacket packet, int ttl) {
-        var level = Minecraft.getInstance().level;
-        var inFlightPacket = new NetworkFrame(from, to, packet, ttl);
 
-        if (level != null) {
-            frames.add(inFlightPacket);
-            NetworkFrameItemEntity entity = new NetworkFrameItemEntity(level, from.getX() + 0.5, from.getY() + .5, from.getZ() + 0.5, inFlightPacket);
-            level.addEntity(entity);
+        if (from.getIP() == to.getIP()) {
+            if (packet instanceof IApplicationPaket p)
+                from.onApplicationPacketReceived(p);
+            else {
+                log.warn("Sending Protocol packet to self {}", packet);
+                try {
+                    throw new Exception();
+                } catch (Exception e) {
+                    log.error(e.getMessage(), e);
+                }
+            }
+            return;
         }
+
+        log.debug("New packet from {} to {}: {}", from, to, packet);
+
+        if (!NetworkPacketCodecRegistry.isRegistered(packet.getClass())) {
+            log.warn("Cannot send unregistered packet {}", packet);
+            return;
+        }
+        PacketDistributor.sendToServer(new NewNetworkFramePayload(from.getBlockPos(), to.getBlockPos(), packet, ttl));
     }
 
     /**
      * Finds the node with the given ip, or null if it does not exist
+     *
      * @param ip the ip
      * @return the node or null
      */
@@ -159,4 +173,5 @@ public class SimulationEngine {
     public void setSimTime(double simulationTime) {
         this.simulationTimeMs = simulationTime;
     }
+
 }

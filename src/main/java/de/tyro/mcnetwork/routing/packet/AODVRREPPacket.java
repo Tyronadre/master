@@ -7,6 +7,8 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.world.phys.Vec2;
 
+import java.util.UUID;
+
 public class AODVRREPPacket extends NetworkPacket implements IProtocolPaket {
 
     public boolean repairFlag;
@@ -18,6 +20,15 @@ public class AODVRREPPacket extends NetworkPacket implements IProtocolPaket {
 
     public AODVRREPPacket(IP originatorIpAddress, IP destinationIpAddress, boolean repairFlag, boolean ackRequiredFlag, int hopCount, int destSeqNumber, long lifetime) {
         super(originatorIpAddress, destinationIpAddress);
+        this.repairFlag = repairFlag;
+        this.ackRequiredFlag = ackRequiredFlag;
+        this.hopCount = hopCount;
+        this.destSeqNumber = destSeqNumber;
+        this.lifetime = lifetime;
+    }
+
+    public AODVRREPPacket(UUID uuid, IP originatorIP, IP destinationIP, boolean repairFlag, boolean ackRequiredFlag, int hopCount, int destSeqNumber, long lifetime) {
+        super(uuid, originatorIP, destinationIP);
         this.repairFlag = repairFlag;
         this.ackRequiredFlag = ackRequiredFlag;
         this.hopCount = hopCount;

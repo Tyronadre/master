@@ -4,14 +4,11 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.tyro.mcnetwork.MCNetwork;
 import de.tyro.mcnetwork.MathUtil;
 import de.tyro.mcnetwork.client.RenderUtil;
-import de.tyro.mcnetwork.routing.NetworkFrame;
+import de.tyro.mcnetwork.entity.NetworkFrameEntity;
 import de.tyro.mcnetwork.routing.IP;
-import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.phys.Vec2;
@@ -20,15 +17,26 @@ import org.jetbrains.annotations.NotNull;
 import java.util.UUID;
 
 public abstract class NetworkPacket implements INetworkPacket {
-    public final UUID id = UUID.randomUUID();
+    public UUID id;
     IP originatorIP;
     IP destinationIP;
-    private NetworkFrame frame;
+    private NetworkFrameEntity frame;
 
     protected NetworkPacket(IP originatorIP, IP destinationIP) {
+        this.id = UUID.randomUUID();
         this.originatorIP = originatorIP;
         this.destinationIP = destinationIP;
     }
+
+    private NetworkPacket() {
+    }
+
+    public NetworkPacket(UUID uuid, IP originatorIP, IP destinationIP) {
+        this.id = uuid;
+        this.originatorIP = originatorIP;
+        this.destinationIP = destinationIP;
+    }
+
 
     @Override
     public UUID getId() {
@@ -46,12 +54,12 @@ public abstract class NetworkPacket implements INetworkPacket {
     }
 
     @Override
-    public NetworkFrame getNetworkFrame() {
+    public NetworkFrameEntity getNetworkFrame() {
         return frame;
     }
 
     @Override
-    public void setFrame(NetworkFrame frame) {
+    public void setFrame(NetworkFrameEntity frame) {
         this.frame = frame;
     }
 
@@ -119,13 +127,24 @@ public abstract class NetworkPacket implements INetworkPacket {
         this.destinationIP = destination;
     }
 
-    @Override
-    public @NotNull Type<? extends INetworkPacket> type() {
-        return new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(MCNetwork.MODID, getClass().getSimpleName()));
+    public void setOriginatorIP(IP originatorIP) {
+        this.originatorIP = originatorIP;
+    }
+
+
+    public void setId(UUID id) {
+        this.id = id;
     }
 
     @Override
-    public StreamCodec<ByteBuf, ? extends INetworkPacket> getStreamCodec() {
-        return null;
+    public @NotNull CustomPacketPayload.Type<? extends INetworkPacket> type() {
+        return new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(MCNetwork.MODID, getClass().getSimpleName().toLowerCase()));
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + "@" + Long.toHexString(getId().getLeastSignificantBits());
     }
 }
+
+

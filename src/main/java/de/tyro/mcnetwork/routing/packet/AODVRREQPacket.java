@@ -9,6 +9,8 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.world.phys.Vec2;
 
+import java.util.UUID;
+
 public class AODVRREQPacket extends NetworkPacket implements IProtocolPaket {
     public final boolean joinFlag;
     public final boolean repairFlag;
@@ -36,6 +38,19 @@ public class AODVRREQPacket extends NetworkPacket implements IProtocolPaket {
 
     public AODVRREQPacket(IP sourceIp, IP destinationIp, boolean unknownSeqFlag, int destinationSequenceNumber, int originatorSequenceNumber, int rreqId, int hopCount) {
         this(sourceIp, destinationIp, false, false, false, false, unknownSeqFlag, hopCount, rreqId, destinationSequenceNumber, originatorSequenceNumber);
+    }
+
+    public AODVRREQPacket(UUID uuid, IP originatorIP, IP destinationIP, boolean joinFlag, boolean repairFlag, boolean gratuitousFlag, boolean destinationOnlyFlag, boolean unknownSeqFlag, int hopCount, int rreqId, int destinationSequenceNumber, int originatorSequenceNumber) {
+        super(uuid, originatorIP, destinationIP);
+        this.joinFlag = joinFlag;
+        this.repairFlag = repairFlag;
+        this.gratuitousFlag = gratuitousFlag;
+        this.destinationOnlyFlag = destinationOnlyFlag;
+        this.unknownSeqFlag = unknownSeqFlag;
+        this.hopCount = hopCount;
+        this.rreqId = rreqId;
+        this.destinationSequenceNumber = destinationSequenceNumber;
+        this.originatorSequenceNumber = originatorSequenceNumber;
     }
 
     public NetworkPacket hop(INetworkNode self) {

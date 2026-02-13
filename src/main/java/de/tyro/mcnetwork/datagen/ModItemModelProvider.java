@@ -13,7 +13,6 @@ public class ModItemModelProvider extends ItemModelProvider {
 
     @Override
     protected void registerModels() {
-        basicItem(ItemRegistry.PACKET_ITEM.get());
         basicItem(ItemRegistry.NETWORK_BOOK.get());
         basicItem(ItemRegistry.SIM_CONTROLLER.get());
     }

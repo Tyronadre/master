@@ -1,8 +1,11 @@
 package de.tyro.mcnetwork.routing;
 
+import de.tyro.mcnetwork.entity.NetworkFrameEntity;
 import de.tyro.mcnetwork.routing.packet.IApplicationPaket;
 import de.tyro.mcnetwork.routing.packet.INetworkPacket;
 import de.tyro.mcnetwork.routing.protocol.RoutingProtocol;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.GlobalPos;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 
@@ -31,10 +34,12 @@ public interface INetworkNode {
      */
     Vec3 getPos();
 
+    BlockPos getBlockPos();
+
     /**
-     * Called when a frame is delivered to this node
+     * Called when a frame is delivered to this node. This should only be called from the server thread
      */
-    void onFrameReceive(NetworkFrame packet);
+    void onFrameReceive(NetworkFrameEntity packet);
 
     /**
      * Called when an application packed should be processed by this node

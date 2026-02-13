@@ -1,18 +1,18 @@
 package de.tyro.mcnetwork.routing;
 
-import com.mojang.datafixers.util.Function4;
-import de.tyro.mcnetwork.MCNetwork;
-import io.netty.buffer.ByteBuf;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
+import net.neoforged.neoforge.common.util.INBTSerializable;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.UnknownNullability;
 
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-public class IP implements CustomPacketPayload {
+public class IP implements INBTSerializable<CompoundTag> {
+    private static final Set<IP> ips = new HashSet<>();
     public static final IP ZERO = new IP(new int[]{0, 0, 0, 0});
     public static final IP BROADCAST = new IP(new int[]{255, 255, 255, 255});
     int[] address;
@@ -20,6 +20,8 @@ public class IP implements CustomPacketPayload {
     public IP(int[] address) {
         if (address == null || address.length != 4) throw new IllegalArgumentException("Invalid IP address: " + Arrays.toString(address));
         this.address = address;
+
+        ips.add(this);
     }
 
     public IP(String address) {
@@ -29,6 +31,8 @@ public class IP implements CustomPacketPayload {
 
         this.address = new int[4];
         for (int i = 0; i < split.length; i++) this.address[i] = Integer.parseInt(split[i]);
+
+        ips.add(this);
     }
 
     public static boolean validateIp(String ip) {
@@ -38,15 +42,22 @@ public class IP implements CustomPacketPayload {
     public static IP getNextFreeIP() {
         int[] ip = new int[4];
         for (int i = 0; i < 4; i++) {
+            for (int j = i; j >= 0; j--) ip[j] = 0;
             for (int j = 0; j < 255; j++) {
                 ip[3 - i] = j;
-                var ipO = new IP(ip);
 
-                if (ipO.equals(ZERO) || ipO.equals(BROADCAST)) continue;
-                if (SimulationEngine.INSTANCE.getNodeList().stream().noneMatch(it -> it.getIP().equals(ipO))) return ipO;
+                if (Arrays.equals(ip, ZERO.address) || ip.equals(BROADCAST.address)) {
+                    continue;
+                }
+                if (ips.stream().noneMatch(it -> Arrays.equals(ip, it.address))) return new IP(ip);
             }
         }
         throw new IllegalStateException("No free IP address found!");
+    }
+
+
+    public int[] asArray() {
+        return address;
     }
 
     @Override
@@ -66,18 +77,16 @@ public class IP implements CustomPacketPayload {
         return Arrays.hashCode(address);
     }
 
-    public static final CustomPacketPayload.Type<IP> TYPE = new CustomPacketPayload.Type<IP>(ResourceLocation.fromNamespaceAndPath(MCNetwork.MODID, "ip"));
-
-    public static final StreamCodec<ByteBuf, IP> STREAM_CODEC = StreamCodec.composite(
-            ByteBufCodecs.INT, (IP ip) -> ip.address[0],
-            ByteBufCodecs.INT, (IP ip) -> ip.address[1],
-            ByteBufCodecs.INT, (IP ip) -> ip.address[2],
-            ByteBufCodecs.INT, (IP ip) -> ip.address[3],
-            (ip0, ip1, ip2, ip3) -> new IP(new int[]{ip0, ip1, ip2, ip3})
-    );
 
     @Override
-    public @NotNull Type<? extends CustomPacketPayload> type() {
-        return TYPE;
+    public @UnknownNullability CompoundTag serializeNBT(HolderLookup.@NotNull Provider provider) {
+        var tag = new CompoundTag(4);
+        for (int i = 0; i < address.length; i++) tag.putInt(String.valueOf(i), address[i]);
+        return tag;
+    }
+
+    @Override
+    public void deserializeNBT(HolderLookup.@NotNull Provider provider, @NotNull CompoundTag nbt) {
+        for (int i = 0; i < 4; i++) address[i] = nbt.getInt(String.valueOf(i));
     }
 }

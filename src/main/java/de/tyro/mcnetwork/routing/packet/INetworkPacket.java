@@ -1,9 +1,7 @@
 package de.tyro.mcnetwork.routing.packet;
 
+import de.tyro.mcnetwork.entity.NetworkFrameEntity;
 import de.tyro.mcnetwork.routing.IP;
-import de.tyro.mcnetwork.routing.NetworkFrame;
-import io.netty.buffer.ByteBuf;
-import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
 import java.util.UUID;
@@ -14,8 +12,6 @@ public interface INetworkPacket extends IPacketRenderable, CustomPacketPayload {
     IP getOriginatorIP();
     INetworkPacket copy();
 
-    void setFrame(NetworkFrame inFlightPacket);
-    NetworkFrame getNetworkFrame();
-
-    StreamCodec<ByteBuf, ? extends INetworkPacket> getStreamCodec();
+    void setFrame(NetworkFrameEntity entity);
+    NetworkFrameEntity getNetworkFrame();
 }

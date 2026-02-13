@@ -2,17 +2,18 @@ package de.tyro.mcnetwork.routing.packet;
 
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.tyro.mcnetwork.MCNetwork;
 import de.tyro.mcnetwork.client.RenderUtil;
 import de.tyro.mcnetwork.routing.IP;
 import de.tyro.mcnetwork.routing.SimulationEngine;
-import io.netty.buffer.ByteBuf;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.phys.Vec2;
 
 import java.util.StringJoiner;
+import java.util.UUID;
 
 public class PingPacket extends NetworkPacket implements IApplicationPaket {
 
@@ -20,6 +21,11 @@ public class PingPacket extends NetworkPacket implements IApplicationPaket {
 
     public PingPacket(IP src, IP dst, long sendStartTime) {
         super(src, dst);
+        this.sendStartTime = sendStartTime;
+    }
+
+    public PingPacket(UUID uuid,  IP src, IP dst, long sendStartTime) {
+        super(uuid, src, dst);
         this.sendStartTime = sendStartTime;
     }
 
@@ -50,8 +56,5 @@ public class PingPacket extends NetworkPacket implements IApplicationPaket {
         return new PingPacket(originatorIP, destinationIP, sendStartTime);
     }
 
-    @Override
-    public StreamCodec<ByteBuf, ? extends INetworkPacket> getStreamCodec() {
-        return null;
-    }
+
 }

@@ -1,12 +1,11 @@
 package de.tyro.mcnetwork.block.entity;
 
-import com.mojang.datafixers.util.Pair;
+import de.tyro.mcnetwork.entity.NetworkFrameEntity;
+import de.tyro.mcnetwork.network.payload.routing.NewNetworkPacketPayload;
 import de.tyro.mcnetwork.routing.ApplicationMessageBus;
 import de.tyro.mcnetwork.routing.INetworkNode;
 import de.tyro.mcnetwork.routing.IP;
-import de.tyro.mcnetwork.routing.NetworkFrame;
 import de.tyro.mcnetwork.routing.SimulationEngine;
-import de.tyro.mcnetwork.routing.packet.DestinationUnreachablePacket;
 import de.tyro.mcnetwork.routing.packet.IApplicationPaket;
 import de.tyro.mcnetwork.routing.packet.INetworkPacket;
 import de.tyro.mcnetwork.routing.packet.IProtocolPaket;
@@ -15,29 +14,31 @@ import de.tyro.mcnetwork.routing.packet.PingRepPacket;
 import de.tyro.mcnetwork.routing.protocol.AODVProtocol;
 import de.tyro.mcnetwork.routing.protocol.RoutingProtocol;
 import de.tyro.mcnetwork.terminal.Terminal;
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.Deque;
 import java.util.List;
-import java.util.concurrent.ConcurrentLinkedDeque;
 
 public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
     //server
-    private IP ipAddress;
+    private IP ipAddress = IP.getNextFreeIP();
     private RoutingProtocol routingProtocol;
 
     //client
     private Terminal terminal;
     private ApplicationMessageBus applicationMessageBus;
     private ReceiveWindow receiveWindow;
-    private Deque<Pair<INetworkPacket, Integer>> scheduledPackages;
 
     public ComputerBlockEntity(BlockPos pos, BlockState state) {
         super(BlockEntityRegistry.COMPUTER_BE.get(), pos, state);
@@ -47,24 +48,22 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
     public void onLoad() {
         if (level == null) return;
 
-        if (level.isClientSide) {
-            ipAddress = IP.getNextFreeIP();
-            routingProtocol = new AODVProtocol(this);
-            SimulationEngine.INSTANCE.registerNode(this);
-//        } else {
-            terminal = new Terminal(this);
-            applicationMessageBus = new ApplicationMessageBus();
-            receiveWindow = new ReceiveWindow(5, 1);
-            scheduledPackages = new ConcurrentLinkedDeque<>();
-        }
+        terminal = new Terminal(this);
+        applicationMessageBus = new ApplicationMessageBus();
+        routingProtocol = new AODVProtocol(this);
+        SimulationEngine.INSTANCE.registerNode(this);
+        receiveWindow = new ReceiveWindow(5, 1);
+
     }
 
     @Override
     public void setRemoved() {
         super.setRemoved();
-        if (level.isClientSide) {
+        if (level.isClientSide()) {
+            if (terminal != null)
+                terminal.interrupt();
+        } else {
             SimulationEngine.INSTANCE.unregisterNode(this);
-            terminal.interrupt();
         }
     }
 
@@ -98,13 +97,17 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
 
     @Override
     public void onApplicationPacketReceived(IApplicationPaket packet) {
-        if (packet instanceof PingPacket ping) {
-            routingProtocol.send(new PingRepPacket(getIP(), ping.getOriginatorIP(), SimulationEngine.INSTANCE.getSimTime() - ping.sendStartTime, SimulationEngine.INSTANCE.getSimTime(), ping.id), Integer.MAX_VALUE);
+        //All the packets that are for the client are packets that will be processed by the applications on this Computer. Therefor we send them to the internal application bus.
+        if (level.isClientSide()) {
+            applicationMessageBus.handle(packet);
             return;
         }
 
-        //relay to the message bus, where other apps can handle it
-        applicationMessageBus.handle(packet);
+        if (packet instanceof PingPacket ping) {
+            routingProtocol.send(new PingRepPacket(getIP(), ping.getOriginatorIP(), SimulationEngine.INSTANCE.getSimTime() - ping.sendStartTime, SimulationEngine.INSTANCE.getSimTime(), ping.id), Integer.MAX_VALUE);
+        } else {
+            PacketDistributor.sendToAllPlayers(new NewNetworkPacketPayload(packet, 0, getBlockPos()));
+        }
     }
 
     @Override
@@ -118,17 +121,17 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
     }
 
     @Override
-    public void onFrameReceive(NetworkFrame frame) {
+    public void onFrameReceive(NetworkFrameEntity frame) {
 //        if (!receiveWindow.tryAccept()) {
 //            System.out.println("Received packet but not accepted by the client, interferred");
 //            return;
 //        }
 
-        var packet = frame.packet;
+        var packet = frame.getPacket();
 
         if (packet instanceof IProtocolPaket pp) routingProtocol.onProtocolPacketReceived(pp);
         else if (packet instanceof IApplicationPaket ap && packet.getDestinationIP().equals(this.ipAddress)) this.onApplicationPacketReceived(ap);
-        else routingProtocol.send(packet, frame.ttl - 1);
+        else routingProtocol.send(packet, frame.getTtl() - 1);
     }
 
     public List<String> getRenderText() {
@@ -142,11 +145,9 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
 
     @Override
     public void tick() {
-        this.scheduledPackages.forEach(p -> routingProtocol.send(p.getFirst(), p.getSecond()));
-        scheduledPackages.clear();
-
-        routingProtocol.tick();
-        applicationMessageBus.tick();
+        if (level.isClientSide()) {
+            applicationMessageBus.tick();
+        }
     }
 
     @Override
@@ -154,12 +155,18 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
         return this.getPos().distanceTo(to.getPos());
     }
 
+
     @Override
     public void send(INetworkPacket packet, int ttl) {
         //ensure we handle this on the server main thread from here on.
         if (level == null) return;
-        if (!level.isClientSide()) PacketDistributor.sendToServer(packet);
+        if (level.isClientSide()) PacketDistributor.sendToServer(new NewNetworkPacketPayload(packet, ttl, getBlockPos()));
         else routingProtocol.send(packet, ttl);
+    }
+
+
+    public void addNewPacketFromClient(INetworkPacket packet, int ttl) {
+        routingProtocol.send(packet, ttl);
     }
 
     static class ReceiveWindow {
@@ -187,6 +194,33 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
         }
     }
 
+    @Override
+    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+        super.saveAdditional(tag, registries);
+        if (this.ipAddress == null) return;
+        tag.put("ip", this.ipAddress.serializeNBT(registries));
+    }
 
+    @Override
+    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+        super.loadAdditional(tag, registries);
+        ipAddress.deserializeNBT(registries, tag.getCompound("ip"));
+
+    }
+
+    @Override
+    public @Nullable Packet<ClientGamePacketListener> getUpdatePacket() {
+        return ClientboundBlockEntityDataPacket.create(this);
+    }
+
+    @Override
+    public @NotNull CompoundTag getUpdateTag(HolderLookup.Provider registries) {
+        return saveWithoutMetadata(registries);
+    }
+
+    @Override
+    public String toString() {
+        return "Computer: " + getIP() + "@" + Integer.toHexString(hashCode());
+    }
 }
 
