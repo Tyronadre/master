@@ -4,8 +4,8 @@ import de.tyro.mcnetwork.routing.IP;
 
 public class DestinationUnreachablePacket extends NetworkPacket implements IApplicationPaket {
 
-    public DestinationUnreachablePacket(IP destIp) {
-        super(null, destIp);
+    public DestinationUnreachablePacket(IP thisIP, IP destIp) {
+        super(thisIP, destIp);
     }
 
     @Override

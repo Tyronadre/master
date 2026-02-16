@@ -1,7 +1,5 @@
 package de.tyro.mcnetwork.client;
 
-import com.mojang.blaze3d.platform.Lighting;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import de.tyro.mcnetwork.block.entity.ComputerBlockEntity;
@@ -49,23 +47,11 @@ public class ComputerBlockEntityRenderer implements BlockEntityRenderer<Computer
         poseStack.mulPose(Axis.XN.rotationDegrees(180.0F));
         poseStack.scale(0.025f, 0.025f, 0.025f);
 
-        Font font = mc.font;
-        List<String> text = be.getRenderText();
-        float textWidth = text.stream().mapToInt(font::width).max().orElse(100);
-
-        RenderUtil.renderBackgroundQuad(poseStack, buffer, textWidth, text.size() * 10, alpha);
+        RenderUtil.renderBackgroundQuad(poseStack, buffer, 170, 120, alpha);
 
         poseStack.translate(0, 0, -0.01f);
 
-        int textColor = ((int) (alpha * 255) << 24) | 0xFFFFFF;
-
-        List<String> lines = be.getRenderText();
-
-        int y = 0;
-        for (String line : lines) {
-            font.drawInBatch(line, -font.width(line) / 2f, y, textColor, false, poseStack.last().pose(), buffer, Font.DisplayMode.SEE_THROUGH, 0, packedLight);
-            y += 10;
-        }
+        be.getRoutingProtocol().render(poseStack, buffer, packedLight, alpha);
 
         poseStack.popPose();
     }

@@ -5,8 +5,11 @@ import de.tyro.mcnetwork.network.configuration.SimulationConfigurationTask;
 import de.tyro.mcnetwork.network.payload.ConfigAckPayload;
 import de.tyro.mcnetwork.network.payload.ConfigSimulationEngineInitPayload;
 import de.tyro.mcnetwork.network.payload.SimulationEngineSpeedPayload;
+import de.tyro.mcnetwork.network.payload.TerminalUpdatePayload;
+import de.tyro.mcnetwork.network.payload.TerminalWatchingPayload;
 import de.tyro.mcnetwork.network.payload.routing.NewNetworkFramePayload;
 import de.tyro.mcnetwork.network.payload.routing.NewNetworkPacketPayload;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.network.event.RegisterConfigurationTasksEvent;
@@ -34,6 +37,24 @@ public class NetworkHandler {
                 ConfigSimulationEngineInitPayload::handle
         );
 
+
+        // ------ TERMINAL ----- //
+
+        registrar.playToServer(
+                TerminalWatchingPayload.TYPE,
+                TerminalWatchingPayload.STREAM_CODEC,
+                TerminalWatchingPayload::handleServerbound
+        );
+
+        registrar.playBidirectional(
+                TerminalUpdatePayload.TYPE,
+                TerminalUpdatePayload.STREAM_CODEC,
+                new DirectionalPayloadHandler<>(
+                        TerminalUpdatePayload::handleClientbound,
+                        TerminalUpdatePayload::handleServerbound
+                )
+        );
+
         registrar.playBidirectional(
                 SimulationEngineSpeedPayload.TYPE,
                 SimulationEngineSpeedPayload.STREAM_CODEC,
@@ -50,7 +71,6 @@ public class NetworkHandler {
                 NewNetworkPacketPayload.STEAM_CODEC,
                 NewNetworkPacketPayload::handle
         );
-
     }
 
     @SubscribeEvent

@@ -1,6 +1,8 @@
 package de.tyro.mcnetwork.gui;
 
 import de.tyro.mcnetwork.block.entity.ComputerBlockEntity;
+import de.tyro.mcnetwork.network.payload.TerminalUpdatePayload;
+import de.tyro.mcnetwork.network.payload.TerminalWatchingPayload;
 import de.tyro.mcnetwork.terminal.CommandRegistry;
 import de.tyro.mcnetwork.terminal.Terminal;
 import net.minecraft.Util;
@@ -10,6 +12,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
+import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 
@@ -18,7 +21,6 @@ import java.util.List;
 
 public class TerminalScreen extends Screen {
 
-    private final ComputerBlockEntity computer;
     private final Terminal terminal;
     private final Player player;
 
@@ -44,7 +46,6 @@ public class TerminalScreen extends Screen {
 
     public TerminalScreen(ComputerBlockEntity computer, Player player) {
         super(Component.literal("Terminal"));
-        this.computer = computer;
         this.terminal = computer.getTerminal();
         this.player = player;
     }
@@ -53,13 +54,17 @@ public class TerminalScreen extends Screen {
     protected void init() {
         super.init();
         this.setFocused(true);
-        terminal.registerPlayer(player);
+        PacketDistributor.sendToServer(new TerminalWatchingPayload(player.getUUID(), true));
     }
 
     @Override
     public void onClose() {
         super.onClose();
-        terminal.unregisterPlayer(player);
+        PacketDistributor.sendToServer(new TerminalWatchingPayload(player.getUUID(), false));
+    }
+
+    private void onChange() {
+        PacketDistributor.sendToServer(new TerminalUpdatePayload(inputBuffer.toString()));
     }
 
     /* ============================================================
@@ -85,6 +90,7 @@ public class TerminalScreen extends Screen {
                 if (cursorPosition > 0) {
                     inputBuffer.deleteCharAt(cursorPosition - 1);
                     cursorPosition--;
+                    onChange();
                 }
                 return true;
             }
@@ -101,16 +107,19 @@ public class TerminalScreen extends Screen {
 
             case GLFW.GLFW_KEY_UP -> {
                 historyUp();
+                onChange();
                 return true;
             }
 
             case GLFW.GLFW_KEY_DOWN -> {
                 historyDown();
+                onChange();
                 return true;
             }
 
             case GLFW.GLFW_KEY_TAB -> {
                 handleTabCompletion();
+                onChange();
                 return true;
             }
         }
@@ -153,6 +162,7 @@ public class TerminalScreen extends Screen {
             resetCompletion();
             inputBuffer.insert(cursorPosition, codePoint);
             cursorPosition++;
+            onChange();
             return true;
         }
         return false;

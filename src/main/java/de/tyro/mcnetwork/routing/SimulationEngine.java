@@ -76,13 +76,16 @@ public class SimulationEngine {
     }
 
     /**
-     * Broadcasts this packet to all of the neighbors of this node
+     * Broadcasts this packet to all of the neighbors of this node. The packet will be wrapped in a NetworkFrame that will be send.
+     * <br>
+     * If this is called on the client side, the method will behave the same, but not send any frames.
      *
      * @param from   the where the packet originates
      * @param packet the packet to broadcast
      * @param ttl    the time to life of the packet
      */
     public void broadcast(INetworkNode from, INetworkPacket packet, int ttl) {
+        if (from.getLevel().isClientSide()) return;
         if (ttl <= 0) return;
         for (INetworkNode to : getNeighbors(from)) {
             log.debug("Broadcasting {} from {} to {}", packet, from, to);
@@ -90,10 +93,25 @@ public class SimulationEngine {
         }
     }
 
+    /**
+     * Unicasts a packet from a node to another node. The packet will be wrapped in a NetworkFrame that will be send.
+     * If the ttl is 0 the method will return false and not send a frame.
+     * If the destination is out of communication range, this method will return false and not send a frame.
+     * If either the source or destination node is null, this method will return false and not send a frame.
+     * <br>
+     * If this is called on the client side, the method will behave the same, but not send any frames.
+     *
+     * @param from the source node
+     * @param to the destination node
+     * @param packet the packet to send
+     * @param ttl time to live
+     * @return true if the frame was send, false otherwise
+     */
     public boolean unicast(INetworkNode from, INetworkNode to, INetworkPacket packet, int ttl) {
         if (ttl <= 0) return false;
         if (from == null || to == null) return false;
         if (from.distanceTo(to) > COMM_RADIUS) return false; // out of range
+        if (from.getLevel().isClientSide()) return true;
         newPacket(from, to, packet, ttl);
         return true;
     }

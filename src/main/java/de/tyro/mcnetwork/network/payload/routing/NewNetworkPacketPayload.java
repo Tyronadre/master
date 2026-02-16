@@ -6,6 +6,7 @@ import de.tyro.mcnetwork.block.entity.ComputerBlockEntity;
 import de.tyro.mcnetwork.network.NetworkUtil;
 import de.tyro.mcnetwork.routing.packet.IApplicationPaket;
 import de.tyro.mcnetwork.routing.packet.INetworkPacket;
+import de.tyro.mcnetwork.routing.packet.IProtocolPaket;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -15,8 +16,13 @@ import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.slf4j.Logger;
 
-public record NewNetworkPacketPayload(INetworkPacket packet, Integer ttl, BlockPos pos) implements CustomPacketPayload {
+public record NewNetworkPacketPayload(INetworkPacket packet, Integer ttl, BlockPos pos, Boolean toSelf) implements CustomPacketPayload {
     static Logger logger = LogUtils.getLogger();
+
+
+    public static CustomPacketPayload toSelf(INetworkPacket packet) {
+        return new NewNetworkPacketPayload(packet, -1, packet.getNetworkFrame().getFrom().getBlockPos(), true);
+    }
 
     @Override
     public Type<? extends CustomPacketPayload> type() {
@@ -32,17 +38,28 @@ public record NewNetworkPacketPayload(INetworkPacket packet, Integer ttl, BlockP
 
         var level = context.player().level();
         var be = NetworkUtil.getBlockEntityAt(ComputerBlockEntity.class, level, pos());
-        if (level.isClientSide && packet.getNetworkFrame() == null) {
-            be.onApplicationPacketReceived(((IApplicationPaket) packet));
+        if (be == null) {
+            logger.error("Could not find computer block at {}", pos);
+            return;
         }
-        be.getRoutingProtocol().send(packet, ttl);
+
+        if (toSelf) {
+            if (packet instanceof IProtocolPaket p) {
+                be.getRoutingProtocol().onProtocolPacketReceived(p);
+            } else if (packet instanceof IApplicationPaket p) {
+                be.onApplicationPacketReceived(p);
+            }
+        } else {
+            be.getRoutingProtocol().send(packet, ttl);
+        }
     }
 
     public static final StreamCodec<FriendlyByteBuf, NewNetworkPacketPayload> STEAM_CODEC = StreamCodec.composite(
-            NetworkPacketPayload.codec(), self -> new NetworkPacketPayload(self.packet),
+            NetworkPacketPayload.codec(), it -> new NetworkPacketPayload(it.packet),
             ByteBufCodecs.INT, NewNetworkPacketPayload::ttl,
             BlockPos.STREAM_CODEC, NewNetworkPacketPayload::pos,
-            (NetworkPacketPayload payload, Integer ttl, BlockPos pos) -> new NewNetworkPacketPayload(payload.packet(), ttl, pos)
+            ByteBufCodecs.BOOL, NewNetworkPacketPayload::toSelf,
+            (payload, ttl, pos, self) -> new NewNetworkPacketPayload(payload.packet(), ttl, pos, self)
     );
 
 }

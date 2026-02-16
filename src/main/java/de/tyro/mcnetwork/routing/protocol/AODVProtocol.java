@@ -1,6 +1,9 @@
 package de.tyro.mcnetwork.routing.protocol;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.datafixers.util.Pair;
+import de.tyro.mcnetwork.client.RenderUtil;
+import de.tyro.mcnetwork.network.payload.routing.NewNetworkFramePayload;
 import de.tyro.mcnetwork.network.payload.routing.NewNetworkPacketPayload;
 import de.tyro.mcnetwork.routing.INetworkNode;
 import de.tyro.mcnetwork.routing.IP;
@@ -12,17 +15,17 @@ import de.tyro.mcnetwork.routing.packet.DestinationUnreachablePacket;
 import de.tyro.mcnetwork.routing.packet.IApplicationPaket;
 import de.tyro.mcnetwork.routing.packet.INetworkPacket;
 import de.tyro.mcnetwork.routing.packet.IProtocolPaket;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class AODVProtocol implements RoutingProtocol {
+public class AODVProtocol implements IRoutingProtocol {
     //CONSTANTS
     private static final SimulationEngine simulator = SimulationEngine.getInstance();
 
@@ -61,18 +64,10 @@ public class AODVProtocol implements RoutingProtocol {
         this.node = node;
     }
 
-
     @Override
     public boolean hasRoute(IP destination) {
         var entry = routingTable.get(destination);
         return entry != null && entry.valid && entry.lifetime > simulator.getSimTime();
-    }
-
-    @Override
-    public Collection<String> renderData() {
-        return routingTable.entrySet().stream()
-                .filter(it -> it.getValue().lifetime - SimulationEngine.getInstance().getSimTime() > 0)
-                .map(it -> it.getKey() + " | " + it.getValue().nextHop + " @ " + it.getValue().seqNumber + ", " + (it.getValue().lifetime - SimulationEngine.getInstance().getSimTime()) + " , " + it.getValue().precursors).toList();
     }
 
     @Override
@@ -232,7 +227,7 @@ public class AODVProtocol implements RoutingProtocol {
     }
 
     private void notifyDestinationUnreachable(IP destIp) {
-        PacketDistributor.sendToAllPlayers(new NewNetworkPacketPayload(new DestinationUnreachablePacket(destIp), 1, this.node.getBlockPos()));
+        PacketDistributor.sendToAllPlayers(NewNetworkPacketPayload.toSelf(new DestinationUnreachablePacket(node.getIP(), destIp)));
     }
 
     private void dropBufferedPackets(IP destIp) {
@@ -241,6 +236,9 @@ public class AODVProtocol implements RoutingProtocol {
 
     @Override
     public void onProtocolPacketReceived(IProtocolPaket packet) {
+        if (!node.getLevel().isClientSide()) {
+            PacketDistributor.sendToAllPlayers(NewNetworkFramePayload.toSelf(packet));
+        }
         if (packet instanceof AODVRREQPacket rreq) handleRREQ(rreq);
         else if (packet instanceof AODVRREPPacket rrep) handleRREP(rrep);
         else if (packet instanceof AODVRERRPacket rerr) handleRERR(3, null, rerr);
@@ -800,6 +798,124 @@ public class AODVProtocol implements RoutingProtocol {
         pendingData.computeIfAbsent(packet.getDestinationIP(), k -> new ArrayList<>()).add(new Pair<>(packet, ttl));
         discoverRoute(packet.getDestinationIP());
     }
+
+    public void render(PoseStack poseStack, MultiBufferSource buffer, int packedLight, float alpha) {
+        final float width = 160f;
+        float y = 0f;
+
+        long now = SimulationEngine.getInstance().getSimTime();
+
+        // --------------------------------------------------
+        // HEADER
+        // --------------------------------------------------
+        RenderUtil.drawStringWithAlphaColor(RenderUtil.Align.CENTER, "AODV @ " + node.getIP(), alpha, width, y, poseStack, buffer, packedLight);
+        y += 10;
+
+        RenderUtil.renderHLine(alpha, width, y, poseStack, buffer, packedLight);
+        y += 6;
+
+        // --------------------------------------------------
+        // BASIC STATE
+        // --------------------------------------------------
+
+        RenderUtil.drawStringWithAlphaColor(RenderUtil.Align.LEFT, "Seq=" + sequenceNumber + "  RREQ_ID=" + rreqId, alpha, width, y, poseStack, buffer, packedLight);
+        y += 8;
+
+        RenderUtil.drawStringWithAlphaColor(RenderUtil.Align.LEFT, "RREQ/s=" + rreqInLastSecond + "  RERR/s=" + rerrInLastSecond, alpha, width, y, poseStack, buffer, packedLight);
+        y += 10;
+
+        // --------------------------------------------------
+        // ROUTING TABLE
+        // --------------------------------------------------
+
+        RenderUtil.drawString("Routing Table:", 0xAAAAFF, 0, y, poseStack, buffer, packedLight);
+        y += 8;
+
+        if (routingTable.isEmpty()) {
+            RenderUtil.drawStringWithAlphaColor(RenderUtil.Align.LEFT, "  <empty>", alpha, width, y, poseStack, buffer, packedLight);
+            y += 8;
+        } else {
+            for (RouteEntry entry : routingTable.values()) {
+
+                int color;
+
+                if (!entry.valid) {
+                    color = 0xFF5555; // red
+                } else if (entry.lifetime - now < 2000) {
+                    color = 0xFFAA00; // expiring
+                } else {
+                    color = 0x55FF55; // valid
+                }
+
+                String line = entry.destination + " → " + entry.nextHop + "  h=" + entry.hopCount + "  seq=" + entry.seqNumber + "  lt=" + Math.max(0, entry.lifetime - now);
+
+                RenderUtil.drawString(RenderUtil.Align.LEFT, line, color, width, y, poseStack, buffer, packedLight);
+
+                y += 8;
+            }
+        }
+
+        y += 4;
+        RenderUtil.renderHLine(alpha, width, y, poseStack, buffer, packedLight);
+        y += 6;
+
+        // --------------------------------------------------
+        // ACTIVE DISCOVERIES
+        // --------------------------------------------------
+
+        RenderUtil.drawString("Discoveries:", 0xFFFF55, 0, y, poseStack, buffer, packedLight);
+        y += 8;
+
+        if (discoveries.isEmpty()) {
+            RenderUtil.drawStringWithAlphaColor("  <none>", alpha, 0, y, poseStack, buffer, packedLight);
+            y += 8;
+        } else {
+            for (Map.Entry<IP, RouteDiscoveryState> e : discoveries.entrySet()) {
+
+                RouteDiscoveryState d = e.getValue();
+
+                String line = e.getKey() + "  ttl=" + d.ttl + "  tries=" + d.rreqAttempts + "  r/s=" + d.rreqInLastSecond;
+
+                RenderUtil.drawString(line, 0xFFFF55, 0, y, poseStack, buffer, packedLight);
+
+                y += 8;
+            }
+        }
+
+        y += 4;
+        RenderUtil.renderHLine(alpha, width, y, poseStack, buffer, packedLight);
+        y += 6;
+
+        // --------------------------------------------------
+        // PENDING DATA
+        // --------------------------------------------------
+
+        RenderUtil.drawString("Pending Data:", 0xFFAAFF, 0, y, poseStack, buffer, packedLight);
+        y += 8;
+
+        if (pendingData.isEmpty()) {
+            RenderUtil.drawStringWithAlphaColor("  <none>", alpha, 0, y, poseStack, buffer, packedLight);
+            y += 8;
+        } else {
+            for (Map.Entry<IP, List<Pair<INetworkPacket, Integer>>> e : pendingData.entrySet()) {
+
+                RenderUtil.drawString(e.getKey() + "  queued=" + e.getValue().size(), 0xFFAAFF, 0, y, poseStack, buffer, packedLight);
+
+                y += 8;
+            }
+        }
+
+        y += 4;
+        RenderUtil.renderHLine(alpha, width, y, poseStack, buffer, packedLight);
+        y += 6;
+
+        // --------------------------------------------------
+        // CACHE + SCHEDULER
+        // --------------------------------------------------
+
+        RenderUtil.drawStringWithAlphaColor("Seen RREQs=" + seenRreqs.size() + "  TickActions=" + tickActions.size(), alpha, 0, y, poseStack, buffer, packedLight);
+    }
+
 
     @Override
     public void tick() {

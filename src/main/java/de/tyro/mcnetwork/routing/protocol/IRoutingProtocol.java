@@ -1,13 +1,12 @@
 package de.tyro.mcnetwork.routing.protocol;
 
 
+import de.tyro.mcnetwork.routing.IHudRenderer;
 import de.tyro.mcnetwork.routing.IP;
 import de.tyro.mcnetwork.routing.packet.INetworkPacket;
 import de.tyro.mcnetwork.routing.packet.IProtocolPaket;
 
-import java.util.Collection;
-
-public interface RoutingProtocol {
+public interface IRoutingProtocol extends IHudRenderer {
 
     void onProtocolPacketReceived(IProtocolPaket packet);
 
@@ -18,7 +17,4 @@ public interface RoutingProtocol {
     void tick();
 
     boolean hasRoute(IP destination);
-
-    Collection<String> renderData();
-
 }

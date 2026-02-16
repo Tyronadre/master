@@ -10,7 +10,7 @@ import de.tyro.mcnetwork.routing.packet.PingRepPacket;
 public class NetworkPacketCodecGenerator {
     public static void generate() {
         NetworkPacketCodecRegistry.register(DestinationUnreachablePacket.class,
-                (buf, uuid, originatorIP, destinationIP) -> new DestinationUnreachablePacket(destinationIP),
+                (buf, uuid, originatorIP, destinationIP) -> new DestinationUnreachablePacket(originatorIP, destinationIP),
                 (buf, packet) -> {}
         );
 

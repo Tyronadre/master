@@ -3,9 +3,9 @@ package de.tyro.mcnetwork.routing;
 import de.tyro.mcnetwork.entity.NetworkFrameEntity;
 import de.tyro.mcnetwork.routing.packet.IApplicationPaket;
 import de.tyro.mcnetwork.routing.packet.INetworkPacket;
-import de.tyro.mcnetwork.routing.protocol.RoutingProtocol;
+import de.tyro.mcnetwork.routing.protocol.IRoutingProtocol;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.GlobalPos;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 
@@ -22,7 +22,7 @@ public interface INetworkNode {
     /**
      * @return the routing protocol that this computer currently uses
      */
-    RoutingProtocol getRoutingProtocol();
+    IRoutingProtocol getRoutingProtocol();
 
     /**
      * @return the bus where application packages can be accessed for any application running on this computer
@@ -63,4 +63,6 @@ public interface INetworkNode {
      * @param ttl    the time to life for frame that will be send
      */
     void send(INetworkPacket packet, int ttl);
+
+    Level getLevel();
 }

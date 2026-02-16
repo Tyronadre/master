@@ -12,7 +12,7 @@ import de.tyro.mcnetwork.routing.packet.IProtocolPaket;
 import de.tyro.mcnetwork.routing.packet.PingPacket;
 import de.tyro.mcnetwork.routing.packet.PingRepPacket;
 import de.tyro.mcnetwork.routing.protocol.AODVProtocol;
-import de.tyro.mcnetwork.routing.protocol.RoutingProtocol;
+import de.tyro.mcnetwork.routing.protocol.IRoutingProtocol;
 import de.tyro.mcnetwork.terminal.Terminal;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
@@ -33,7 +33,7 @@ import java.util.List;
 public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
     //server
     private IP ipAddress = IP.getNextFreeIP();
-    private RoutingProtocol routingProtocol;
+    private IRoutingProtocol routingProtocol;
 
     //client
     private Terminal terminal;
@@ -53,15 +53,13 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
         routingProtocol = new AODVProtocol(this);
         SimulationEngine.INSTANCE.registerNode(this);
         receiveWindow = new ReceiveWindow(5, 1);
-
     }
 
     @Override
     public void setRemoved() {
         super.setRemoved();
         if (level.isClientSide()) {
-            if (terminal != null)
-                terminal.interrupt();
+            if (terminal != null) terminal.interrupt();
         } else {
             SimulationEngine.INSTANCE.unregisterNode(this);
         }
@@ -91,7 +89,7 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
     }
 
     @Override
-    public RoutingProtocol getRoutingProtocol() {
+    public IRoutingProtocol getRoutingProtocol() {
         return routingProtocol;
     }
 
@@ -106,7 +104,7 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
         if (packet instanceof PingPacket ping) {
             routingProtocol.send(new PingRepPacket(getIP(), ping.getOriginatorIP(), SimulationEngine.INSTANCE.getSimTime() - ping.sendStartTime, SimulationEngine.INSTANCE.getSimTime(), ping.id), Integer.MAX_VALUE);
         } else {
-            PacketDistributor.sendToAllPlayers(new NewNetworkPacketPayload(packet, 0, getBlockPos()));
+            PacketDistributor.sendToAllPlayers(NewNetworkPacketPayload.toSelf(packet));
         }
     }
 
@@ -128,16 +126,14 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
 //        }
 
         var packet = frame.getPacket();
-
         if (packet instanceof IProtocolPaket pp) routingProtocol.onProtocolPacketReceived(pp);
         else if (packet instanceof IApplicationPaket ap && packet.getDestinationIP().equals(this.ipAddress)) this.onApplicationPacketReceived(ap);
-        else routingProtocol.send(packet, frame.getTtl() - 1);
+        else if (frame.getTtl() > 0) routingProtocol.send(packet, frame.getTtl() - 1);
     }
 
     public List<String> getRenderText() {
         var list = new ArrayList<String>();
         if (getIP() != null) list.add(getIP().toString());
-        if (getRoutingProtocol() != null) list.addAll(getRoutingProtocol().renderData());
 
         return list;
     }
@@ -148,6 +144,7 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
         if (level.isClientSide()) {
             applicationMessageBus.tick();
         }
+        routingProtocol.tick();
     }
 
     @Override
@@ -158,14 +155,8 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
 
     @Override
     public void send(INetworkPacket packet, int ttl) {
-        //ensure we handle this on the server main thread from here on.
         if (level == null) return;
-        if (level.isClientSide()) PacketDistributor.sendToServer(new NewNetworkPacketPayload(packet, ttl, getBlockPos()));
-        else routingProtocol.send(packet, ttl);
-    }
-
-
-    public void addNewPacketFromClient(INetworkPacket packet, int ttl) {
+        if (level.isClientSide()) PacketDistributor.sendToServer(new NewNetworkPacketPayload(packet, ttl, getBlockPos(), false));
         routingProtocol.send(packet, ttl);
     }
 

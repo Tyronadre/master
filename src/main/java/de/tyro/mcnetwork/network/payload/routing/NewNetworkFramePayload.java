@@ -6,6 +6,7 @@ import de.tyro.mcnetwork.block.entity.ComputerBlockEntity;
 import de.tyro.mcnetwork.entity.NetworkFrameEntity;
 import de.tyro.mcnetwork.network.NetworkUtil;
 import de.tyro.mcnetwork.routing.packet.INetworkPacket;
+import de.tyro.mcnetwork.routing.packet.IProtocolPaket;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -30,6 +31,11 @@ public record NewNetworkFramePayload(BlockPos from, BlockPos to, INetworkPacket 
         return new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(MCNetwork.MODID, NetworkPacketPayloadUtil.class.getSimpleName().toLowerCase()));
     }
 
+    public static CustomPacketPayload toSelf(IProtocolPaket packet) {
+        var frame = packet.getNetworkFrame();
+        return new NewNetworkFramePayload(frame.getFrom().getBlockPos(), frame.getTo().getBlockPos(), packet, -1);
+    }
+
     private NetworkPacketPayload payload() {
         return new NetworkPacketPayload(packet);
     }
@@ -52,12 +58,19 @@ public record NewNetworkFramePayload(BlockPos from, BlockPos to, INetworkPacket 
     public void handle(IPayloadContext context) {
         logger.debug("Received {} on {}", this, context.player().level().isClientSide ? "client" : "server");
 
+
         var level = context.player().level();
         var from = NetworkUtil.getBlockEntityAt(ComputerBlockEntity.class, level, from());
         var to = NetworkUtil.getBlockEntityAt(ComputerBlockEntity.class, level, to());
 
+
         var networkFrameEntity = new NetworkFrameEntity(level, from, to, ttl(), packet());
 
-        context.player().level().addFreshEntity(networkFrameEntity);
+
+        if (level.isClientSide && ttl == -1) {
+            to.onFrameReceive(networkFrameEntity);
+        } else {
+            context.player().level().addFreshEntity(networkFrameEntity);
+        }
     }
 }

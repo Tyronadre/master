@@ -1,7 +1,7 @@
 plugins {
     id 'java-library'
     id 'maven-publish'
-    id 'net.neoforged.moddev' version '2.0.107'
+    id 'net.neoforged.moddev' version '2.0.140'
     id 'idea'
 }
 
@@ -19,7 +19,6 @@ group = mod_group_id
 
 repositories {
     // Add here additional repositories if required by some of the dependencies below.
-    mavenCentral()
 }
 
 base {
@@ -110,7 +109,6 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 // "optional", meaning it will not be pulled by dependents of this mod.
 configurations {
     runtimeClasspath.extendsFrom localRuntime
-    includedJars
 }
 
 dependencies {
@@ -131,8 +129,6 @@ var generateModMetadata = tasks.register("generateModMetadata", ProcessResources
             mod_name               : mod_name,
             mod_license            : mod_license,
             mod_version            : mod_version,
-            mod_authors            : mod_authors,
-            mod_description        : mod_description
     ]
     inputs.properties replaceProperties
     expand replaceProperties

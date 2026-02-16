@@ -22,8 +22,8 @@ public abstract class NetworkPacketCodec<T extends INetworkPacket> implements St
     @Override
     public void encode(FriendlyByteBuf buffer, T networkPacket) {
         buffer.writeUUID(networkPacket.getId());
-        writeIP(buffer, networkPacket.getOriginatorIP());
-        writeIP(buffer, networkPacket.getDestinationIP());
+        writeIP(buffer, networkPacket.getOriginatorIP() == null ? IP.ZERO : networkPacket.getOriginatorIP());
+        writeIP(buffer, networkPacket.getDestinationIP() == null  ? IP.ZERO : networkPacket.getDestinationIP());
         encodeActual(buffer, networkPacket);
     }
 
