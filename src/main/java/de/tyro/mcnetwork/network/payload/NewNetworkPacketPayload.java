@@ -1,9 +1,11 @@
-package de.tyro.mcnetwork.network.payload.routing;
+package de.tyro.mcnetwork.network.payload;
 
 import com.mojang.logging.LogUtils;
 import de.tyro.mcnetwork.MCNetwork;
 import de.tyro.mcnetwork.block.entity.ComputerBlockEntity;
 import de.tyro.mcnetwork.network.NetworkUtil;
+import de.tyro.mcnetwork.network.payload.networkPacket.NetworkPacketPayload;
+import de.tyro.mcnetwork.routing.INetworkNode;
 import de.tyro.mcnetwork.routing.packet.IApplicationPaket;
 import de.tyro.mcnetwork.routing.packet.INetworkPacket;
 import de.tyro.mcnetwork.routing.packet.IProtocolPaket;
@@ -20,8 +22,8 @@ public record NewNetworkPacketPayload(INetworkPacket packet, Integer ttl, BlockP
     static Logger logger = LogUtils.getLogger();
 
 
-    public static CustomPacketPayload toSelf(INetworkPacket packet) {
-        return new NewNetworkPacketPayload(packet, -1, packet.getNetworkFrame().getFrom().getBlockPos(), true);
+    public static CustomPacketPayload toSelf(INetworkPacket packet, INetworkNode node) {
+        return new NewNetworkPacketPayload(packet, -1,node.getBlockPos(), true);
     }
 
     @Override

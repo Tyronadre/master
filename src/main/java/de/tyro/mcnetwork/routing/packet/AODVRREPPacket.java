@@ -64,7 +64,7 @@ public class AODVRREPPacket extends NetworkPacket implements IProtocolPaket {
     }
 
     @Override
-    protected Vec2 getContentSize(Font font) {
+    public Vec2 getRenderSize(Font font) {
         var width = font.width("Lifetime " + lifetime)/2;
 
         return new Vec2(width, 24);

@@ -4,14 +4,11 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import de.tyro.mcnetwork.block.entity.ComputerBlockEntity;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.world.phys.Vec3;
-
-import java.util.List;
 
 public class ComputerBlockEntityRenderer implements BlockEntityRenderer<ComputerBlockEntity> {
     private static final double MAX_DISTANCE = 16.0;
@@ -47,7 +44,9 @@ public class ComputerBlockEntityRenderer implements BlockEntityRenderer<Computer
         poseStack.mulPose(Axis.XN.rotationDegrees(180.0F));
         poseStack.scale(0.025f, 0.025f, 0.025f);
 
-        RenderUtil.renderBackgroundQuad(poseStack, buffer, 170, 120, alpha);
+        var width = be.getRoutingProtocol().getRenderSize(Minecraft.getInstance().font).x;
+
+        RenderUtil.renderBackgroundQuad(poseStack, buffer, width, 120, alpha);
 
         poseStack.translate(0, 0, -0.01f);
 

@@ -33,7 +33,7 @@ public class PingCommand extends Command {
 
         var destIP = new IP(destIPString);
 
-        SimulationEngine sim = SimulationEngine.getInstance();
+        SimulationEngine sim = SimulationEngine.getInstance(terminal.getNode().getLevel().isClientSide());
 
         println("PING " + destIP);
 

@@ -70,7 +70,7 @@ public abstract class NetworkPacket implements INetworkPacket {
 
         //Calculate the sizes
         var headerSize = getHeaderSize(font);
-        var contentSize = getContentSize(font);
+        var contentSize = getRenderSize(font);
 
         var size = new Vec2(MathUtil.max(headerSize.x, contentSize.x, 70), headerSize.y + contentSize.y + 2);
 
@@ -92,7 +92,7 @@ public abstract class NetworkPacket implements INetworkPacket {
         poseStack.popPose();
     }
 
-    protected Vec2 getContentSize(Font font) {
+    public Vec2 getRenderSize(Font font) {
         return Vec2.ZERO;
     }
 

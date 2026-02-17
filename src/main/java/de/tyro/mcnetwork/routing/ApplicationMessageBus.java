@@ -14,6 +14,11 @@ public class ApplicationMessageBus {
     private final Deque<IApplicationPaket> packets = new ConcurrentLinkedDeque<>();
     private final ReentrantLock lock = new ReentrantLock();
     private final Condition stateChanged = lock.newCondition();
+    private final INetworkNode node;
+
+    public ApplicationMessageBus(INetworkNode node) {
+        this.node = node;
+    }
 
     /**
      * Neue Pakete vom Netzwerk kommen hier an.
@@ -38,7 +43,7 @@ public class ApplicationMessageBus {
             long timeoutMs
     ) throws InterruptedException, DestinationUnreachableException {
 
-        SimulationEngine sim = SimulationEngine.getInstance();
+        SimulationEngine sim = SimulationEngine.getInstance(node.getLevel().isClientSide);
         long startSimTime = sim.getSimTime();
         long deadlineSimTime = startSimTime + timeoutMs;
 

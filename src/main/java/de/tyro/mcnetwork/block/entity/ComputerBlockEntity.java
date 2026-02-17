@@ -1,7 +1,7 @@
 package de.tyro.mcnetwork.block.entity;
 
 import de.tyro.mcnetwork.entity.NetworkFrameEntity;
-import de.tyro.mcnetwork.network.payload.routing.NewNetworkPacketPayload;
+import de.tyro.mcnetwork.network.payload.NewNetworkPacketPayload;
 import de.tyro.mcnetwork.routing.ApplicationMessageBus;
 import de.tyro.mcnetwork.routing.INetworkNode;
 import de.tyro.mcnetwork.routing.IP;
@@ -49,9 +49,9 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
         if (level == null) return;
 
         terminal = new Terminal(this);
-        applicationMessageBus = new ApplicationMessageBus();
+        applicationMessageBus = new ApplicationMessageBus(this);
         routingProtocol = new AODVProtocol(this);
-        SimulationEngine.INSTANCE.registerNode(this);
+        SimulationEngine.getInstance(level.isClientSide).registerNode(this);
         receiveWindow = new ReceiveWindow(5, 1);
     }
 
@@ -60,9 +60,9 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
         super.setRemoved();
         if (level.isClientSide()) {
             if (terminal != null) terminal.interrupt();
-        } else {
-            SimulationEngine.INSTANCE.unregisterNode(this);
         }
+
+        SimulationEngine.getInstance(level.isClientSide).unregisterNode(this);
     }
 
     public IP getIP() {
@@ -102,9 +102,9 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
         }
 
         if (packet instanceof PingPacket ping) {
-            routingProtocol.send(new PingRepPacket(getIP(), ping.getOriginatorIP(), SimulationEngine.INSTANCE.getSimTime() - ping.sendStartTime, SimulationEngine.INSTANCE.getSimTime(), ping.id), Integer.MAX_VALUE);
+            routingProtocol.send(new PingRepPacket(getIP(), ping.getOriginatorIP(), SimulationEngine.getInstance(level.isClientSide).getSimTime() - ping.sendStartTime, SimulationEngine.getInstance(level.isClientSide).getSimTime(), ping.id), Integer.MAX_VALUE);
         } else {
-            PacketDistributor.sendToAllPlayers(NewNetworkPacketPayload.toSelf(packet));
+            PacketDistributor.sendToAllPlayers(NewNetworkPacketPayload.toSelf(packet, getTerminal().getNode()));
         }
     }
 
@@ -160,7 +160,7 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
         routingProtocol.send(packet, ttl);
     }
 
-    static class ReceiveWindow {
+    class ReceiveWindow {
         private final long windowTicks;
         private final int maxPackets;
 
@@ -173,7 +173,7 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
         }
 
         public boolean tryAccept() {
-            var currentTick = SimulationEngine.INSTANCE.getSimTime();
+            var currentTick = SimulationEngine.getInstance(level.isClientSide).getSimTime();
 
             if (windowStartTick == -1 || currentTick - windowStartTick >= windowTicks) {
                 windowStartTick = currentTick;

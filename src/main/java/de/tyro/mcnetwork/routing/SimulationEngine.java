@@ -1,16 +1,12 @@
 package de.tyro.mcnetwork.routing;
 
-import de.tyro.mcnetwork.MCNetwork;
 import de.tyro.mcnetwork.entity.NetworkFrameEntity;
-import de.tyro.mcnetwork.network.payload.routing.NetworkPacketCodecRegistry;
-import de.tyro.mcnetwork.network.payload.routing.NewNetworkFramePayload;
+import de.tyro.mcnetwork.network.payload.networkPacket.NetworkPacketCodecRegistry;
 import de.tyro.mcnetwork.routing.packet.IApplicationPaket;
 import de.tyro.mcnetwork.routing.packet.INetworkPacket;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
-import net.neoforged.neoforge.network.PacketDistributor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -21,27 +17,32 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class SimulationEngine {
 
-    public static final SimulationEngine INSTANCE = new SimulationEngine(10);
+    private static final SimulationEngine SERVER_INSTANCE = new SimulationEngine();
+    private static final SimulationEngine CLIENT_INSTANCE = new SimulationEngine();
+
     private static final Logger log = LogManager.getLogger(SimulationEngine.class);
-    public static SimulationEngine getInstance() {
-        return INSTANCE;
+
+    public static SimulationEngine getInstance(Boolean clientSide) {
+        return clientSide ? CLIENT_INSTANCE : SERVER_INSTANCE;
     }
 
-    private SimulationEngine(double commRadius) {
-        COMM_RADIUS = commRadius;
+
+    private SimulationEngine() {
+        this.commRadius = 20;
     }
 
 
     private final Map<IP, INetworkNode> nodes = new ConcurrentHashMap<>();
 
     private double simulationTimeMs = 0;
-    private double simulationSpeed = 0.05;
+    private double simulationSpeed = 0.25;
     private double frameMovementPerTick = 1;
     private boolean simulationPaused = false;
     private static final long TICK_DURATION_MS = 50;
-    private final double COMM_RADIUS;
+    private double commRadius;
 
     public void registerNode(INetworkNode node) {
+        log.debug("Registering node {}. {} @ {}", node, node.getLevel(), Integer.toHexString(hashCode()));
         nodes.put(node.getIP(), node);
     }
 
@@ -72,7 +73,7 @@ public class SimulationEngine {
     }
 
     public List<INetworkNode> getNeighbors(INetworkNode node) {
-        return nodes.values().stream().filter(n -> !n.getIP().equals(node.getIP())).filter(n -> node.distanceTo(n) <= COMM_RADIUS).toList();
+        return nodes.values().stream().filter(n -> !n.getIP().equals(node.getIP())).filter(n -> node.distanceTo(n) <= commRadius).toList();
     }
 
     /**
@@ -101,33 +102,36 @@ public class SimulationEngine {
      * <br>
      * If this is called on the client side, the method will behave the same, but not send any frames.
      *
-     * @param from the source node
-     * @param to the destination node
+     * @param from   the source node
+     * @param to     the destination node
      * @param packet the packet to send
-     * @param ttl time to live
+     * @param ttl    time to live
      * @return true if the frame was send, false otherwise
      */
     public boolean unicast(INetworkNode from, INetworkNode to, INetworkPacket packet, int ttl) {
         if (ttl <= 0) return false;
         if (from == null || to == null) return false;
-        if (from.distanceTo(to) > COMM_RADIUS) return false; // out of range
+        if (from.distanceTo(to) > commRadius) return false; // out of range
         if (from.getLevel().isClientSide()) return true;
         newPacket(from, to, packet, ttl);
         return true;
     }
 
+    /**
+     * Always called from server thread only
+     *
+     * @param from   sending node
+     * @param to     receiving node
+     * @param packet packet that will be transmitted
+     * @param ttl    ttl for the packet
+     */
     private void newPacket(INetworkNode from, INetworkNode to, INetworkPacket packet, int ttl) {
 
         if (from.getIP() == to.getIP()) {
             if (packet instanceof IApplicationPaket p)
                 from.onApplicationPacketReceived(p);
             else {
-                log.warn("Sending Protocol packet to self {}", packet);
-                try {
-                    throw new Exception();
-                } catch (Exception e) {
-                    log.error(e.getMessage(), e);
-                }
+                log.warn("Trying to sending Protocol packet to self {}", packet);
             }
             return;
         }
@@ -138,7 +142,8 @@ public class SimulationEngine {
             log.warn("Cannot send unregistered packet {}", packet);
             return;
         }
-        PacketDistributor.sendToServer(new NewNetworkFramePayload(from.getBlockPos(), to.getBlockPos(), packet, ttl));
+//        PacketDistributor.sendToAllPlayers(new NewNetworkFramePayload(from.getBlockPos(), to.getBlockPos(), packet, ttl));
+        from.getLevel().addFreshEntity(new NetworkFrameEntity(from.getLevel(), from, to, ttl, packet));
     }
 
     /**
@@ -173,7 +178,7 @@ public class SimulationEngine {
 
     public void setSimSpeed(double speed) {
         simulationSpeed = speed;
-        MCNetwork.LOGGER.info(String.format("Setting simulation speed to: %f", speed));
+        log.info(String.format("Setting simulation speed to: %f", speed));
     }
 
     public boolean nodeExists(IP ip) {
@@ -186,10 +191,19 @@ public class SimulationEngine {
 
     public void setFrameMovementPerTick(double movementPerTick) {
         this.frameMovementPerTick = movementPerTick;
+        log.info(String.format("Setting frame speed to: %f", commRadius));
     }
 
     public void setSimTime(double simulationTime) {
         this.simulationTimeMs = simulationTime;
     }
 
+    public void setCommRadius(double commRadius) {
+        this.commRadius = commRadius;
+        log.info(String.format("Setting comm radius to: %f", commRadius));
+    }
+
+    public double getCommRange() {
+        return commRadius;
+    }
 }

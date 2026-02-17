@@ -1,10 +1,12 @@
-package de.tyro.mcnetwork.network.payload.routing;
+package de.tyro.mcnetwork.network.payload;
 
 import com.mojang.logging.LogUtils;
 import de.tyro.mcnetwork.MCNetwork;
 import de.tyro.mcnetwork.block.entity.ComputerBlockEntity;
 import de.tyro.mcnetwork.entity.NetworkFrameEntity;
 import de.tyro.mcnetwork.network.NetworkUtil;
+import de.tyro.mcnetwork.network.payload.networkPacket.NetworkPacketPayload;
+import de.tyro.mcnetwork.network.payload.networkPacket.NetworkPacketPayloadUtil;
 import de.tyro.mcnetwork.routing.packet.INetworkPacket;
 import de.tyro.mcnetwork.routing.packet.IProtocolPaket;
 import net.minecraft.core.BlockPos;

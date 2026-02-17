@@ -1,7 +1,7 @@
 package de.tyro.mcnetwork.network.configuration;
 
 import de.tyro.mcnetwork.MCNetwork;
-import de.tyro.mcnetwork.network.payload.ConfigSimulationEngineInitPayload;
+import de.tyro.mcnetwork.network.payload.SimulationEngineSettingsPayload;
 import de.tyro.mcnetwork.routing.SimulationEngine;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.network.protocol.configuration.ServerConfigurationPacketListener;
@@ -17,8 +17,8 @@ public record SimulationConfigurationTask(ServerConfigurationPacketListener list
 
     @Override
     public void run(Consumer<CustomPacketPayload> sender) {
-        var sim = SimulationEngine.getInstance();
-        var payload = new ConfigSimulationEngineInitPayload(sim.getExactSimTime(), sim.getSimSpeed(), sim.getFrameMovementPerTick());
+        var sim = SimulationEngine.getInstance(false);
+        var payload = new SimulationEngineSettingsPayload(sim.getSimSpeed(), sim.getFrameMovementPerTick(), sim.isPaused(), sim.getCommRange());
         sender.accept(payload);
 
         listener().finishCurrentTask(TYPE);

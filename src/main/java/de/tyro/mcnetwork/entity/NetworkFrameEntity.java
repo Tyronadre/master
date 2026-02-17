@@ -6,8 +6,7 @@ import com.mojang.math.Axis;
 import de.tyro.mcnetwork.block.entity.ComputerBlockEntity;
 import de.tyro.mcnetwork.client.RenderUtil;
 import de.tyro.mcnetwork.network.NetworkUtil;
-import de.tyro.mcnetwork.network.payload.routing.NetworkPacketPayload;
-import de.tyro.mcnetwork.network.payload.routing.NewNetworkFramePayload;
+import de.tyro.mcnetwork.network.payload.NewNetworkFramePayload;
 import de.tyro.mcnetwork.routing.INetworkNode;
 import de.tyro.mcnetwork.routing.SimulationEngine;
 import de.tyro.mcnetwork.routing.packet.INetworkPacket;
@@ -20,14 +19,14 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.bus.api.Event;
 import net.neoforged.neoforge.entity.IEntityWithComplexSpawn;
+import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
 public class NetworkFrameEntity extends Entity implements IEntityWithComplexSpawn {
-
-    private static final SimulationEngine sim = SimulationEngine.getInstance();
-    Logger logger = LogUtils.getLogger();
+    static Logger logger = LogUtils.getLogger();
 
     public INetworkNode getFrom() {
         return from;
@@ -62,7 +61,7 @@ public class NetworkFrameEntity extends Entity implements IEntityWithComplexSpaw
     }
 
 
-    public NetworkFrameEntity(Level level, ComputerBlockEntity from, ComputerBlockEntity to, int ttl, INetworkPacket packet) {
+    public NetworkFrameEntity(Level level, INetworkNode from, INetworkNode to, int ttl, INetworkPacket packet) {
         this(level, from.getPos());
         if (from == to) throw new IllegalArgumentException();
 
@@ -89,15 +88,13 @@ public class NetworkFrameEntity extends Entity implements IEntityWithComplexSpaw
 
     @Override
     public void tick() {
-        if (!initialized) {
-            return;
-        }
+        if (!initialized) return;
 
         super.tick();
         super.move(MoverType.SELF, this.getDeltaMovement());
-        if (this.hasArrived() && !level().isClientSide()) {
+        if (!level().isClientSide && hasArrived()) {
             to.onFrameReceive(this);
-            remove(RemovalReason.DISCARDED);
+            discard();
         }
     }
 
@@ -122,6 +119,7 @@ public class NetworkFrameEntity extends Entity implements IEntityWithComplexSpaw
             to = NetworkUtil.getBlockEntityAt(ComputerBlockEntity.class, level(), payload.to());
             ttl = payload.ttl();
             packet = payload.packet();
+            packet.setFrame(this);
 
             initialized = true;
         } catch (Exception e) {
@@ -132,9 +130,11 @@ public class NetworkFrameEntity extends Entity implements IEntityWithComplexSpaw
     @Override
     public @NotNull Vec3 getDeltaMovement() {
         if (!initialized) return Vec3.ZERO;
-        if (sim.isPaused()) return  Vec3.ZERO;
 
-        var tickSpeed = sim.getSimSpeed() * sim.getFrameMovementPerTick();
+        var sim = SimulationEngine.getInstance(level().isClientSide());
+        if (sim.isPaused()) return Vec3.ZERO;
+
+        var tickSpeed = sim.getSimSpeed() * 10;
 
         Vec3 toTarget = to.getPos().subtract(getPosition(0));
         double distance = toTarget.length();

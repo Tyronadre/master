@@ -1,4 +1,4 @@
-package de.tyro.mcnetwork.network.payload.routing;
+package de.tyro.mcnetwork.network.payload.networkPacket;
 
 
 import de.tyro.mcnetwork.routing.packet.AODVRREPPacket;

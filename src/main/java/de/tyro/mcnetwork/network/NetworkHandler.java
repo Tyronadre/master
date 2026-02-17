@@ -3,18 +3,15 @@ package de.tyro.mcnetwork.network;
 import de.tyro.mcnetwork.MCNetwork;
 import de.tyro.mcnetwork.network.configuration.SimulationConfigurationTask;
 import de.tyro.mcnetwork.network.payload.ConfigAckPayload;
-import de.tyro.mcnetwork.network.payload.ConfigSimulationEngineInitPayload;
-import de.tyro.mcnetwork.network.payload.SimulationEngineSpeedPayload;
+import de.tyro.mcnetwork.network.payload.NewNetworkFramePayload;
+import de.tyro.mcnetwork.network.payload.NewNetworkPacketPayload;
+import de.tyro.mcnetwork.network.payload.SimulationEngineSettingsPayload;
 import de.tyro.mcnetwork.network.payload.TerminalUpdatePayload;
 import de.tyro.mcnetwork.network.payload.TerminalWatchingPayload;
-import de.tyro.mcnetwork.network.payload.routing.NewNetworkFramePayload;
-import de.tyro.mcnetwork.network.payload.routing.NewNetworkPacketPayload;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.network.event.RegisterConfigurationTasksEvent;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
-import net.neoforged.neoforge.network.handling.DirectionalPayloadHandler;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
 @EventBusSubscriber(modid = MCNetwork.MODID)
@@ -32,9 +29,9 @@ public class NetworkHandler {
                 ConfigAckPayload::handle
         );
         registrar.configurationToClient(
-                ConfigSimulationEngineInitPayload.TYPE,
-                ConfigSimulationEngineInitPayload.STREAM_CODEC,
-                ConfigSimulationEngineInitPayload::handle
+                SimulationEngineSettingsPayload.TYPE,
+                SimulationEngineSettingsPayload.STREAM_CODEC,
+                SimulationEngineSettingsPayload::handle
         );
 
 
@@ -43,24 +40,21 @@ public class NetworkHandler {
         registrar.playToServer(
                 TerminalWatchingPayload.TYPE,
                 TerminalWatchingPayload.STREAM_CODEC,
-                TerminalWatchingPayload::handleServerbound
+                TerminalWatchingPayload::handle
         );
 
         registrar.playBidirectional(
                 TerminalUpdatePayload.TYPE,
                 TerminalUpdatePayload.STREAM_CODEC,
-                new DirectionalPayloadHandler<>(
-                        TerminalUpdatePayload::handleClientbound,
-                        TerminalUpdatePayload::handleServerbound
-                )
+                TerminalUpdatePayload::handle
         );
 
         registrar.playBidirectional(
-                SimulationEngineSpeedPayload.TYPE,
-                SimulationEngineSpeedPayload.STREAM_CODEC,
-                SimulationEngineSpeedPayload::handle);
+                SimulationEngineSettingsPayload.TYPE,
+                SimulationEngineSettingsPayload.STREAM_CODEC,
+                SimulationEngineSettingsPayload::handle);
 
-        registrar.playToServer(
+        registrar.playBidirectional(
                 NewNetworkFramePayload.getType(),
                 NewNetworkFramePayload.STREAM_CODEC,
                 NewNetworkFramePayload::handle

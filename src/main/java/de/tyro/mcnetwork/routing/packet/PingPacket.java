@@ -2,14 +2,10 @@ package de.tyro.mcnetwork.routing.packet;
 
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.tyro.mcnetwork.MCNetwork;
 import de.tyro.mcnetwork.client.RenderUtil;
 import de.tyro.mcnetwork.routing.IP;
-import de.tyro.mcnetwork.routing.SimulationEngine;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.phys.Vec2;
 
 import java.util.StringJoiner;
@@ -40,14 +36,14 @@ public class PingPacket extends NetworkPacket implements IApplicationPaket {
     }
 
     @Override
-    protected Vec2 getContentSize(Font font) {
-        var line = "Time " + (SimulationEngine.getInstance().getSimTime() - sendStartTime) + "ms";
+    public Vec2 getRenderSize(Font font) {
+        var line = "Time " + (getSimulationEngine().getSimTime() - sendStartTime) + "ms";
         return new Vec2(font.width(line), font.lineHeight);
     }
 
     @Override
     protected void renderPacketContent(PoseStack poseStack, MultiBufferSource buffer, int packedLight, float alpha, Font font, float width) {
-        String line = "Time " + (SimulationEngine.getInstance().getSimTime() - sendStartTime) + "ms";
+        String line = "Time " + (getSimulationEngine().getSimTime() - sendStartTime) + "ms";
         RenderUtil.drawStringWithAlphaColor(RenderUtil.Align.LEFT, line, alpha, width, 0, poseStack, buffer, packedLight);
     }
 

@@ -1,5 +1,6 @@
 package de.tyro.mcnetwork.terminal;
 
+import de.tyro.mcnetwork.gui.TerminalScreen;
 import de.tyro.mcnetwork.routing.INetworkNode;
 import de.tyro.mcnetwork.terminal.commands.*;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -21,6 +22,7 @@ public class Terminal {
     private Command runningCommand;
 
     private final int maxLines = 200;
+    private TerminalScreen screen;
 
     public Terminal(INetworkNode node) {
         this.node = node;
@@ -119,6 +121,14 @@ public class Terminal {
 
     public void unregisterPlayer(ServerPlayer player) {
         registeredPlayers.remove(player);
+    }
+
+    public void setScreen(TerminalScreen screen) {
+        this.screen = screen;
+    }
+
+    public TerminalScreen getScreen() {
+        return screen;
     }
 }
 

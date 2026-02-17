@@ -1,9 +1,10 @@
 package de.tyro.mcnetwork.gui;
 
-import de.tyro.mcnetwork.network.payload.SimulationEngineSpeedPayload;
+import de.tyro.mcnetwork.network.payload.SimulationEngineSettingsPayload;
 import de.tyro.mcnetwork.routing.SimulationEngine;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractSliderButton;
+import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
@@ -18,8 +19,10 @@ import java.util.function.Function;
 
 public class SimulationControllerScreen extends AbstractContainerScreen<SimulationControllerMenu> {
     Player player;
+    public Button pauseButton;
     public LogSlider simulationSpeedSlider;
     public LogSlider frameSpeedSlider;
+    public EditBox commRadiusEditBox;
 
     public SimulationControllerScreen(SimulationControllerMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
@@ -32,15 +35,16 @@ public class SimulationControllerScreen extends AbstractContainerScreen<Simulati
     protected void init() {
         super.init();
 
-        SimulationEngine sim = SimulationEngine.getInstance();
+        SimulationEngine sim = SimulationEngine.getInstance(true);
 
         int centerX = this.leftPos + this.imageWidth / 2;
         int y = this.topPos + 30;
 
-        this.addRenderableWidget(Button.builder(getPauseLabel(sim), btn -> {
-            togglePause(sim);
-            btn.setMessage(getPauseLabel(sim));
-        }).bounds(centerX - 40, y, 80, 20).build());
+        pauseButton = this.addRenderableWidget(Button.builder(
+                        getPauseLabel(sim),
+                        btn -> PacketDistributor.sendToServer(new SimulationEngineSettingsPayload(sim.getSimSpeed(), sim.getFrameMovementPerTick(), !sim.isPaused(), sim.getCommRange())))
+                .bounds(centerX - 40, y, 80, 20)
+                .build());
 
 
         simulationSpeedSlider = this.addRenderableWidget(new LogSlider(
@@ -52,7 +56,7 @@ public class SimulationControllerScreen extends AbstractContainerScreen<Simulati
                 5,
                 sim.getSimSpeed(),
                 (value) -> String.format("Simulation Speed: %.3fx", value),
-                (value) -> PacketDistributor.sendToServer(new SimulationEngineSpeedPayload(value, player.getId()))
+                (value) -> PacketDistributor.sendToServer(new SimulationEngineSettingsPayload(value, sim.getFrameMovementPerTick(), sim.isPaused(), sim.getCommRange()))
         ));
 
         frameSpeedSlider = this.addRenderableWidget(new LogSlider(
@@ -64,15 +68,21 @@ public class SimulationControllerScreen extends AbstractContainerScreen<Simulati
                 1,
                 sim.getFrameMovementPerTick(),
                 (value) -> String.format("Frame Speed: %.3fx", value),
-                sim::setFrameMovementPerTick
+                (value) -> PacketDistributor.sendToServer(new SimulationEngineSettingsPayload(sim.getSimSpeed(), value, sim.isPaused(), sim.getCommRange()))
         ));
 
+        commRadiusEditBox = this.addRenderableWidget(new EditBox(font, centerX - 70, y + 90, 140, 20, Component.literal("Reichweite")));
+        commRadiusEditBox.setResponder((value) -> {
+            try {
+                PacketDistributor.sendToServer(new SimulationEngineSettingsPayload(sim.getSimSpeed(), sim.getFrameMovementPerTick(), sim.isPaused(), Double.parseDouble(value)));
+            } catch (Exception ignored) {
+            }
+        });
     }
 
     @Override
     protected void containerTick() {
         super.containerTick();
-
     }
 
     // --------------------------------------------------
@@ -82,7 +92,6 @@ public class SimulationControllerScreen extends AbstractContainerScreen<Simulati
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
 //        this.renderBackground(graphics, mouseX, mouseY, partialTick);
         super.render(graphics, mouseX, mouseY, partialTick);
-
 
 
         graphics.drawString(this.font, this.title, this.leftPos + 8, this.topPos + 6, 0x404040, false);
@@ -95,13 +104,6 @@ public class SimulationControllerScreen extends AbstractContainerScreen<Simulati
     @Override
     protected void renderBg(@NotNull GuiGraphics graphics, float partialTicks, int mouseX, int mouseY) {
         // Optional: draw background texture here
-    }
-
-    // --------------------------------------------------
-    // Pause handling
-    // --------------------------------------------------
-    private void togglePause(SimulationEngine sim) {
-        sim.setPaused(!sim.isPaused());
     }
 
     private Component getPauseLabel(SimulationEngine sim) {
@@ -170,6 +172,7 @@ public class SimulationControllerScreen extends AbstractContainerScreen<Simulati
 
         /**
          * Sets the value of this slider, given a fraction from 0 to 1 on the x scale of the slider. 0 is minValue, 1 is maxValue
+         *
          * @param fraction 'progress' on the slider
          */
         private void setValueFromFraction(double fraction) {

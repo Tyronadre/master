@@ -21,6 +21,7 @@ import java.util.List;
 
 public class TerminalScreen extends Screen {
 
+    private final ComputerBlockEntity computerBlockEntity;
     private final Terminal terminal;
     private final Player player;
 
@@ -46,7 +47,9 @@ public class TerminalScreen extends Screen {
 
     public TerminalScreen(ComputerBlockEntity computer, Player player) {
         super(Component.literal("Terminal"));
+        this.computerBlockEntity = computer;
         this.terminal = computer.getTerminal();
+        this.terminal.setScreen(this);
         this.player = player;
     }
 
@@ -54,17 +57,23 @@ public class TerminalScreen extends Screen {
     protected void init() {
         super.init();
         this.setFocused(true);
-        PacketDistributor.sendToServer(new TerminalWatchingPayload(player.getUUID(), true));
+        PacketDistributor.sendToServer(new TerminalWatchingPayload(computerBlockEntity.getBlockPos(), true));
     }
 
     @Override
     public void onClose() {
         super.onClose();
-        PacketDistributor.sendToServer(new TerminalWatchingPayload(player.getUUID(), false));
+        PacketDistributor.sendToServer(new TerminalWatchingPayload(computerBlockEntity.getBlockPos(), false));
     }
 
-    private void onChange() {
-        PacketDistributor.sendToServer(new TerminalUpdatePayload(inputBuffer.toString()));
+    private void onChangeSend() {
+        PacketDistributor.sendToServer(new TerminalUpdatePayload(computerBlockEntity.getBlockPos(), inputBuffer.toString(), cursorPosition));
+    }
+
+    public void onChangeReceive(TerminalUpdatePayload terminalUpdatePayload) {
+        this.inputBuffer.setLength(0);
+        this.inputBuffer.append(terminalUpdatePayload.input());
+        this.cursorPosition = terminalUpdatePayload.cursorPosition();
     }
 
     /* ============================================================
@@ -83,6 +92,7 @@ public class TerminalScreen extends Screen {
         switch (keyCode) {
             case GLFW.GLFW_KEY_ENTER -> {
                 submitCommand();
+                onChangeSend();
                 return true;
             }
 
@@ -90,36 +100,38 @@ public class TerminalScreen extends Screen {
                 if (cursorPosition > 0) {
                     inputBuffer.deleteCharAt(cursorPosition - 1);
                     cursorPosition--;
-                    onChange();
+                    onChangeSend();
                 }
                 return true;
             }
 
             case GLFW.GLFW_KEY_LEFT -> {
                 if (cursorPosition > 0) cursorPosition--;
+                onChangeSend();
                 return true;
             }
 
             case GLFW.GLFW_KEY_RIGHT -> {
                 if (cursorPosition < inputBuffer.length()) cursorPosition++;
+                onChangeSend();
                 return true;
             }
 
             case GLFW.GLFW_KEY_UP -> {
                 historyUp();
-                onChange();
+                onChangeSend();
                 return true;
             }
 
             case GLFW.GLFW_KEY_DOWN -> {
                 historyDown();
-                onChange();
+                onChangeSend();
                 return true;
             }
 
             case GLFW.GLFW_KEY_TAB -> {
                 handleTabCompletion();
-                onChange();
+                onChangeSend();
                 return true;
             }
         }
@@ -162,7 +174,7 @@ public class TerminalScreen extends Screen {
             resetCompletion();
             inputBuffer.insert(cursorPosition, codePoint);
             cursorPosition++;
-            onChange();
+            onChangeSend();
             return true;
         }
         return false;
