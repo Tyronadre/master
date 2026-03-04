@@ -6,9 +6,7 @@ import de.tyro.mcnetwork.block.entity.ComputerBlockEntity;
 import de.tyro.mcnetwork.entity.NetworkFrameEntity;
 import de.tyro.mcnetwork.network.NetworkUtil;
 import de.tyro.mcnetwork.network.payload.networkPacket.NetworkPacketPayload;
-import de.tyro.mcnetwork.network.payload.networkPacket.NetworkPacketPayloadUtil;
 import de.tyro.mcnetwork.routing.packet.INetworkPacket;
-import de.tyro.mcnetwork.routing.packet.IProtocolPaket;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -30,12 +28,11 @@ public record NewNetworkFramePayload(BlockPos from, BlockPos to, INetworkPacket 
     }
 
     public static Type<NewNetworkFramePayload> getType() {
-        return new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(MCNetwork.MODID, NetworkPacketPayloadUtil.class.getSimpleName().toLowerCase()));
+        return new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(MCNetwork.MODID, NetworkPacketPayload.class.getSimpleName().toLowerCase()));
     }
 
-    public static CustomPacketPayload toSelf(IProtocolPaket packet) {
-        var frame = packet.getNetworkFrame();
-        return new NewNetworkFramePayload(frame.getFrom().getBlockPos(), frame.getTo().getBlockPos(), packet, -1);
+    public static CustomPacketPayload toSelf(NetworkFrameEntity frame) {
+        return new NewNetworkFramePayload(frame.getFrom().getBlockPos(), frame.getTo().getBlockPos(), frame.getPacket(), -1);
     }
 
     private NetworkPacketPayload payload() {

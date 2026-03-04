@@ -1,34 +1,26 @@
 package de.tyro.mcnetwork.routing.protocol;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.logging.LogUtils;
 import de.tyro.mcnetwork.client.RenderUtil;
-import de.tyro.mcnetwork.network.payload.NewNetworkFramePayload;
 import de.tyro.mcnetwork.network.payload.NewNetworkPacketPayload;
 import de.tyro.mcnetwork.routing.IHudRenderer;
 import de.tyro.mcnetwork.routing.INetworkNode;
 import de.tyro.mcnetwork.routing.IP;
 import de.tyro.mcnetwork.routing.SimulationEngine;
-import de.tyro.mcnetwork.routing.packet.AODVRERRPacket;
-import de.tyro.mcnetwork.routing.packet.AODVRREPPacket;
-import de.tyro.mcnetwork.routing.packet.AODVRREQPacket;
-import de.tyro.mcnetwork.routing.packet.DestinationUnreachablePacket;
-import de.tyro.mcnetwork.routing.packet.IApplicationPaket;
+import de.tyro.mcnetwork.routing.packet.aodv.AODVRERRPacket;
+import de.tyro.mcnetwork.routing.packet.aodv.AODVRREPPacket;
+import de.tyro.mcnetwork.routing.packet.aodv.AODVRREQPacket;
+import de.tyro.mcnetwork.routing.packet.application.DestinationUnreachablePacket;
+import de.tyro.mcnetwork.routing.packet.IApplicationPacket;
 import de.tyro.mcnetwork.routing.packet.INetworkPacket;
 import de.tyro.mcnetwork.routing.packet.IProtocolPaket;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.world.phys.Vec2;
-import net.neoforged.neoforge.network.PacketDistributor;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.ConcurrentModificationException;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -73,6 +65,11 @@ public class AODVProtocol implements IRoutingProtocol, IHudRenderer {
     public AODVProtocol(INetworkNode node) {
         this.node = node;
         this.simulator = SimulationEngine.getInstance(node.getLevel().isClientSide());
+    }
+
+    @Override
+    public INetworkNode getNode() {
+        return node;
     }
 
     @Override
@@ -133,10 +130,7 @@ public class AODVProtocol implements IRoutingProtocol, IHudRenderer {
             discoveries.remove(destIp);
             return;
         }
-        tickActions.add(
-                now + (int) Math.pow(2, state.rreqAttempts) * NET_TRAVERSAL_TIME,
-                () -> discoverRoute(destIp)
-        );
+        tickActions.add(now + (int) Math.pow(2, state.rreqAttempts) * NET_TRAVERSAL_TIME, () -> discoverRoute(destIp));
         state.rreqAttempts++;
 
         // Data packets waiting for a route (i.e., waiting for a RREP after a
@@ -232,7 +226,7 @@ public class AODVProtocol implements IRoutingProtocol, IHudRenderer {
     }
 
     private void notifyDestinationUnreachable(IP destIp) {
-        PacketDistributor.sendToAllPlayers(NewNetworkPacketPayload.toSelf(new DestinationUnreachablePacket(node.getIP(), destIp), node));
+        NewNetworkPacketPayload.sendToSelf(new DestinationUnreachablePacket(node.getIP(), destIp), node);
     }
 
     private void dropBufferedPackets(IP destIp) {
@@ -241,9 +235,6 @@ public class AODVProtocol implements IRoutingProtocol, IHudRenderer {
 
     @Override
     public void onProtocolPacketReceived(IProtocolPaket packet) {
-        if (!node.getLevel().isClientSide()) {
-            PacketDistributor.sendToAllPlayers(NewNetworkFramePayload.toSelf(packet));
-        }
         if (packet instanceof AODVRREQPacket rreq) handleRREQ(rreq);
         else if (packet instanceof AODVRREPPacket rrep) handleRREP(rrep);
         else if (packet instanceof AODVRERRPacket rerr) handleRERR(3, null, rerr);
@@ -426,7 +417,7 @@ public class AODVProtocol implements IRoutingProtocol, IHudRenderer {
         else {
             rrep.destSeqNumber = destinationEntry.seqNumber;
             rrep.hopCount = destinationEntry.hopCount;
-            rrep.lifetime = simulator.getSimTime() - destinationEntry.lifetime;
+            rrep.lifetime = destinationEntry.lifetime - simulator.getSimTime();
 
             destinationEntry.precursors.add(rreq.getNetworkFrame().getFrom().getIP());
             originatorEntry.precursors.add(destinationEntry.nextHop);
@@ -575,7 +566,7 @@ public class AODVProtocol implements IRoutingProtocol, IHudRenderer {
 
         // Case 2: intermediate node with a fresh enough route
         else if (!rreq.destinationOnlyFlag && destRoute != null && destRoute.valid) {
-            if (!rreq.unknownSeqFlag && destRoute.seqValid && destRoute.seqNumber >= rreq.destinationSequenceNumber) {
+            if (destRoute.seqValid && destRoute.seqNumber >= rreq.destinationSequenceNumber) {
                 generateRREP = true;
             }
         }
@@ -754,7 +745,7 @@ public class AODVProtocol implements IRoutingProtocol, IHudRenderer {
 
         //if the destination is this node, we send a packet to ourself. this can only be an application packet. receive it or throw an error
         if (packet.getDestinationIP().equals(node.getIP())) {
-            if (packet instanceof IApplicationPaket a) {
+            if (packet instanceof IApplicationPacket a) {
                 node.onApplicationPacketReceived(a);
                 return;
             } else {
@@ -801,38 +792,43 @@ public class AODVProtocol implements IRoutingProtocol, IHudRenderer {
     }
 
     public Vec2 getRenderSize(Font font) {
-        return new Vec2(200, 200);
+        var height = 35;
+        height += 8 * Math.max(1, routingTable.size());
+        height += 14;
+        height += 8 * Math.max(1, discoveries.size());
+        height += 14;
+        height += 8 * Math.max(1, discoveries.size());
+        height += 11;
+
+        return new Vec2(200, height);
     }
 
     @Override
-    public void render(PoseStack poseStack, MultiBufferSource buffer, int packedLight, float alpha) {
-        float width = 200;
+    public void render(RenderUtil renderer) {
+        var width = getRenderSize(renderer.getFont()).x;
         float y = 0f;
 
         long now = SimulationEngine.getInstance(true).getSimTime();
 
-        RenderUtil.drawStringWithAlphaColor(RenderUtil.Align.CENTER, "AODV @ " + node.getIP(), alpha, width, y, poseStack, buffer, packedLight);
-        y += 9;
-
-        RenderUtil.renderHLine(alpha, width, y, poseStack, buffer, packedLight);
+        renderer.renderHLineWithAlphaColor(width, y);
         y += 4;
 
-        RenderUtil.drawStringWithAlphaColor(RenderUtil.Align.LEFT, "Seq=" + sequenceNumber, alpha, width, y, poseStack, buffer, packedLight);
-        RenderUtil.drawStringWithAlphaColor(RenderUtil.Align.RIGHT, "RREQ/s=" + rreqInLastSecond, alpha, width, y, poseStack, buffer, packedLight);
+        renderer.drawStringWithAlphaColor(RenderUtil.Align.LEFT, "Seq=" + sequenceNumber, width, y);
+        renderer.drawStringWithAlphaColor(RenderUtil.Align.RIGHT, "RREQ/s=" + rreqInLastSecond, width, y);
         y += 9;
 
-        RenderUtil.drawStringWithAlphaColor(RenderUtil.Align.LEFT, "RREQ_ID=" + rreqId, alpha, width, y, poseStack, buffer, packedLight);
-        RenderUtil.drawStringWithAlphaColor(RenderUtil.Align.RIGHT, "RERR/s=" + rerrInLastSecond, alpha, width, y, poseStack, buffer, packedLight);
+        renderer.drawStringWithAlphaColor(RenderUtil.Align.LEFT, "RREQ_ID=" + rreqId, width, y);
+        renderer.drawStringWithAlphaColor(RenderUtil.Align.RIGHT, "RERR/s=" + rerrInLastSecond, width, y);
         y += 10;
 
-        RenderUtil.renderHLine(alpha, width, y, poseStack, buffer, packedLight);
+        renderer.renderHLineWithAlphaColor(width, y);
         y += 2;
 
-        RenderUtil.drawString(RenderUtil.Align.CENTER, "Routing Table", 0xAAAAFF, width, y, poseStack, buffer, packedLight);
+        renderer.drawString(RenderUtil.Align.CENTER, "Routing Table", 0xAAAAFF, width, y);
         y += 10;
 
         if (routingTable.isEmpty()) {
-            RenderUtil.drawStringWithAlphaColor(RenderUtil.Align.CENTER, "<empty>", alpha, width, y, poseStack, buffer, packedLight);
+            renderer.drawStringWithAlphaColor(RenderUtil.Align.CENTER, "<empty>", width, y);
             y += 8;
         } else {
             for (RouteEntry entry : routingTable.values()) {
@@ -849,21 +845,21 @@ public class AODVProtocol implements IRoutingProtocol, IHudRenderer {
 
                 String line = entry.destination + " → " + entry.nextHop + "  h=" + entry.hopCount + "  seq=" + entry.seqNumber + "  lt=" + Math.max(0, entry.lifetime - now);
 
-                RenderUtil.drawString(RenderUtil.Align.LEFT, line, color, width, y, poseStack, buffer, packedLight);
+                renderer.drawString(RenderUtil.Align.LEFT, line, color, width, y);
 
                 y += 8;
             }
         }
 
         y += 2;
-        RenderUtil.renderHLine(alpha, width, y, poseStack, buffer, packedLight);
+        renderer.renderHLineWithAlphaColor(width, y);
         y += 2;
 
-        RenderUtil.drawString(RenderUtil.Align.CENTER, "Discoveries", 0xFFFF55, width, y, poseStack, buffer, packedLight);
+        renderer.drawString(RenderUtil.Align.CENTER, "Discoveries", 0xFFFF55, width, y);
         y += 10;
 
         if (discoveries.isEmpty()) {
-            RenderUtil.drawStringWithAlphaColor(RenderUtil.Align.CENTER, "<none>", alpha, width, y, poseStack, buffer, packedLight);
+            renderer.drawStringWithAlphaColor(RenderUtil.Align.CENTER, "<none>", width, y);
             y += 8;
         } else {
             for (Map.Entry<IP, RouteDiscoveryState> e : discoveries.entrySet()) {
@@ -872,38 +868,38 @@ public class AODVProtocol implements IRoutingProtocol, IHudRenderer {
 
                 String line = e.getKey() + "  ttl=" + d.ttl + "  tries=" + d.rreqAttempts + "  r/s=" + d.rreqInLastSecond;
 
-                RenderUtil.drawStringWithAlphaColor(RenderUtil.Align.LEFT, line, alpha, width, y, poseStack, buffer, packedLight);
+                renderer.drawStringWithAlphaColor(RenderUtil.Align.LEFT, line, width, y);
 
                 y += 8;
             }
         }
 
         y += 2;
-        RenderUtil.renderHLine(alpha, width, y, poseStack, buffer, packedLight);
+        renderer.renderHLineWithAlphaColor(width, y);
         y += 2;
 
-        RenderUtil.drawString(RenderUtil.Align.CENTER, "Pending Data", 0xFFAAFF, width, y, poseStack, buffer, packedLight);
+        renderer.drawString(RenderUtil.Align.CENTER, "Pending Data", 0xFFAAFF, width, y);
         y += 10;
 
         if (pendingData.isEmpty()) {
-            RenderUtil.drawStringWithAlphaColor(RenderUtil.Align.CENTER, "<none>", alpha, width, y, poseStack, buffer, packedLight);
+            renderer.drawStringWithAlphaColor(RenderUtil.Align.CENTER, "<none>", width, y);
             y += 8;
         } else {
             for (Map.Entry<IP, List<Pair<INetworkPacket, Integer>>> e : pendingData.entrySet()) {
 
-                RenderUtil.drawString(RenderUtil.Align.LEFT, e.getKey() + "  queued=" + e.getValue().size(), 0xFFAAFF, width, y, poseStack, buffer, packedLight);
+                renderer.drawString(RenderUtil.Align.LEFT, e.getKey() + "  queued=" + e.getValue().size(), 0xFFAAFF, width, y);
 
                 y += 8;
             }
         }
 
         y += 2;
-        RenderUtil.renderHLine(alpha, width, y, poseStack, buffer, packedLight);
+        renderer.renderHLineWithAlphaColor(width, y);
         y += 2;
 
 
-        RenderUtil.drawStringWithAlphaColor(RenderUtil.Align.LEFT, "Seen RREQs=" + seenRreqs.size(), alpha, width, y, poseStack, buffer, packedLight);
-        RenderUtil.drawStringWithAlphaColor(RenderUtil.Align.RIGHT, "TickActions=" + tickActions.size(), alpha, width, y, poseStack, buffer, packedLight);
+        renderer.drawStringWithAlphaColor(RenderUtil.Align.LEFT, "Seen RREQs=" + seenRreqs.size(), width, y);
+        renderer.drawStringWithAlphaColor(RenderUtil.Align.RIGHT, "TickActions=" + tickActions.size(), width, y);
     }
 
 
@@ -976,65 +972,6 @@ public class AODVProtocol implements IRoutingProtocol, IHudRenderer {
             nextRreqAttemptsResetInterval = SimulationEngine.getInstance(node.getLevel().isClientSide).getSimTime() + 1000;
         }
 
-    }
-
-    private class TickActions {
-
-        private final List<TickAction> actions = new ArrayList<>();
-        private final java.util.concurrent.locks.ReentrantLock lock =
-                new java.util.concurrent.locks.ReentrantLock();
-
-        public int size() {
-            lock.lock();
-            try {
-                return actions.size();
-            } finally {
-                lock.unlock();
-            }
-        }
-
-        private record TickAction(long tick, Runnable task) {
-            public void run() {
-                task.run();
-            }
-        }
-
-        public void add(long tick, Runnable task) {
-            log.debug("Adding TickAction on {} in {}", tick, Integer.toHexString(this.hashCode()));
-            lock.lock();
-            try {
-                actions.add(new TickAction(tick, task));
-            } finally {
-                lock.unlock();
-            }
-        }
-
-        public void execute(long currentTick) {
-            List<TickAction> toExecute = new ArrayList<>();
-
-            lock.lock();
-            try {
-                Iterator<TickAction> iterator = actions.iterator();
-                while (iterator.hasNext()) {
-                    TickAction action = iterator.next();
-                    if (action.tick() <= currentTick) {
-                        toExecute.add(action);
-                        iterator.remove();
-                    }
-                }
-            } finally {
-                lock.unlock();
-            }
-
-            // Phase 2: execute outside lock
-            for (TickAction action : toExecute) {
-                try {
-                    action.run();
-                } catch (Exception e) {
-                    log.error("Error executing TickAction", e);
-                }
-            }
-        }
     }
 
 

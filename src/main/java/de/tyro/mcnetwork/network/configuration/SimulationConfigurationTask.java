@@ -18,11 +18,10 @@ public record SimulationConfigurationTask(ServerConfigurationPacketListener list
     @Override
     public void run(Consumer<CustomPacketPayload> sender) {
         var sim = SimulationEngine.getInstance(false);
-        var payload = new SimulationEngineSettingsPayload(sim.getSimSpeed(), sim.getFrameMovementPerTick(), sim.isPaused(), sim.getCommRange());
+        var payload = SimulationEngineSettingsPayload.Builder(sim).build();
         sender.accept(payload);
 
         listener().finishCurrentTask(TYPE);
-
     }
 
     @Override

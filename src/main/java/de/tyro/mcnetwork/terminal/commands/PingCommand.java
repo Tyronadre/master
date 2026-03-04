@@ -3,8 +3,8 @@ package de.tyro.mcnetwork.terminal.commands;
 import de.tyro.mcnetwork.routing.IP;
 import de.tyro.mcnetwork.routing.SimulationEngine;
 import de.tyro.mcnetwork.routing.exceptions.DestinationUnreachableException;
-import de.tyro.mcnetwork.routing.packet.PingPacket;
-import de.tyro.mcnetwork.routing.packet.PingRepPacket;
+import de.tyro.mcnetwork.routing.packet.application.PingPacket;
+import de.tyro.mcnetwork.routing.packet.application.PingRepPacket;
 import de.tyro.mcnetwork.terminal.Terminal;
 
 public class PingCommand extends Command {
@@ -41,7 +41,7 @@ public class PingCommand extends Command {
             long sendTime = sim.getSimTime();
             var ping = new PingPacket(terminal.getNode().getIP(), destIP, sendTime);
 
-            terminal.getNode().send(ping, Integer.MAX_VALUE);
+            terminal.getNode().sendApplicationPacket(ping, Integer.MAX_VALUE);
 
             // Warten auf Echo
             PingRepPacket rep;

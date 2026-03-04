@@ -1,8 +1,7 @@
 package de.tyro.mcnetwork.routing;
 
 import de.tyro.mcnetwork.entity.NetworkFrameEntity;
-import de.tyro.mcnetwork.routing.packet.IApplicationPaket;
-import de.tyro.mcnetwork.routing.packet.INetworkPacket;
+import de.tyro.mcnetwork.routing.packet.IApplicationPacket;
 import de.tyro.mcnetwork.routing.protocol.IRoutingProtocol;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
@@ -44,7 +43,7 @@ public interface INetworkNode {
     /**
      * Called when an application packed should be processed by this node
      */
-    void onApplicationPacketReceived(IApplicationPaket packet);
+    void onApplicationPacketReceived(IApplicationPacket packet);
 
     void tick();
 
@@ -62,7 +61,9 @@ public interface INetworkNode {
      * @param packet the packet to send
      * @param ttl    the time to life for frame that will be send
      */
-    void send(INetworkPacket packet, int ttl);
+    void sendApplicationPacket(IApplicationPacket packet, int ttl);
 
     Level getLevel();
+
+    void setProtocol(IRoutingProtocol routingProtocol);
 }

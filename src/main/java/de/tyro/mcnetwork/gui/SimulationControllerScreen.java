@@ -42,7 +42,7 @@ public class SimulationControllerScreen extends AbstractContainerScreen<Simulati
 
         pauseButton = this.addRenderableWidget(Button.builder(
                         getPauseLabel(sim),
-                        btn -> PacketDistributor.sendToServer(new SimulationEngineSettingsPayload(sim.getSimSpeed(), sim.getFrameMovementPerTick(), !sim.isPaused(), sim.getCommRange())))
+                        btn -> PacketDistributor.sendToServer(SimulationEngineSettingsPayload.Builder(sim).paused(!sim.isPaused()).build()))
                 .bounds(centerX - 40, y, 80, 20)
                 .build());
 
@@ -56,25 +56,13 @@ public class SimulationControllerScreen extends AbstractContainerScreen<Simulati
                 5,
                 sim.getSimSpeed(),
                 (value) -> String.format("Simulation Speed: %.3fx", value),
-                (value) -> PacketDistributor.sendToServer(new SimulationEngineSettingsPayload(value, sim.getFrameMovementPerTick(), sim.isPaused(), sim.getCommRange()))
-        ));
-
-        frameSpeedSlider = this.addRenderableWidget(new LogSlider(
-                centerX - 70,
-                y + 60,
-                140,
-                20,
-                0.01,
-                1,
-                sim.getFrameMovementPerTick(),
-                (value) -> String.format("Frame Speed: %.3fx", value),
-                (value) -> PacketDistributor.sendToServer(new SimulationEngineSettingsPayload(sim.getSimSpeed(), value, sim.isPaused(), sim.getCommRange()))
+                (value) -> PacketDistributor.sendToServer(SimulationEngineSettingsPayload.Builder(sim).simSpeed(value).build())
         ));
 
         commRadiusEditBox = this.addRenderableWidget(new EditBox(font, centerX - 70, y + 90, 140, 20, Component.literal("Reichweite")));
         commRadiusEditBox.setResponder((value) -> {
             try {
-                PacketDistributor.sendToServer(new SimulationEngineSettingsPayload(sim.getSimSpeed(), sim.getFrameMovementPerTick(), sim.isPaused(), Double.parseDouble(value)));
+                PacketDistributor.sendToServer(SimulationEngineSettingsPayload.Builder(sim).commRadius(Double.parseDouble(value)).build());
             } catch (Exception ignored) {
             }
         });

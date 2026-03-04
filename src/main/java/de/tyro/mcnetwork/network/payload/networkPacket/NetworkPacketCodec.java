@@ -1,49 +1,60 @@
 package de.tyro.mcnetwork.network.payload.networkPacket;
 
+import de.tyro.mcnetwork.network.BetterByteBuf;
+import de.tyro.mcnetwork.routing.INetworkNode;
 import de.tyro.mcnetwork.routing.IP;
 import de.tyro.mcnetwork.routing.packet.INetworkPacket;
-import io.netty.buffer.ByteBuf;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
 
 public abstract class NetworkPacketCodec<T extends INetworkPacket> implements StreamCodec<FriendlyByteBuf, T> {
-    public abstract T decodeActual(UUID uuid, IP originatorIP, IP destinationIP, FriendlyByteBuf buf);
+    protected abstract T decodeActual(UUID uuid, IP originatorIP, IP destinationIP, BetterByteBuf buf);
 
-    public abstract void encodeActual(FriendlyByteBuf buffer, T packet);
+    protected abstract void encodeActual(BetterByteBuf buffer, T packet);
 
     @Override
     public @NotNull T decode(@NotNull FriendlyByteBuf buffer) {
-        return decodeActual(buffer.readUUID(), readIP(buffer), readIP(buffer), buffer);
+        var buf = new BetterByteBuf(buffer);
+
+        return decodeActual(buf.readUUID(), buf.readIP(), buf.readIP(), buf);
     }
 
     @Override
-    public void encode(FriendlyByteBuf buffer, T networkPacket) {
-        buffer.writeUUID(networkPacket.getId());
-        writeIP(buffer, networkPacket.getOriginatorIP() == null ? IP.ZERO : networkPacket.getOriginatorIP());
-        writeIP(buffer, networkPacket.getDestinationIP() == null  ? IP.ZERO : networkPacket.getDestinationIP());
-        encodeActual(buffer, networkPacket);
+    public void encode(@NotNull FriendlyByteBuf buffer, T networkPacket) {
+        var buf = new BetterByteBuf(buffer);
+
+        buf.writeUUID(networkPacket.getId())
+                .writeIP(networkPacket.getOriginatorIP() == null ? IP.ZERO : networkPacket.getOriginatorIP())
+                .writeIP(networkPacket.getDestinationIP() == null ? IP.ZERO : networkPacket.getDestinationIP());
+        encodeActual(buf, networkPacket);
     }
 
-    protected void writeIP(FriendlyByteBuf buffer, IP ip) {
-        for (int i = 0; i < 4; i++) buffer.writeByte(ip.asArray()[i]);
+    @SuppressWarnings("unchecked")
+    public void handle(INetworkPacket packet, IPayloadContext context) {
+        handleActual((T) packet, context);
     }
 
-    protected IP readIP(ByteBuf buffer) {
-        int[] ip = new int[4];
-        for (int i = 0; i < 4; i++) ip[i] = buffer.readByte();
-        return new IP(ip);
+    protected void handleActual(T packet, IPayloadContext context) {
     }
+
 
     @FunctionalInterface
     public interface Decoder<T extends INetworkPacket> {
-        T decode(FriendlyByteBuf buf, UUID uuid, IP originatorIP, IP destinationIP);
+        T decode(BetterByteBuf buf, UUID uuid, IP originatorIP, IP destinationIP);
     }
 
     @FunctionalInterface
     public interface Encoder<T extends INetworkPacket> {
-        void encode(FriendlyByteBuf buffer, T packet);
+        void encode(BetterByteBuf buffer, T packet);
     }
+
+    @FunctionalInterface
+    public interface Handler<T extends INetworkPacket> {
+        void handle(T packet, IPayloadContext context);
+    }
+
 }

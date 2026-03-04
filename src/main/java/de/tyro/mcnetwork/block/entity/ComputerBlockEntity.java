@@ -6,11 +6,10 @@ import de.tyro.mcnetwork.routing.ApplicationMessageBus;
 import de.tyro.mcnetwork.routing.INetworkNode;
 import de.tyro.mcnetwork.routing.IP;
 import de.tyro.mcnetwork.routing.SimulationEngine;
-import de.tyro.mcnetwork.routing.packet.IApplicationPaket;
-import de.tyro.mcnetwork.routing.packet.INetworkPacket;
+import de.tyro.mcnetwork.routing.packet.IApplicationPacket;
 import de.tyro.mcnetwork.routing.packet.IProtocolPaket;
-import de.tyro.mcnetwork.routing.packet.PingPacket;
-import de.tyro.mcnetwork.routing.packet.PingRepPacket;
+import de.tyro.mcnetwork.routing.packet.application.PingPacket;
+import de.tyro.mcnetwork.routing.packet.application.PingRepPacket;
 import de.tyro.mcnetwork.routing.protocol.AODVProtocol;
 import de.tyro.mcnetwork.routing.protocol.IRoutingProtocol;
 import de.tyro.mcnetwork.terminal.Terminal;
@@ -94,17 +93,22 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
     }
 
     @Override
-    public void onApplicationPacketReceived(IApplicationPaket packet) {
-        //All the packets that are for the client are packets that will be processed by the applications on this Computer. Therefor we send them to the internal application bus.
-        if (level.isClientSide()) {
-            applicationMessageBus.handle(packet);
+    public void onApplicationPacketReceived(IApplicationPacket packet) {
+        var sim = SimulationEngine.getInstance(level.isClientSide);
+
+        if (packet instanceof PingPacket ping) {
+            routingProtocol.send(new PingRepPacket(getIP(), ping.getOriginatorIP(), (long) (sim.getSimTime() - ping.sendStartTime), sim.getSimTime(), ping.id), Integer.MAX_VALUE);
             return;
         }
 
-        if (packet instanceof PingPacket ping) {
-            routingProtocol.send(new PingRepPacket(getIP(), ping.getOriginatorIP(), SimulationEngine.getInstance(level.isClientSide).getSimTime() - ping.sendStartTime, SimulationEngine.getInstance(level.isClientSide).getSimTime(), ping.id), Integer.MAX_VALUE);
-        } else {
-            PacketDistributor.sendToAllPlayers(NewNetworkPacketPayload.toSelf(packet, getTerminal().getNode()));
+
+        //All the packets that are for the client are packets that will be processed by the applications on this Computer. Therefor we send them to the internal application bus.
+        if (!level.isClientSide && packet instanceof PingRepPacket pingRep) {
+            NewNetworkPacketPayload.sendToSelf(packet, this);
+        }
+
+        if (level.isClientSide) {
+            applicationMessageBus.handle(packet);
         }
     }
 
@@ -126,9 +130,13 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
 //        }
 
         var packet = frame.getPacket();
-        if (packet instanceof IProtocolPaket pp) routingProtocol.onProtocolPacketReceived(pp);
-        else if (packet instanceof IApplicationPaket ap && packet.getDestinationIP().equals(this.ipAddress)) this.onApplicationPacketReceived(ap);
-        else if (frame.getTtl() > 0) routingProtocol.send(packet, frame.getTtl() - 1);
+
+        if (packet instanceof IProtocolPaket pp)
+            routingProtocol.onProtocolPacketReceived(pp);
+        else if (!level.isClientSide && packet instanceof IApplicationPacket ap && packet.getDestinationIP().equals(this.ipAddress))
+            this.onApplicationPacketReceived(ap);
+        else if (frame.getTtl() > 0 && !packet.getDestinationIP().equals(this.ipAddress))
+            routingProtocol.send(packet, frame.getTtl() - 1);
     }
 
     public List<String> getRenderText() {
@@ -154,10 +162,19 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
 
 
     @Override
-    public void send(INetworkPacket packet, int ttl) {
+    public void sendApplicationPacket(IApplicationPacket packet, int ttl) {
         if (level == null) return;
+
         if (level.isClientSide()) PacketDistributor.sendToServer(new NewNetworkPacketPayload(packet, ttl, getBlockPos(), false));
-        routingProtocol.send(packet, ttl);
+
+        if (packet.getDestinationIP().equals(ipAddress)) onApplicationPacketReceived(packet);
+
+        if (!level.isClientSide()) routingProtocol.send(packet, ttl);
+    }
+
+    @Override
+    public void setProtocol(IRoutingProtocol routingProtocol) {
+        this.routingProtocol = routingProtocol;
     }
 
     class ReceiveWindow {

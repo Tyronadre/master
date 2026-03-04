@@ -19,10 +19,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.bus.api.Event;
 import net.neoforged.neoforge.entity.IEntityWithComplexSpawn;
-import org.apache.logging.log4j.LogManager;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
 public class NetworkFrameEntity extends Entity implements IEntityWithComplexSpawn {
@@ -50,6 +47,11 @@ public class NetworkFrameEntity extends Entity implements IEntityWithComplexSpaw
     private INetworkPacket packet;
     private boolean initialized = false;
 
+    private double lastTick;
+    private double distanceTravled;
+
+    public static double M_PER_NS = 0.3; //~lightspeed
+
     public NetworkFrameEntity(Level level, Vec3 pos) {
         super(EntityRegistry.NETWORK_FRAME_ENTITY.get(), level);
         this.setPos(pos);
@@ -70,6 +72,8 @@ public class NetworkFrameEntity extends Entity implements IEntityWithComplexSpaw
         this.ttl = ttl;
         this.packet = packet;
         packet.setFrame(this);
+        var sim = SimulationEngine.getInstance(level.isClientSide);
+        sim.registerNetworkFrame(this);
 
         initialized = true;
     }
@@ -86,20 +90,48 @@ public class NetworkFrameEntity extends Entity implements IEntityWithComplexSpaw
     protected void addAdditionalSaveData(CompoundTag compound) {
     }
 
-    @Override
-    public void tick() {
+    public void simTick() {
         if (!initialized) return;
 
         super.tick();
-        super.move(MoverType.SELF, this.getDeltaMovement());
-        if (!level().isClientSide && hasArrived()) {
-            to.onFrameReceive(this);
-            discard();
+        move(MoverType.SELF, getSimDeltaMovement());
+        var arrived = hasArrived();
+
+        if (arrived) {
+            SimulationEngine.getInstance(level().isClientSide).removeNetworkFrame(this);
+            try {
+                to.onFrameReceive(this);
+                discard();
+            } catch (Exception e) {
+                logger.error(e.getLocalizedMessage(), e);
+            }
         }
     }
 
-    private boolean hasArrived() {
-        return getPosition(0).distanceTo(to.getPos()) < 0.1;
+
+    public Vec3 getSimDeltaMovement() {
+        if (!initialized) return Vec3.ZERO;
+
+        var sim = SimulationEngine.getInstance(level().isClientSide());
+        if (sim.isPaused()) return Vec3.ZERO;
+
+        Vec3 toTarget = to.getPos().subtract(getPosition(1));
+        double distance = toTarget.length();
+
+        //return zero if we are really close
+        if (distance < 1e-9) return Vec3.ZERO;
+
+        var movement = toTarget.normalize().scale(M_PER_NS * sim.getSimSpeed() * SimulationEngine.NS_PER_SIM_TICK);
+//        System.out.println(movement.length());
+
+        // Prevent overshooting
+        if (distance <= movement.length()) return toTarget;
+
+        return movement;
+    }
+
+    public boolean hasArrived() {
+        return getPosition(1).distanceTo(to.getPos()) < 0.1;
     }
 
     @Override
@@ -121,38 +153,20 @@ public class NetworkFrameEntity extends Entity implements IEntityWithComplexSpaw
             packet = payload.packet();
             packet.setFrame(this);
 
+
+            var sim = SimulationEngine.getInstance(level().isClientSide);
+            sim.registerNetworkFrame(this);
+
             initialized = true;
         } catch (Exception e) {
             this.discard();
         }
     }
 
-    @Override
-    public @NotNull Vec3 getDeltaMovement() {
-        if (!initialized) return Vec3.ZERO;
-
-        var sim = SimulationEngine.getInstance(level().isClientSide());
-        if (sim.isPaused()) return Vec3.ZERO;
-
-        var tickSpeed = sim.getSimSpeed() * 10;
-
-        Vec3 toTarget = to.getPos().subtract(getPosition(0));
-        double distance = toTarget.length();
-
-        if (distance < 1e-9) {
-            return Vec3.ZERO;
-        }
-
-        // Prevent overshooting
-        if (distance <= tickSpeed) {
-            return toTarget;
-        }
-
-        Vec3 direction = toTarget.scale(1.0 / distance);
-        return direction.scale(tickSpeed);
-    }
 
     public void render(PoseStack poseStack, MultiBufferSource bufferSource, int packedLight, float alpha) {
+        var renderer = new RenderUtil(poseStack, bufferSource, alpha, packedLight);
+
         var mc = Minecraft.getInstance();
 
         poseStack.pushPose();
@@ -165,11 +179,11 @@ public class NetworkFrameEntity extends Entity implements IEntityWithComplexSpaw
         poseStack.pushPose();
         poseStack.scale(0.5f, 0.5f, 0.5f);
 
-        RenderUtil.drawStringWithAlphaColor(RenderUtil.Align.CENTER, "UDP @ " + from.getIP().toString() + " -> " + to.getIP().toString() + " TTL: " + ttl, alpha, 0, -15, poseStack, bufferSource, packedLight);
+        renderer.drawStringWithAlphaColor(RenderUtil.Align.CENTER, "UDP @ " + from.getIP().toString() + " -> " + to.getIP().toString() + " TTL: " + ttl, 0, -15);
 
         poseStack.popPose();
 
-        packet.render(poseStack, bufferSource, packedLight, alpha);
+        packet.render(renderer);
 
         poseStack.popPose();
     }

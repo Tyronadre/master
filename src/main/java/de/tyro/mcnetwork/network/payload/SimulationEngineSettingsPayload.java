@@ -14,16 +14,20 @@ import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.jetbrains.annotations.NotNull;
 
-public record SimulationEngineSettingsPayload(double simSpeed, double frameSpeed, boolean paused, double commRadius) implements CustomPacketPayload {
+public record SimulationEngineSettingsPayload(long simTime, double simSpeed, boolean paused, double commRadius) implements CustomPacketPayload {
 
     public static final StreamCodec<ByteBuf, SimulationEngineSettingsPayload> STREAM_CODEC = StreamCodec.composite(
+            ByteBufCodecs.VAR_LONG, SimulationEngineSettingsPayload::simTime,
             ByteBufCodecs.DOUBLE, SimulationEngineSettingsPayload::simSpeed,
-            ByteBufCodecs.DOUBLE, SimulationEngineSettingsPayload::frameSpeed,
             ByteBufCodecs.BOOL, SimulationEngineSettingsPayload::paused,
             ByteBufCodecs.DOUBLE, SimulationEngineSettingsPayload::commRadius,
             SimulationEngineSettingsPayload::new);
 
     public static final CustomPacketPayload.Type<SimulationEngineSettingsPayload> TYPE = new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(MCNetwork.MODID, "simulation_engine_speed"));
+
+    public static SimulationEngineSettingsPayloadBuilder Builder(SimulationEngine sim) {
+        return new SimulationEngineSettingsPayloadBuilder(sim);
+    }
 
 
     @Override
@@ -34,14 +38,13 @@ public record SimulationEngineSettingsPayload(double simSpeed, double frameSpeed
     public void handle(IPayloadContext context) {
         var sim = SimulationEngine.getInstance(context.flow().isClientbound());
         sim.setSimSpeed(simSpeed());
-        sim.setFrameMovementPerTick(frameSpeed());
         sim.setPaused(paused());
         sim.setCommRadius(commRadius());
 
         if (context.flow().isClientbound()) {
+            sim.setSimTime(simTime());
             if (Minecraft.getInstance().screen instanceof SimulationControllerScreen simScreen) {
                 simScreen.simulationSpeedSlider.setValueExternal(simSpeed);
-                simScreen.frameSpeedSlider.setValueExternal(frameSpeed);
                 simScreen.commRadiusEditBox.setMessage(Component.literal(String.valueOf(commRadius())));
                 simScreen.pauseButton.setMessage(Component.literal(paused ? "Resume" : "Pause"));
             }
@@ -49,5 +52,46 @@ public record SimulationEngineSettingsPayload(double simSpeed, double frameSpeed
             PacketDistributor.sendToAllPlayers(this);
         }
     }
+
+    public static class SimulationEngineSettingsPayloadBuilder {
+        long simTime;
+        double simSpeed;
+        double frameSpeed;
+        boolean paused;
+        double commRadius;
+
+        public SimulationEngineSettingsPayloadBuilder(SimulationEngine simulationEngine) {
+            this.simTime = simulationEngine.getSimTime();
+            this.simSpeed = simulationEngine.getSimSpeed();
+            this.paused = simulationEngine.isPaused();
+            this.commRadius = simulationEngine.getCommRange();
+        }
+
+        public SimulationEngineSettingsPayloadBuilder simSpeed(double simSpeed) {
+            this.simSpeed = simSpeed;
+            return this;
+        }
+
+        public SimulationEngineSettingsPayloadBuilder frameSpeed(double frameSpeed) {
+            this.frameSpeed = frameSpeed;
+            return this;
+        }
+
+        public SimulationEngineSettingsPayloadBuilder paused(boolean paused) {
+            this.paused = paused;
+            return this;
+        }
+
+        public SimulationEngineSettingsPayloadBuilder commRadius(double commRadius) {
+            this.commRadius = commRadius;
+            return this;
+        }
+
+        public SimulationEngineSettingsPayload build() {
+            return new SimulationEngineSettingsPayload(simTime, simSpeed, paused, commRadius);
+        }
+    }
+
+
 
 }

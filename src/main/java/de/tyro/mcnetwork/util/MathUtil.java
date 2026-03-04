@@ -1,4 +1,4 @@
-package de.tyro.mcnetwork;
+package de.tyro.mcnetwork.util;
 
 public class MathUtil {
     public static float max(float... values) {

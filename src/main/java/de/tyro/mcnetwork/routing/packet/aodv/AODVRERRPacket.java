@@ -1,8 +1,9 @@
-package de.tyro.mcnetwork.routing.packet;
+package de.tyro.mcnetwork.routing.packet.aodv;
 
 import de.tyro.mcnetwork.routing.IP;
-import io.netty.buffer.ByteBuf;
-import net.minecraft.network.codec.StreamCodec;
+import de.tyro.mcnetwork.routing.packet.INetworkPacket;
+import de.tyro.mcnetwork.routing.packet.IProtocolPaket;
+import de.tyro.mcnetwork.routing.packet.NetworkPacket;
 
 import java.util.HashMap;
 import java.util.Map;

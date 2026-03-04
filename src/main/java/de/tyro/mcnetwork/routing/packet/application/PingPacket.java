@@ -1,19 +1,23 @@
-package de.tyro.mcnetwork.routing.packet;
+package de.tyro.mcnetwork.routing.packet.application;
 
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.tyro.mcnetwork.client.RenderUtil;
+import de.tyro.mcnetwork.entity.NetworkFrameEntity;
 import de.tyro.mcnetwork.routing.IP;
+import de.tyro.mcnetwork.routing.SimulationEngine;
+import de.tyro.mcnetwork.routing.packet.IApplicationPacket;
+import de.tyro.mcnetwork.routing.packet.INetworkPacket;
+import de.tyro.mcnetwork.routing.packet.NetworkPacket;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.world.phys.Vec2;
 
 import java.util.StringJoiner;
 import java.util.UUID;
 
-public class PingPacket extends NetworkPacket implements IApplicationPaket {
+public class PingPacket extends NetworkPacket implements IApplicationPacket {
 
-    public final long sendStartTime;
+    public long sendStartTime;
 
     public PingPacket(IP src, IP dst, long sendStartTime) {
         super(src, dst);
@@ -30,8 +34,8 @@ public class PingPacket extends NetworkPacket implements IApplicationPaket {
         return new StringJoiner(", ", PingPacket.class.getSimpleName() + "[", "]")
                 .add("sendTime=" + sendStartTime)
                 .add("id=" + id)
-                .add("sourceIp=" + originatorIP)
-                .add("destinationIp=" + destinationIP)
+                .add("sourceIp=" + getOriginatorIP())
+                .add("destinationIp=" + getDestinationIP())
                 .toString();
     }
 
@@ -42,15 +46,14 @@ public class PingPacket extends NetworkPacket implements IApplicationPaket {
     }
 
     @Override
-    protected void renderPacketContent(PoseStack poseStack, MultiBufferSource buffer, int packedLight, float alpha, Font font, float width) {
+    protected void renderPacketContent(RenderUtil renderer, PoseStack poseStack, float width) {
         String line = "Time " + (getSimulationEngine().getSimTime() - sendStartTime) + "ms";
-        RenderUtil.drawStringWithAlphaColor(RenderUtil.Align.LEFT, line, alpha, width, 0, poseStack, buffer, packedLight);
+        renderer.drawStringWithAlphaColor(RenderUtil.Align.LEFT, line,  width, 0);
     }
 
     @Override
     public INetworkPacket copy() {
-        return new PingPacket(originatorIP, destinationIP, sendStartTime);
+        return new PingPacket(getOriginatorIP(), getDestinationIP(), sendStartTime);
     }
-
 
 }

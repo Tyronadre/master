@@ -2,6 +2,7 @@ package de.tyro.mcnetwork.routing.protocol;
 
 
 import de.tyro.mcnetwork.routing.IHudRenderer;
+import de.tyro.mcnetwork.routing.INetworkNode;
 import de.tyro.mcnetwork.routing.IP;
 import de.tyro.mcnetwork.routing.packet.INetworkPacket;
 import de.tyro.mcnetwork.routing.packet.IProtocolPaket;
@@ -17,4 +18,6 @@ public interface IRoutingProtocol extends IHudRenderer {
     void tick();
 
     boolean hasRoute(IP destination);
+
+    INetworkNode getNode();
 }

@@ -3,7 +3,9 @@ package de.tyro.mcnetwork.terminal;
 import de.tyro.mcnetwork.terminal.commands.ClearCommand;
 import de.tyro.mcnetwork.terminal.commands.Command;
 import de.tyro.mcnetwork.terminal.commands.HelpCommand;
+import de.tyro.mcnetwork.terminal.commands.IpConfigCommand;
 import de.tyro.mcnetwork.terminal.commands.PingCommand;
+import de.tyro.mcnetwork.terminal.commands.RoutingProtocolCommand;
 import de.tyro.mcnetwork.terminal.commands.TraceRouteCommand;
 
 import java.util.HashMap;
@@ -26,6 +28,8 @@ public class CommandRegistry {
         register("traceroute", TraceRouteCommand::new);
         register("tracert", TraceRouteCommand::new);
         register("help", HelpCommand::new);
+        register("setProtocol", RoutingProtocolCommand::new);
+        register("ipConfig", IpConfigCommand::new);
     }
 
     public void register(String name, CommandFactory command) {

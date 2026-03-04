@@ -4,9 +4,10 @@ import com.mojang.logging.LogUtils;
 import de.tyro.mcnetwork.MCNetwork;
 import de.tyro.mcnetwork.block.entity.ComputerBlockEntity;
 import de.tyro.mcnetwork.network.NetworkUtil;
+import de.tyro.mcnetwork.network.payload.networkPacket.NetworkPacketCodecRegistry;
 import de.tyro.mcnetwork.network.payload.networkPacket.NetworkPacketPayload;
 import de.tyro.mcnetwork.routing.INetworkNode;
-import de.tyro.mcnetwork.routing.packet.IApplicationPaket;
+import de.tyro.mcnetwork.routing.packet.IApplicationPacket;
 import de.tyro.mcnetwork.routing.packet.INetworkPacket;
 import de.tyro.mcnetwork.routing.packet.IProtocolPaket;
 import net.minecraft.core.BlockPos;
@@ -15,15 +16,21 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
+import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.slf4j.Logger;
 
-public record NewNetworkPacketPayload(INetworkPacket packet, Integer ttl, BlockPos pos, Boolean toSelf) implements CustomPacketPayload {
+public record NewNetworkPacketPayload(INetworkPacket packet, Integer ttl, BlockPos pos, Boolean sendToSelf) implements CustomPacketPayload {
     static Logger logger = LogUtils.getLogger();
 
-
-    public static CustomPacketPayload toSelf(INetworkPacket packet, INetworkNode node) {
-        return new NewNetworkPacketPayload(packet, -1,node.getBlockPos(), true);
+    /**
+     * Sends this networkPacket to the same node
+     *
+     * @param packet the packet
+     * @param node the node
+     */
+    public static void sendToSelf(INetworkPacket packet, INetworkNode node) {
+        PacketDistributor.sendToAllPlayers( new NewNetworkPacketPayload(packet, -1,node.getBlockPos(), true));
     }
 
     @Override
@@ -45,10 +52,12 @@ public record NewNetworkPacketPayload(INetworkPacket packet, Integer ttl, BlockP
             return;
         }
 
-        if (toSelf) {
+        NetworkPacketCodecRegistry.handlerOf(packet.getClass()).handle(packet, context);
+
+        if (sendToSelf) {
             if (packet instanceof IProtocolPaket p) {
                 be.getRoutingProtocol().onProtocolPacketReceived(p);
-            } else if (packet instanceof IApplicationPaket p) {
+            } else if (packet instanceof IApplicationPacket p) {
                 be.onApplicationPacketReceived(p);
             }
         } else {
@@ -60,7 +69,7 @@ public record NewNetworkPacketPayload(INetworkPacket packet, Integer ttl, BlockP
             NetworkPacketPayload.codec(), it -> new NetworkPacketPayload(it.packet),
             ByteBufCodecs.INT, NewNetworkPacketPayload::ttl,
             BlockPos.STREAM_CODEC, NewNetworkPacketPayload::pos,
-            ByteBufCodecs.BOOL, NewNetworkPacketPayload::toSelf,
+            ByteBufCodecs.BOOL, NewNetworkPacketPayload::sendToSelf,
             (payload, ttl, pos, self) -> new NewNetworkPacketPayload(payload.packet(), ttl, pos, self)
     );
 
