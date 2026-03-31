@@ -1,6 +1,8 @@
 package de.tyro.mcnetwork.network.payload.networkPacket;
 
 
+import de.tyro.mcnetwork.network.BetterByteBuf;
+import de.tyro.mcnetwork.routing.IP;
 import de.tyro.mcnetwork.routing.SimulationEngine;
 import de.tyro.mcnetwork.routing.packet.aodv.AODVRREPPacket;
 import de.tyro.mcnetwork.routing.packet.aodv.AODVRREQPacket;
@@ -10,9 +12,24 @@ import de.tyro.mcnetwork.routing.packet.application.PingRepPacket;
 import de.tyro.mcnetwork.routing.packet.dsr.DSRRouteReply;
 import de.tyro.mcnetwork.routing.packet.dsr.DSRRouteRequest;
 import de.tyro.mcnetwork.routing.packet.dsr.DSRSourceRoute;
+import de.tyro.mcnetwork.routing.packet.lar.LARRouteError;
+import de.tyro.mcnetwork.routing.packet.lar.LARRouteReply;
+import de.tyro.mcnetwork.routing.packet.lar.LARRouteRequest;
+import de.tyro.mcnetwork.routing.packet.olsr.HelloPacket;
+import de.tyro.mcnetwork.routing.packet.olsr.TCPacket;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.StreamDecoder;
+import net.minecraft.network.codec.StreamEncoder;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
+import org.apache.logging.log4j.core.pattern.FormattingInfo;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.function.IntFunction;
+import java.util.stream.Collectors;
 
 import static de.tyro.mcnetwork.network.payload.networkPacket.NetworkPacketCodecRegistry.register;
 
@@ -132,6 +149,76 @@ public class NetworkPacketCodecGenerator {
                         .writeInt(packet.getSegLeft())
                         .writeIPList(packet.getAddresses())
                         .writePacket(packet.getPacket()));
+
+        register(LARRouteError.class,
+                (buf, uuid, originatorIP, destinationIP) -> new LARRouteError(
+                        uuid,
+                        originatorIP,
+                        destinationIP,
+                        buf.readIP()
+                ),
+                (buf, packet) -> buf
+                        .writeIP(packet.unreachableDestination)
+        );
+
+        register(LARRouteRequest.class,
+                (buf, uuid, originatorIP, destinationIP) -> new LARRouteRequest(
+                        uuid,
+                        originatorIP,
+                        destinationIP,
+                        buf.readVec3(),
+                        buf.readVec3(),
+                        buf.readInt(),
+                        buf.readInt()
+                ),
+                (buf, packet) -> buf
+                        .writeVec3R(packet.sourcePos)
+                        .writeVec3R(packet.destExpectedPos)
+                        .writeInt(packet.requestZoneSize)
+                        .writeInt(packet.hopCount)
+        );
+
+        register(LARRouteReply.class,
+                (buf, uuid, originatorIP, destinationIP) -> new LARRouteReply(
+                        uuid,
+                        originatorIP,
+                        destinationIP,
+                        buf.readVec3(),
+                        buf.readVec3()
+                ),
+                (buf, packet) -> buf
+                        .writeVec3R(packet.sourcePos)
+                        .writeVec3R(packet.destPos)
+        );
+
+        register(HelloPacket.class,
+                (buf, uuid, originatorIP, destinationIP) -> new HelloPacket(
+                        uuid,
+                        originatorIP,
+                        new HashSet<>(buf.readIPList()),
+                        buf.readInt()
+                ),
+                (buf, packet) -> buf
+                        .writeIPList(new ArrayList<>(packet.neighbors))
+                        .writeInt(packet.willingness)
+        );
+
+        register(TCPacket.class,
+                (buf, uuid, originatorIP, destinationIP) -> new TCPacket(
+                        uuid,
+                        originatorIP,
+                        buf.readMap(
+                                buffer -> BetterByteBuf.IP_STREAM_CODEC.decode(buf),
+                                (StreamDecoder<FriendlyByteBuf, Set<IP>>) buffer -> new HashSet<>(buffer.readCollection(HashSet::new, buffer1 -> BetterByteBuf.IP_STREAM_CODEC.decode(buffer1)))
+                        )
+                ),
+                (buf, packet) ->
+                        buf.writeMap(packet.advertisedLinks,
+                                (buffer, value) -> BetterByteBuf.IP_STREAM_CODEC.encode(buffer, value),
+                                (buffer, value) -> buffer.writeCollection(value, (buffer2, value1) -> BetterByteBuf.IP_STREAM_CODEC.encode(buffer2, value1))
+                        )
+        );
+
     }
 
 

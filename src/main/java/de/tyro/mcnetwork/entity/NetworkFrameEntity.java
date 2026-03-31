@@ -14,6 +14,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.MoverType;
@@ -24,6 +26,18 @@ import org.slf4j.Logger;
 
 public class NetworkFrameEntity extends Entity implements IEntityWithComplexSpawn {
     static Logger logger = LogUtils.getLogger();
+
+    public enum State {
+        TRAVELING,
+        ARRIVED,
+        INTERFERED
+    }
+
+    private State state = State.TRAVELING;
+    private int interferedTicks = 0;
+
+    private static final EntityDataAccessor<Integer> DATA_STATE = SynchedEntityData.defineId(NetworkFrameEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Integer> DATA_INTERFERED_TICKS = SynchedEntityData.defineId(NetworkFrameEntity.class, EntityDataSerializers.INT);
 
     public INetworkNode getFrom() {
         return from;
@@ -46,11 +60,9 @@ public class NetworkFrameEntity extends Entity implements IEntityWithComplexSpaw
     private int ttl;
     private INetworkPacket packet;
     private boolean initialized = false;
+    private Vec3 simulationPosition; // Position calculated from simulation
 
-    private double lastTick;
-    private double distanceTravled;
-
-    public static double M_PER_NS = 0.3; //~lightspeed
+    public static double M_PER_MS = 300000; //~lightspeed
 
     public NetworkFrameEntity(Level level, Vec3 pos) {
         super(EntityRegistry.NETWORK_FRAME_ENTITY.get(), level);
@@ -71,6 +83,7 @@ public class NetworkFrameEntity extends Entity implements IEntityWithComplexSpaw
         this.to = to;
         this.ttl = ttl;
         this.packet = packet;
+        this.simulationPosition = from.getPos();
         packet.setFrame(this);
         var sim = SimulationEngine.getInstance(level.isClientSide);
         sim.registerNetworkFrame(this);
@@ -80,34 +93,68 @@ public class NetworkFrameEntity extends Entity implements IEntityWithComplexSpaw
 
     @Override
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        builder.define(DATA_STATE, State.TRAVELING.ordinal());
+        builder.define(DATA_INTERFERED_TICKS, 0);
     }
 
     @Override
     protected void readAdditionalSaveData(CompoundTag compound) {
+        state = State.values()[compound.getInt("state")];
+        interferedTicks = compound.getInt("interferedTicks");
     }
 
     @Override
     protected void addAdditionalSaveData(CompoundTag compound) {
+        compound.putInt("state", state.ordinal());
+        compound.putInt("interferedTicks", interferedTicks);
     }
 
     public void simTick() {
         if (!initialized) return;
 
-        super.tick();
-        move(MoverType.SELF, getSimDeltaMovement());
-        var arrived = hasArrived();
+        if (state == State.TRAVELING) {
+            simulationPosition = simulationPosition.add(getSimDeltaMovement());
 
-        if (arrived) {
-            SimulationEngine.getInstance(level().isClientSide).removeNetworkFrame(this);
-            try {
-                to.onFrameReceive(this);
+            if (hasArrived()) {
+                setPos(simulationPosition);
+
+                state = State.ARRIVED;
+//                entityData.set(DATA_STATE, state.ordinal());
+
+                try {
+                    to.onFrameReceive(this);
+                    if (state == State.ARRIVED) {
+                        SimulationEngine.getInstance(level().isClientSide).removeNetworkFrame(this);
+                        discard();
+                    }
+                } catch (Exception e) {
+                    logger.error(e.getLocalizedMessage(), e);
+                }
+            }
+        }
+
+        if (state == State.INTERFERED) {
+            interferedTicks++;
+//            entityData.set(DATA_INTERFERED_TICKS, interferedTicks);
+            if (interferedTicks > 100) {
+                SimulationEngine.getInstance(level().isClientSide).removeNetworkFrame(this);
                 discard();
-            } catch (Exception e) {
-                logger.error(e.getLocalizedMessage(), e);
             }
         }
     }
 
+    @Override
+    public void tick() {
+        super.tick();
+        if (!initialized) return;
+
+//        if (!level().isClientSide) return
+
+        Vec3 currentPos = getPosition(1);
+        Vec3 diff = simulationPosition.subtract(currentPos);
+        if (state != State.TRAVELING) return;
+        if (diff.lengthSqr() > 1e-6) move(MoverType.SELF, diff);
+    }
 
     public Vec3 getSimDeltaMovement() {
         if (!initialized) return Vec3.ZERO;
@@ -115,13 +162,13 @@ public class NetworkFrameEntity extends Entity implements IEntityWithComplexSpaw
         var sim = SimulationEngine.getInstance(level().isClientSide());
         if (sim.isPaused()) return Vec3.ZERO;
 
-        Vec3 toTarget = to.getPos().subtract(getPosition(1));
+        Vec3 toTarget = to.getPos().subtract(simulationPosition);
         double distance = toTarget.length();
 
         //return zero if we are really close
         if (distance < 1e-9) return Vec3.ZERO;
 
-        var movement = toTarget.normalize().scale(M_PER_NS * sim.getSimSpeed() * SimulationEngine.NS_PER_SIM_TICK);
+        var movement = toTarget.normalize().scale(M_PER_MS / 100_000 * sim.getSimSpeed() * SimulationEngine.MS_PER_SIM_TICK);
 //        System.out.println(movement.length());
 
         // Prevent overshooting
@@ -131,7 +178,7 @@ public class NetworkFrameEntity extends Entity implements IEntityWithComplexSpaw
     }
 
     public boolean hasArrived() {
-        return getPosition(1).distanceTo(to.getPos()) < 0.1;
+        return simulationPosition.distanceTo(to.getPos()) < 0.1;
     }
 
     @Override
@@ -152,12 +199,16 @@ public class NetworkFrameEntity extends Entity implements IEntityWithComplexSpaw
             ttl = payload.ttl();
             packet = payload.packet();
             packet.setFrame(this);
-
+            this.simulationPosition = from.getPos();
 
             var sim = SimulationEngine.getInstance(level().isClientSide);
             sim.registerNetworkFrame(this);
 
             initialized = true;
+            state = State.TRAVELING;
+            interferedTicks = 0;
+            entityData.set(DATA_STATE, state.ordinal());
+            entityData.set(DATA_INTERFERED_TICKS, interferedTicks);
         } catch (Exception e) {
             this.discard();
         }
@@ -165,6 +216,9 @@ public class NetworkFrameEntity extends Entity implements IEntityWithComplexSpaw
 
 
     public void render(PoseStack poseStack, MultiBufferSource bufferSource, int packedLight, float alpha) {
+        State currentState = State.values()[entityData.get(DATA_STATE)];
+        if (currentState == State.ARRIVED) return;
+
         var renderer = new RenderUtil(poseStack, bufferSource, alpha, packedLight);
 
         var mc = Minecraft.getInstance();
@@ -179,12 +233,24 @@ public class NetworkFrameEntity extends Entity implements IEntityWithComplexSpaw
         poseStack.pushPose();
         poseStack.scale(0.5f, 0.5f, 0.5f);
 
-        renderer.drawStringWithAlphaColor(RenderUtil.Align.CENTER, "UDP @ " + from.getIP().toString() + " -> " + to.getIP().toString() + " TTL: " + ttl, 0, -15);
+        if (currentState == State.INTERFERED) {
+            renderer.renderBackgroundQuadWithColor(100, 20, 0xFF0000);
+        }
+
+        int textColor = currentState == State.INTERFERED ? 0xFFFF0000 : RenderUtil.getTextColorFromAlpha(alpha);
+        renderer.drawString(RenderUtil.Align.CENTER, "UDP @ " + from.getIP().toString() + " -> " + to.getIP().toString() + " TTL: " + ttl, textColor, 0, -15);
 
         poseStack.popPose();
 
         packet.render(renderer);
 
         poseStack.popPose();
+    }
+
+    public void setInterfered() {
+        state = State.INTERFERED;
+        entityData.set(DATA_STATE, state.ordinal());
+        interferedTicks = 0;
+        entityData.set(DATA_INTERFERED_TICKS, 0);
     }
 }

@@ -80,7 +80,7 @@ public class ApplicationMessageBus {
         }
     }
 
-    public void tick() {
+    public void simTick() {
         lock.lock();
         try {
             stateChanged.signalAll();

@@ -1,5 +1,6 @@
 package de.tyro.mcnetwork.gui;
 
+import de.tyro.mcnetwork.network.payload.SetProtocolPayload;
 import de.tyro.mcnetwork.network.payload.SimulationEngineSettingsPayload;
 import de.tyro.mcnetwork.routing.SimulationEngine;
 import net.minecraft.client.gui.GuiGraphics;
@@ -23,6 +24,7 @@ public class SimulationControllerScreen extends AbstractContainerScreen<Simulati
     public LogSlider simulationSpeedSlider;
     public LogSlider frameSpeedSlider;
     public EditBox commRadiusEditBox;
+    private Button[] protocolButtons;
 
     public SimulationControllerScreen(SimulationControllerMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
@@ -66,6 +68,24 @@ public class SimulationControllerScreen extends AbstractContainerScreen<Simulati
             } catch (Exception ignored) {
             }
         });
+
+        // Protocol buttons
+        String[] protocols = {"AODV", "DSR", "LAR", "OLSR"};
+        int protocolButtonY = y + 120;
+        int buttonWidth = 33;
+        int spacing = 2;
+
+        protocolButtons = new Button[protocols.length];
+        int startX = centerX - (protocols.length * (buttonWidth + spacing)) / 2;
+
+        for (int i = 0; i < protocols.length; i++) {
+            final String protocol = protocols[i].toLowerCase();
+            protocolButtons[i] = this.addRenderableWidget(Button.builder(
+                    Component.literal(protocols[i]),
+                    btn -> PacketDistributor.sendToServer(new SetProtocolPayload(protocol)))
+                    .bounds(startX + i * (buttonWidth + spacing), protocolButtonY, buttonWidth, 20)
+                    .build());
+        }
     }
 
     @Override

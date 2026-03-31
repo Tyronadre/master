@@ -2,6 +2,7 @@ package de.tyro.mcnetwork.routing;
 
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.codec.StreamCodec;
 import net.neoforged.neoforge.common.util.INBTSerializable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.UnknownNullability;
@@ -12,6 +13,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class IP implements INBTSerializable<CompoundTag> {
+
     private static final Set<IP> ips = new HashSet<>();
     public static final IP ZERO = new IP(new int[]{0, 0, 0, 0});
     public static final IP BROADCAST = new IP(new int[]{255, 255, 255, 255});

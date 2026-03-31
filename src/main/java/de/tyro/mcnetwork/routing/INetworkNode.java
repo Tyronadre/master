@@ -45,7 +45,7 @@ public interface INetworkNode {
      */
     void onApplicationPacketReceived(IApplicationPacket packet);
 
-    void tick();
+    void simTick();
 
     /**
      * Calculates the euclidean distance to another node

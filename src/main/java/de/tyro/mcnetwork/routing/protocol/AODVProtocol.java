@@ -904,7 +904,7 @@ public class AODVProtocol implements IRoutingProtocol, IHudRenderer {
 
 
     @Override
-    public void tick() {
+    public void simTick() {
         long now = simulator.getSimTime();
 
         tickActions.execute(now);

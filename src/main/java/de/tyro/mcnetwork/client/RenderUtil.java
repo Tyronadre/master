@@ -184,6 +184,29 @@ public class RenderUtil {
         vc.addVertex(mat, x2, y1, 0).setColor(r, g, b, bgAlpha);
     }
 
+    public void renderBackgroundQuadWithColor(float width, float height, int color) {
+        float padding = 2f;
+        float bgAlpha = alpha * 0.6f;
+
+        float r = ((color >> 16) & 0xFF) / 255f;
+        float g = ((color >> 8) & 0xFF) / 255f;
+        float b = (color & 0xFF) / 255f;
+
+        VertexConsumer vc = buffer.getBuffer(RenderType.debugQuads());
+
+        Matrix4f mat = poseStack.last().pose();
+
+        float x1 = -width / 2f - padding;
+        float x2 = width / 2f + padding;
+        float y1 = -padding;
+        float y2 = height + padding;
+
+        vc.addVertex(mat, x1, y1, 0).setColor(r, g, b, bgAlpha);
+        vc.addVertex(mat, x1, y2, 0).setColor(r, g, b, bgAlpha);
+        vc.addVertex(mat, x2, y2, 0).setColor(r, g, b, bgAlpha);
+        vc.addVertex(mat, x2, y1, 0).setColor(r, g, b, bgAlpha);
+    }
+
     public void renderLine(float x1, float y1, float x2, float y2, int color) {
         VertexConsumer vc = buffer.getBuffer(RenderType.debugLineStrip(1));
         Matrix4f mat = poseStack.last().pose();

@@ -12,6 +12,7 @@ import de.tyro.mcnetwork.routing.packet.application.PingPacket;
 import de.tyro.mcnetwork.routing.packet.application.PingRepPacket;
 import de.tyro.mcnetwork.routing.protocol.AODVProtocol;
 import de.tyro.mcnetwork.routing.protocol.IRoutingProtocol;
+import de.tyro.mcnetwork.routing.protocol.LARProtocol;
 import de.tyro.mcnetwork.terminal.Terminal;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
@@ -51,7 +52,7 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
         applicationMessageBus = new ApplicationMessageBus(this);
         routingProtocol = new AODVProtocol(this);
         SimulationEngine.getInstance(level.isClientSide).registerNode(this);
-        receiveWindow = new ReceiveWindow(5, 1);
+        receiveWindow = new ReceiveWindow(5, 2);
     }
 
     @Override
@@ -124,10 +125,10 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
 
     @Override
     public void onFrameReceive(NetworkFrameEntity frame) {
-//        if (!receiveWindow.tryAccept()) {
-//            System.out.println("Received packet but not accepted by the client, interferred");
-//            return;
-//        }
+        if (!receiveWindow.tryAccept()) {
+            frame.setInterfered();
+            return;
+        }
 
         var packet = frame.getPacket();
 
@@ -148,11 +149,11 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
 
 
     @Override
-    public void tick() {
+    public void simTick() {
         if (level.isClientSide()) {
-            applicationMessageBus.tick();
+            applicationMessageBus.simTick();
         }
-        routingProtocol.tick();
+        routingProtocol.simTick();
     }
 
     @Override
@@ -178,27 +179,27 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
     }
 
     class ReceiveWindow {
-        private final long windowTicks;
-        private final int maxPackets;
+        private final long windowSizeMs;
+        private final int maxPacketsPerWindow;
 
         private long windowStartTick = -1;
         private int count = 0;
 
-        public ReceiveWindow(long windowTicks, int maxPackets) {
-            this.windowTicks = windowTicks;
-            this.maxPackets = maxPackets;
+        public ReceiveWindow(long windowSizeMs, int maxPacketsPerWindow) {
+            this.windowSizeMs = windowSizeMs;
+            this.maxPacketsPerWindow = maxPacketsPerWindow;
         }
 
         public boolean tryAccept() {
             var currentTick = SimulationEngine.getInstance(level.isClientSide).getSimTime();
 
-            if (windowStartTick == -1 || currentTick - windowStartTick >= windowTicks) {
+            if (windowStartTick == -1 || currentTick - windowStartTick >= windowSizeMs) {
                 windowStartTick = currentTick;
                 count = 0;
             }
 
             count++;
-            return count <= maxPackets;
+            return count <= maxPacketsPerWindow;
         }
     }
 
@@ -231,4 +232,3 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
         return "Computer: " + getIP() + "@" + Integer.toHexString(hashCode());
     }
 }
-

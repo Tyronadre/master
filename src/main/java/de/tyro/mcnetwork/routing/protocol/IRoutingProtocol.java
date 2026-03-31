@@ -15,7 +15,7 @@ public interface IRoutingProtocol extends IHudRenderer {
 
     void discoverRoute(IP destinationIp);
 
-    void tick();
+    void simTick();
 
     boolean hasRoute(IP destination);
 

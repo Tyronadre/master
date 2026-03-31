@@ -38,11 +38,11 @@ public class SimulationEngine {
     private final Map<IP, INetworkNode> nodes = new ConcurrentHashMap<>();
     private final List<NetworkFrameEntity> networkFrames = new ArrayList<>();
 
-    private long simulationTimeNS = 0;
+    private long simulationTimeMS = 0;
     private double simulationSpeed = 0.25;
     private boolean simulationPaused = false;
     public static long SIM_TICK_PER_GAME_TICK = 5;
-    public static long NS_PER_SIM_TICK = 1;
+    public static long MS_PER_SIM_TICK = 1;
     private double commRadius;
 
     public void registerNode(INetworkNode node) {
@@ -56,7 +56,7 @@ public class SimulationEngine {
     }
 
     public long getSimTime() {
-        return simulationTimeNS;
+        return simulationTimeMS;
     }
 
 
@@ -75,14 +75,14 @@ public class SimulationEngine {
     private void tick() {
         if (simulationPaused) return;
 
-        // SAFE ACTUAL SIM TIME EVER SUBTICK!
+        // SAFE ACTUAL SIM TIME EVER SUBTICK
         double simulationTicks = SIM_TICK_PER_GAME_TICK * simulationSpeed;
 
         for (double i = 0; i < simulationTicks; i++) {
             new ArrayList<>(networkFrames).forEach(NetworkFrameEntity::simTick);
-            nodes.values().forEach(INetworkNode::tick);
+            nodes.values().forEach(INetworkNode::simTick);
 
-            simulationTimeNS += NS_PER_SIM_TICK;
+            simulationTimeMS += MS_PER_SIM_TICK;
         }
     }
 
@@ -200,7 +200,7 @@ public class SimulationEngine {
     }
 
     public void setSimTime(long simulationTime) {
-        this.simulationTimeNS = simulationTime;
+        this.simulationTimeMS = simulationTime;
     }
 
     public void setCommRadius(double commRadius) {

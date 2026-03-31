@@ -786,7 +786,7 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
     }
 
     @Override
-    public void tick() {
+    public void simTick() {
         tickActions.execute(sim.getSimTime());
     }
 

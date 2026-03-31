@@ -3,6 +3,8 @@ package de.tyro.mcnetwork.terminal.commands;
 import de.tyro.mcnetwork.routing.protocol.AODVProtocol;
 import de.tyro.mcnetwork.routing.protocol.DSRProtocol;
 import de.tyro.mcnetwork.routing.protocol.IRoutingProtocol;
+import de.tyro.mcnetwork.routing.protocol.LARProtocol;
+import de.tyro.mcnetwork.routing.protocol.OLSRProtocol;
 import de.tyro.mcnetwork.terminal.Terminal;
 
 public class RoutingProtocolCommand extends Command{
@@ -13,15 +15,17 @@ public class RoutingProtocolCommand extends Command{
     @Override
     public void execute() throws InterruptedException {
         if (this.args.length != 1) {
-            println("Usage: setProtocol <protocol>[aodv|dsr]");
+            println("Usage: setProtocol <protocol>[aodv|dsr|lar|olsr]");
             return;
         }
 
         IRoutingProtocol protocol = switch (this.args[0]) {
             case "aodv" -> new AODVProtocol(terminal.getNode());
             case "dsr" -> new DSRProtocol(terminal.getNode());
+            case "lar" -> new LARProtocol(terminal.getNode());
+            case "olsr" -> new OLSRProtocol(terminal.getNode());
             default -> {
-                println("Usage: setProtocol <protocol>[aodv|dsr] ");
+                println("Usage: setProtocol <protocol>[aodv|dsr|lar|olsr] ");
                 yield null;
             }
         };
