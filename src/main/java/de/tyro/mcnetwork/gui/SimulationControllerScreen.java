@@ -2,6 +2,7 @@ package de.tyro.mcnetwork.gui;
 
 import de.tyro.mcnetwork.network.payload.SetProtocolPayload;
 import de.tyro.mcnetwork.network.payload.SimulationEngineSettingsPayload;
+import de.tyro.mcnetwork.networkBook.data.TopicManager;
 import de.tyro.mcnetwork.routing.SimulationEngine;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractSliderButton;
@@ -86,6 +87,15 @@ public class SimulationControllerScreen extends AbstractContainerScreen<Simulati
                     .bounds(startX + i * (buttonWidth + spacing), protocolButtonY, buttonWidth, 20)
                     .build());
         }
+
+        var reloadQuestButton = this.addRenderableWidget(Button.builder(
+                Component.literal("Reload Quests"),
+                btn -> TopicManager.getInstance().reloadTopics())
+                .bounds(centerX - 70,
+                        y + 100, 140, 20)
+                .build()
+        );
+
     }
 
     @Override

@@ -5,8 +5,10 @@ import de.tyro.mcnetwork.MCNetwork;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.storage.DimensionDataStorage;
 import org.slf4j.Logger;
 import org.yaml.snakeyaml.Yaml;
 
@@ -35,7 +37,12 @@ public class TopicManager {
         return INSTANCE;
     }
 
-    public void loadTopics() {
+    public void reloadTopics() {
+        topics.clear();
+        loadTopicsFromResources();
+    }
+
+    public void loadTopicsFromResources() {
         var location = ResourceLocation.fromNamespaceAndPath(MCNetwork.MODID, CHAPTER_FOLDER + "chapters.yaml");
         var resourceO = rm.getResource(location);
         if (resourceO.isEmpty()) return;
@@ -86,8 +93,9 @@ public class TopicManager {
     }
 
     public List<Topic> getTopics() {
-        topics.clear();
-        loadTopics();
+        if (topics.isEmpty()) {
+            loadTopicsFromResources();
+        }
         return topics;
     }
 

@@ -3,4 +3,4 @@
   icon: minecraft:textures/item/book.png
 - title: Debug
   path: debug
-  icon: minecraft:textures/item/redstone_dust.png
+  icon: minecraft:textures/item/book.png

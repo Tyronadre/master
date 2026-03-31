@@ -19,6 +19,7 @@ public class MarkdownParser {
     private static final Pattern orderedListItemPattern = Pattern.compile("\\d+\\.\\s+(.*)$");
     private static final Pattern imagePattern = Pattern.compile("!\\[.*?]\\(([\\w.]*)\\s*(\".*\")?.*\\)");
     private static final Pattern animationPatter = Pattern.compile("@animation\\[(.*)]");
+    private static final Pattern taskPattern = Pattern.compile("@task\\[(.*)]");
 
     private static final ResourceManager resourceManager = Minecraft.getInstance().getResourceManager();
 
@@ -48,6 +49,24 @@ public class MarkdownParser {
             Matcher animation = animationPatter.matcher(line);
             if (animation.find()) {
                 doc.addAnimationBlock(resourceLocation.withSuffix("/" +animation.group(1) + ".json"));
+                i++;
+                continue;
+            }
+
+            Matcher task = taskPattern.matcher(line);
+            if (task.find()) {
+                String content = task.group(1);
+                String[] pairs = content.split(";");
+                List<String> questions = new ArrayList<>();
+                List<String> answers = new ArrayList<>();
+                for (String pair : pairs) {
+                    String[] qa = pair.split("\\|");
+                    if (qa.length == 2) {
+                        questions.add(qa[0]);
+                        answers.add(qa[1]);
+                    }
+                }
+                doc.addTaskBlock(questions, answers);
                 i++;
                 continue;
             }

@@ -7,6 +7,8 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.network.chat.Component;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 
 /**
@@ -32,6 +34,8 @@ public class ContentPane implements GuiEventListener {
     private boolean focused;
     private boolean scrollbarDragging = false;
     private float scrollbarDragOffset = 0f;
+    private GuiEventListener focusedElement = null;
+    private List<GuiEventListener> interactiveBlocks = new ArrayList<>();
 
     public ContentPane(int x, int y, int w, int h) {
         this.x = x;
@@ -44,6 +48,9 @@ public class ContentPane implements GuiEventListener {
         subtopic = s;
         renderer = s.getMarkdownRenderer();
         this.scrollY = 0f;
+        interactiveBlocks.clear();
+        focusedElement = null;
+        interactiveBlocks = s.getMarkdownDocument().getInteractiveBlocks();
     }
 
     public void setCloseListener(Consumer<Void> c) {
@@ -123,6 +130,15 @@ public class ContentPane implements GuiEventListener {
             }
         }
 
+        // delegate to interactive blocks
+        for (GuiEventListener el : interactiveBlocks) {
+            if (el.mouseClicked(mx, my + scrollY, button)) {
+                focusedElement = el;
+                return true;
+            }
+        }
+        focusedElement = null;
+
         // else click in content area: start drag (we optionally allow dragging content)
         return false;
     }
@@ -184,5 +200,19 @@ public class ContentPane implements GuiEventListener {
         }
         if (scrollY + h - 32 > contentHeight) scrollY = contentHeight - h + 32;
         return true;
+    }
+
+    public boolean charTyped(char codePoint, int modifiers) {
+        if (focusedElement != null) {
+            return focusedElement.charTyped(codePoint, modifiers);
+        }
+        return false;
+    }
+
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (focusedElement != null) {
+            return focusedElement.keyPressed(keyCode, scanCode, modifiers);
+        }
+        return false;
     }
 }

@@ -55,6 +55,7 @@ public class NetworkBookScreen extends Screen {
         if (currentTopic != null) draggablePlane.setSubtopics(currentTopic.getSubtopics());
 
         contentPane = new ContentPane(64, 24, this.width - 64 - 18, this.height - 48);
+        if (currentSubtopic != null) contentPane.setSubtopic(currentSubtopic);
         contentPane.setCloseListener(c -> closeSubtopic());
         contentPane.setCompletionListener(this::onMarkComplete);
 
@@ -141,6 +142,22 @@ public class NetworkBookScreen extends Screen {
             return contentPane.mouseScrolled(mouseX, mouseY, scrollY) || super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
         }
         return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+    }
+
+    @Override
+    public boolean charTyped(char codePoint, int modifiers) {
+        if (currentSubtopic != null && contentPane != null) {
+            if (contentPane.charTyped(codePoint, modifiers)) return true;
+        }
+        return super.charTyped(codePoint, modifiers);
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (currentSubtopic != null && contentPane != null) {
+            if (contentPane.keyPressed(keyCode, scanCode, modifiers)) return true;
+        }
+        return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     @Override

@@ -8,6 +8,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
@@ -16,6 +17,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * MarkdownRenderer (Parser + Renderer)
@@ -166,6 +168,7 @@ public class MarkdownRenderer {
     }
 
     private void renderStyledLine(GuiGraphics gg, StyledLine sl, int x, int y) {
+        if (gg == null) return;
         int curX = x;
         for (StyledWord w : sl.words) {
             var comp = w.getComponent();
@@ -223,7 +226,7 @@ public class MarkdownRenderer {
         }
     }
 
-    abstract static class Block {
+    public abstract static class Block {
         abstract int render(GuiGraphics g, int x, int y, int w);
     }
 
@@ -294,9 +297,21 @@ public class MarkdownRenderer {
         public void addListBlock(List<List<InlineNode>> list, boolean ordered) {
             blocks.add(new ListBlock(list, ordered));
         }
+
+        public void addTaskBlock(List<String> questions, List<String> answers) {
+            List<Block> questionBlocks = new ArrayList<>();
+            for (String q : questions) {
+                questionBlocks.add(new ParagraphBlock(MarkdownParser.parseInline(q)));
+            }
+            blocks.add(new TaskBlock(questionBlocks, answers));
+        }
+
+        public List<GuiEventListener> getInteractiveBlocks() {
+            return blocks.stream().filter(it -> it instanceof GuiEventListener).map(it -> (GuiEventListener) it).collect(Collectors.toList());
+        }
     }
 
-    class HeaderBlock extends Block {
+    public class HeaderBlock extends Block {
         public final int level;
         public final String text;
 
@@ -539,6 +554,275 @@ public class MarkdownRenderer {
                 e.printStackTrace();
             }
             return 0;
+        }
+    }
+
+    public class TaskBlock extends Block implements GuiEventListener {
+        // Hilfsmethode für Rechteckrahmen
+        private void drawRect(GuiGraphics gg, int x, int y, int w, int h, int color) {
+            // Oben
+            gg.fill(x, y, x + w, y + 1, color);
+            // Unten
+            gg.fill(x, y + h - 1, x + w, y + h, color);
+            // Links
+            gg.fill(x, y, x + 1, y + h, color);
+            // Rechts
+            gg.fill(x + w - 1, y, x + w, y + h, color);
+        }
+
+        public final List<Block> questionBlocks;
+        public final List<String> answers;
+        private int x, y, w, h;
+        private final List<String> userInputs;
+        private final List<Boolean> corrects;
+        private boolean submitted = false;
+        private boolean showSolution = false;
+        private int focusedInput = -1;
+        private int hoveredButton = -1; // 0: Submit, 1: Solution, 2: Try Again
+        private static final long CURSOR_BLINK_INTERVAL_MS = 500;
+        private long lastBlink = 0;
+        private boolean cursorVisible = true;
+
+        public TaskBlock(List<Block> questionBlocks, List<String> answers) {
+            this.questionBlocks = questionBlocks;
+            this.answers = answers;
+            this.userInputs = new java.util.ArrayList<>();
+            this.corrects = new java.util.ArrayList<>();
+            for (int i = 0; i < questionBlocks.size(); i++) {
+                this.userInputs.add("");
+                this.corrects.add(false);
+            }
+        }
+
+        @Override
+        protected int render(GuiGraphics gg, int x, int y, int width) {
+            this.x = x;
+            this.y = y;
+            this.w = width;
+            Font font = mc.font;
+            int lineHeight = font.lineHeight;
+            int curY = y;
+
+            // Aufgaben rendern
+            int inputH = 22;
+            int indent = 10;
+            int textFieldW = width - indent - 10;
+            for (int i = 0; i < questionBlocks.size(); i++) {
+
+                curY += 2;
+                int qH = questionBlocks.get(i).render(gg, x + indent, curY, width - indent - 4);
+                curY += qH + 2;
+
+                boolean focused = (focusedInput == i) && !submitted;
+                int tfY = curY;
+                int tfX = x + indent;
+                int tfW = textFieldW;
+                int tfH = inputH;
+                int borderColor = focused ? 0xFF66AAFF : 0xFF888888;
+                int bgColor = 0xFF222233;
+                if (submitted) {
+                    if (corrects.get(i)) bgColor = 0xFF224422;
+                    else {
+                        bgColor = 0xFF442222;
+                        if (showSolution)
+                            tfW -= font.width(answers.get(i));
+                    }
+                }
+                gg.fill(tfX, tfY, tfX + tfW, tfY + tfH, bgColor);
+                drawRect(gg, tfX, tfY, tfW, tfH, borderColor);
+                String displayInput = userInputs.get(i);
+
+                if (focused && !submitted) {
+                    long now = System.currentTimeMillis();
+                    if (now - lastBlink > CURSOR_BLINK_INTERVAL_MS) {
+                        cursorVisible = !cursorVisible;
+                        lastBlink = now;
+                    }
+                    if (cursorVisible) displayInput += "|";
+                }
+                if (font.width(displayInput) > tfW - 8) {
+                    displayInput = font.plainSubstrByWidth(displayInput, tfW - 8);
+                }
+                gg.drawString(font, displayInput, tfX + 4, tfY + 4, 0xFFFFFF);
+
+
+                //draw solution
+                if (submitted && showSolution && !corrects.get(i)) {
+                    gg.drawString(font, answers.get(i), tfX + tfW + 8, tfY + 4, 0xFFFF00);
+                }
+                curY += tfH + 8;
+            }
+
+            // Button(s)
+            int btnH = 22;
+            int btnW = 90;
+            int btnX = x + indent;
+            int btnY = curY;
+            boolean allCorrect = true;
+            for (boolean c : corrects)
+                if (!c) {
+                    allCorrect = false;
+                    break;
+                }
+            if (!submitted) {
+                int color = hoveredButton == 0 ? 0xFF336699 : 0xFF224466;
+                gg.fill(btnX, btnY, btnX + btnW, btnY + btnH, color);
+                drawRect(gg, btnX, btnY, btnW, btnH, 0xFFAAAAAA);
+                gg.drawCenteredString(font, "Submit", btnX + btnW / 2, btnY + 4, 0xFFFFFF);
+                curY += btnH + 8;
+            } else if (!allCorrect) {
+                // Solution Button
+                int colorSol = hoveredButton == 1 ? 0xFF668833 : 0xFF446622;
+                gg.fill(btnX, btnY, btnX + btnW, btnY + btnH, colorSol);
+                drawRect(gg, btnX, btnY, btnW, btnH, 0xFFAAAAAA);
+                gg.drawCenteredString(font, "Solution", btnX + btnW / 2, btnY + 4, 0xFFFFFF);
+                // Try Again Button
+                int btnX2 = btnX + btnW + 12;
+                int colorTry = hoveredButton == 2 ? 0xFF993355 : 0xFF662244;
+                gg.fill(btnX2, btnY, btnX2 + btnW, btnY + btnH, colorTry);
+                drawRect(gg, btnX2, btnY, btnW, btnH, 0xFFAAAAAA);
+                gg.drawCenteredString(font, "Try Again", btnX2 + btnW / 2, btnY + 4, 0xFFFFFF);
+                curY += btnH + 8;
+            } else {
+                gg.drawString(font, "Correct!", btnX, btnY + 4, 0x00FF00);
+                curY += btnH + 8;
+            }
+
+            this.h = curY - y;
+            return this.h;
+        }
+
+        @Override
+        public boolean mouseClicked(double mx, double my, int button) {
+            Font font = mc.font;
+            int lineHeight = font.lineHeight;
+            int inputH = 22;
+            int blockIndent = 18;
+            int textFieldIndent = 36;
+            int textFieldW = w - textFieldIndent - 10;
+            int curY = y;
+            // Eingabefelder
+            for (int i = 0; i < questionBlocks.size(); i++) {
+                curY += 2;
+                int qH = questionBlocks.get(i).render(null, x + blockIndent, curY, w - blockIndent - 4); //get height
+                curY += qH + 2;
+                int tfY = curY;
+                int tfX = x + textFieldIndent;
+                int tfW = textFieldW;
+                int tfH = inputH;
+                if (mx >= tfX && mx <= tfX + tfW && my >= tfY && my <= tfY + tfH) {
+                    focusedInput = i;
+                    return true;
+                }
+                curY += tfH + 8;
+            }
+            // Button(s)
+            int btnH = 22;
+            int btnW = 90;
+            int btnX = x + textFieldIndent;
+            int btnY = curY;
+            boolean allCorrect = true;
+            for (boolean c : corrects)
+                if (!c) {
+                    allCorrect = false;
+                    break;
+                }
+            if (!submitted && mx >= btnX && mx <= btnX + btnW && my >= btnY && my <= btnY + btnH) {
+                // Submit
+                submitted = true;
+                for (int i = 0; i < questionBlocks.size(); i++) {
+                    corrects.set(i, userInputs.get(i).trim().equalsIgnoreCase(answers.get(i).trim()));
+                }
+                return true;
+            } else if (submitted && !allCorrect) {
+                // Solution
+                if (mx >= btnX && mx <= btnX + btnW && my >= btnY && my <= btnY + btnH) {
+                    showSolution = true;
+                    return true;
+                }
+                // Try Again
+                int btnX2 = btnX + btnW + 12;
+                if (mx >= btnX2 && mx <= btnX2 + btnW && my >= btnY && my <= btnY + btnH) {
+                    for (int i = 0; i < userInputs.size(); i++) {
+                        if (!corrects.get(i)) userInputs.set(i, "");
+                    }
+                    submitted = false;
+                    showSolution = false;
+                    focusedInput = -1;
+                    return true;
+                }
+            }
+            focusedInput = -1;
+            return false;
+        }
+
+        @Override
+        public boolean charTyped(char codePoint, int modifiers) {
+            if (focusedInput >= 0 && focusedInput < userInputs.size() && !submitted) {
+                if (codePoint >= 32) { // printable
+                    String s = userInputs.get(focusedInput) + codePoint;
+                    userInputs.set(focusedInput, s);
+                }
+                return true;
+            }
+            return false;
+        }
+
+        @Override
+        public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+            if (focusedInput >= 0 && focusedInput < userInputs.size() && !submitted) {
+                if (keyCode == 259) { // backspace
+                    String s = userInputs.get(focusedInput);
+                    if (!s.isEmpty()) {
+                        userInputs.set(focusedInput, s.substring(0, s.length() - 1));
+                    }
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        @Override
+        public void setFocused(boolean focused) {
+            // nicht mehr benötigt, da mehrere Felder
+        }
+
+        @Override
+        public boolean isFocused() {
+            return focusedInput != -1;
+        }
+
+        // Hover-Handling für Buttons
+        public void mouseMoved(double mx, double my) {
+            int inputH = 22;
+            int blockIndent = 18;
+            int textFieldIndent = 36;
+            int textFieldW = w - textFieldIndent - 10;
+            int curY = y;
+            for (int i = 0; i < questionBlocks.size(); i++) {
+                curY += 2;
+                int qH = questionBlocks.get(i).render(null, x + blockIndent, curY, w - blockIndent - 4);
+                curY += qH + 2;
+                curY += inputH + 8;
+            }
+            int btnH = 22;
+            int btnW = 90;
+            int btnX = x + textFieldIndent;
+            int btnY = curY;
+            boolean allCorrect = true;
+            for (boolean c : corrects)
+                if (!c) {
+                    allCorrect = false;
+                    break;
+                }
+            hoveredButton = -1;
+            if (!submitted && mx >= btnX && mx <= btnX + btnW && my >= btnY && my <= btnY + btnH) {
+                hoveredButton = 0;
+            } else if (submitted && !allCorrect) {
+                if (mx >= btnX && mx <= btnX + btnW && my >= btnY && my <= btnY + btnH) hoveredButton = 1;
+                int btnX2 = btnX + btnW + 12;
+                if (mx >= btnX2 && mx <= btnX2 + btnW && my >= btnY && my <= btnY + btnH) hoveredButton = 2;
+            }
         }
     }
 }

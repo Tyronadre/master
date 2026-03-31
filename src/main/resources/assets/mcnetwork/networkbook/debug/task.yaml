@@ -1,0 +1,7 @@
+title: task
+posX: 400
+posY: 400
+content: |
+  some normal test 2
+  
+  @task[this is a question|21]

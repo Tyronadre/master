@@ -15,7 +15,7 @@ import java.util.UUID;
  */
 public class SubTopic {
     private final Topic topic;
-    private final String id;
+    private final UUID id;
     private final String title;
     private final Vec2 position;
     private final List<SubTopic> prerequisites = new ArrayList<>();
@@ -23,7 +23,7 @@ public class SubTopic {
     private final ResourceLocation icon;
 
     public SubTopic(Topic topic, String title, ResourceLocation icon, String content, int posX, int posY) {
-        this.id = UUID.randomUUID().toString();
+        this.id = UUID.randomUUID();
         this.topic = topic;
         this.title = title;
         this.position = new Vec2(posX, posY);
@@ -38,7 +38,7 @@ public class SubTopic {
         }
     }
 
-    public String getId() {
+    public UUID getId() {
         return id;
     }
 

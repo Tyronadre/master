@@ -1,0 +1,7 @@
+title: task1
+posX: 0
+posY: 300
+content: |
+  # this is a title
+  
+  @task[frage 1?|1;frage 2?|2;frage **3** 3|3]

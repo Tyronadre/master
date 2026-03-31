@@ -11,7 +11,7 @@ content: |
   ---
   
   Wollen Sie sich tatsächlichen Datenverkehr und die Protokolle anschauen die dabei benutzt werden, so gibt es 
-  Beispielsweise Tools wie Wireshark, mit denen Sie Datenverkehr direkt auf ihrem eigenen Computer sehen können. 
+  beispielsweise Tools wie Wireshark, mit denen Sie Datenverkehr direkt auf ihrem eigenen Computer sehen können. 
   In diesem Mod wurde versucht realen Datenverkehr möglichst getreu nachzubilden, damit verschieden Netzwerkaufbauten
   problemlos getestet und analysiert werden können. Wir hoffen dadurch einen immersiven Lernerfolg geben zu können.
   
