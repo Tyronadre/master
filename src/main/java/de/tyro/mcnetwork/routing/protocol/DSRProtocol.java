@@ -1128,10 +1128,10 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
             var y1R = -50;
             var x2R = 50;
             var y2R = 50;
-            renderer.renderLine(x1R, y1R, x1R, y2R, 0xFFFFFFFF);
-            renderer.renderLine(x1R, y2R, x2R, y2R, 0xFFFFFFFF);
-            renderer.renderLine(x2R, y2R, x2R, y1R, 0xFFFFFFFF);
-            renderer.renderLine(x2R, y1R, x1R, y1R, 0xFFFFFFFF);
+            renderer.drawLine(x1R, y1R, x1R, y2R, 0xFFFFFFFF);
+            renderer.drawLine(x1R, y2R, x2R, y2R, 0xFFFFFFFF);
+            renderer.drawLine(x2R, y2R, x2R, y1R, 0xFFFFFFFF);
+            renderer.drawLine(x2R, y1R, x1R, y1R, 0xFFFFFFFF);
 
 //            renderer.beginStencilClip(-50, -50, 100, 100);
 
@@ -1159,7 +1159,7 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
                 float x2 = (float) Math.clamp(posB.x, -500, 500);
                 float y2 = (float) Math.clamp(posB.z, -500, 500);
 
-                renderer.renderLine(x1, y1, x2, y2, 0xFF000000 | ((int) r * 255) << 16 | ((int) g * 255) << 8);
+                renderer.drawLine(x1, y1, x2, y2, 0xFF000000 | ((int) r * 255) << 16 | ((int) g * 255) << 8);
 
             }
 
@@ -1171,7 +1171,7 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
                 renderer.drawString(node.getIP().toString(), 0x00ff00, (float) pos.x() * 4 - 15, (float) pos.z() * 4 - 12);
                 poseStack.popPose();
 
-                renderer.renderRectangle((float) (pos.x() - 1), (float) (pos.z() - 1), (float) (pos.x() + 1), (float) (pos.z() + 1), 0xFFFFFFFF);
+                renderer.fillRectangle((float) (pos.x() - 1), (float) (pos.z() - 1), (float) (pos.x() + 1), (float) (pos.z() + 1), 0xFFFFFFFF);
             }
 
 //            renderer.endStencilClip();

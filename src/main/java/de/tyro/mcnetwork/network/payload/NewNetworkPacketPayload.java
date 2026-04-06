@@ -52,7 +52,7 @@ public record NewNetworkPacketPayload(INetworkPacket packet, Integer ttl, BlockP
             return;
         }
 
-        NetworkPacketCodecRegistry.handlerOf(packet.getClass()).handle(packet, context);
+        NetworkPacketCodecRegistry.handlerOf(packet.getClass()).handle(packet, context.flow().isClientbound());
 
         if (sendToSelf) {
             if (packet instanceof IProtocolPaket p) {

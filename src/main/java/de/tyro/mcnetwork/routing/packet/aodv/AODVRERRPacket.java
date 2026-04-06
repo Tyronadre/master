@@ -7,14 +7,22 @@ import de.tyro.mcnetwork.routing.packet.NetworkPacket;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 public class AODVRERRPacket extends NetworkPacket implements IProtocolPaket {
     public final boolean noDelete;
-    public final Map<IP, Integer> unreachable = new HashMap<>();
+    public final Map<IP, Integer> unreachable;
 
     public AODVRERRPacket(IP sourceIp, IP destinationIp, boolean noDelete) {
         super(sourceIp, destinationIp);
         this.noDelete = noDelete;
+        this.unreachable = new HashMap<>();
+    }
+
+    public AODVRERRPacket(UUID id, IP sourceIp, IP destinationIp, boolean noDelete, Map<IP, Integer> unreachable) {
+        super(id, sourceIp, destinationIp);
+        this.noDelete = noDelete;
+        this.unreachable = unreachable;
     }
 
     public void addUnreachable(IP ip, int seqNumber) {

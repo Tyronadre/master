@@ -51,7 +51,7 @@ public class NetworkBookScreen extends Screen {
         Optional<Topic> maybe = topics.stream().findFirst();
         currentTopic = maybe.orElse(null);
 
-        draggablePlane = new DraggablePlane(64, 24, this.width - 64 - 18, this.height - 48);
+        draggablePlane = new DraggablePlane(this, 64, 24, this.width - 64 - 18, this.height - 48);
         if (currentTopic != null) draggablePlane.setSubtopics(currentTopic.getSubtopics());
 
         contentPane = new ContentPane(64, 24, this.width - 64 - 18, this.height - 48);
@@ -62,7 +62,7 @@ public class NetworkBookScreen extends Screen {
         this.initialized = true;
     }
 
-    private void onTabClicked(Topic clicked) {
+    void onTabClicked(Topic clicked) {
         if (clicked == null) return;
 
         Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.BOOK_PAGE_TURN, 1.0f));
@@ -73,7 +73,7 @@ public class NetworkBookScreen extends Screen {
         this.transitionProgress = 0.0f;
     }
 
-    private void onSubtopicClicked(SubTopic s) {
+    void onSubtopicClicked(SubTopic s) {
         this.currentSubtopic = s;
         contentPane.setSubtopic(s);
         Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0f));
@@ -81,12 +81,12 @@ public class NetworkBookScreen extends Screen {
         this.transitionProgress = 0.0f;
     }
 
-    private void closeSubtopic() {
+    void closeSubtopic() {
         this.currentSubtopic = null;
         this.transitionProgress = 0.0f;
     }
 
-    private void onMarkComplete(SubTopic s) {
+    void onMarkComplete(SubTopic s) {
         topicManager.markCompleted(mc.player, s);
         Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.PLAYER_LEVELUP, 1.0f));
     }
@@ -105,7 +105,7 @@ public class NetworkBookScreen extends Screen {
         gg.enableScissor(64, 24, this.width - 18, this.height - 24);
 
         if (currentSubtopic == null) {
-            draggablePlane.render(gg, mouseX, mouseY, partialTicks, tile -> onSubtopicClicked(tile.getSubtopic()));
+            draggablePlane.render(gg, mouseX, mouseY, partialTicks);
         } else {
             contentPane.render(gg, mouseX, mouseY, partialTicks);
         }

@@ -4,11 +4,14 @@ package de.tyro.mcnetwork.network.payload.networkPacket;
 import de.tyro.mcnetwork.network.BetterByteBuf;
 import de.tyro.mcnetwork.routing.IP;
 import de.tyro.mcnetwork.routing.SimulationEngine;
+import de.tyro.mcnetwork.routing.packet.aodv.AODVRERRPacket;
 import de.tyro.mcnetwork.routing.packet.aodv.AODVRREPPacket;
 import de.tyro.mcnetwork.routing.packet.aodv.AODVRREQPacket;
 import de.tyro.mcnetwork.routing.packet.application.DestinationUnreachablePacket;
 import de.tyro.mcnetwork.routing.packet.application.PingPacket;
 import de.tyro.mcnetwork.routing.packet.application.PingRepPacket;
+import de.tyro.mcnetwork.routing.packet.application.TraceRoutePacket;
+import de.tyro.mcnetwork.routing.packet.application.TraceRouteReplyPacket;
 import de.tyro.mcnetwork.routing.packet.dsr.DSRRouteReply;
 import de.tyro.mcnetwork.routing.packet.dsr.DSRRouteRequest;
 import de.tyro.mcnetwork.routing.packet.dsr.DSRSourceRoute;
@@ -42,12 +45,10 @@ public class NetworkPacketCodecGenerator {
         );
 
         register(PingPacket.class,
-                (buf, uuid, originatorIP, destinationIP) -> new PingPacket(uuid, originatorIP, destinationIP, SimulationEngine.getInstance(false).getSimTime()),
+                (buf, uuid, originatorIP, destinationIP) -> new PingPacket(uuid, originatorIP, destinationIP, 0),
                 (buf, packet) -> {
                 },
-                (PingPacket packet, IPayloadContext context) -> {
-                    packet.sendStartTime = SimulationEngine.getInstance(context.flow().isClientbound()).getSimTime();
-                }
+                (packet, onClientSide) -> packet.sendStartTime = SimulationEngine.getInstance(onClientSide).getSimTime()
         );
 
         register(PingRepPacket.class,
@@ -55,13 +56,41 @@ public class NetworkPacketCodecGenerator {
                         uuid,
                         ip1,
                         ip2,
-                        buf.readLong(),
-                        buf.readDouble(),
+                        buf.readInt(),
+                        0,
                         buf.readUUID()),
                 (buf, packet) -> buf
-                        .writeLong(packet.sendTime)
-                        .writeDouble(packet.returnStartTime)
-                        .writeUUID(packet.replyUUID));
+                        .writeInt(packet.sendTime)
+                        .writeUUID(packet.replyUUID),
+                (packet, onClientSide) -> packet.returnStartTime = SimulationEngine.getInstance(onClientSide).getSimTime()
+        );
+
+        register(TraceRoutePacket.class,
+                (buf, uuid, originatorIP, destinationIP) -> new TraceRoutePacket(
+                        uuid,
+                        originatorIP,
+                        destinationIP,
+                        0),
+                (buf, packet) -> {
+                },
+                (packet, onClientSide) -> packet.sendStartTime = SimulationEngine.getInstance(onClientSide).getSimTime()
+        );
+
+        register(TraceRouteReplyPacket.class,
+                (buf, uuid, ip1, ip2) -> new TraceRouteReplyPacket(
+                        uuid,
+                        ip1,
+                        ip2,
+                        buf.readInt(),
+                        0,
+                        buf.readUUID(),
+                        buf.readInt()),
+                (buf, packet) -> buf
+                        .writeInt(packet.sendTime)
+                        .writeUUID(packet.replyUUID)
+                        .writeInt(packet.hopCount),
+                (packet, onClientSide) -> packet.returnStartTime = SimulationEngine.getInstance(onClientSide).getSimTime()
+        );
 
         register(AODVRREQPacket.class,
                 (buf, uuid, oIP, dIP) -> new AODVRREQPacket(
@@ -103,6 +132,23 @@ public class NetworkPacketCodecGenerator {
                         .writeInt(packet.hopCount)
                         .writeInt(packet.destSeqNumber)
                         .writeLong(packet.lifetime));
+
+        register(AODVRERRPacket.class,
+                (buf, uuid, originatorIP, destinationIP) -> new AODVRERRPacket(
+                        uuid,
+                        originatorIP,
+                        destinationIP,
+                        buf.readBoolean(),
+                        buf.readMap(
+                                (buffer) -> BetterByteBuf.IP_STREAM_CODEC.decode(buffer),
+                                FriendlyByteBuf::readInt
+                        )
+                ),
+                (buf, packet) -> buf.writeBoolean(packet.noDelete)
+                        .writeMap(packet.unreachable,
+                                (buffer, value) -> BetterByteBuf.IP_STREAM_CODEC.encode(buffer, value),
+                                FriendlyByteBuf::writeInt)
+        );
 
         register(DSRRouteRequest.class,
                 (buf, uuid, originatorIP, destinationIP) -> new DSRRouteRequest(
@@ -215,7 +261,7 @@ public class NetworkPacketCodecGenerator {
                 (buf, packet) ->
                         buf.writeMap(packet.advertisedLinks,
                                 (buffer, value) -> BetterByteBuf.IP_STREAM_CODEC.encode(buffer, value),
-                                (buffer, value) -> buffer.writeCollection(value, (buffer2, value1) -> BetterByteBuf.IP_STREAM_CODEC.encode(buffer2, value1))
+                                (buffer, value) -> buffer.writeCollection(value, (buffer1, value1) -> BetterByteBuf.IP_STREAM_CODEC.encode(buffer1, value1))
                         )
         );
 

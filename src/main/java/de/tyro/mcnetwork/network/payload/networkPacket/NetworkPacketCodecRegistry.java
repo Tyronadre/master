@@ -57,8 +57,8 @@ public class NetworkPacketCodecRegistry {
             }
 
             @Override
-            protected void handleActual(T packet, IPayloadContext context) {
-                handler.handle(packet, context);
+            protected void handleActual(T packet, Boolean onClientSide) {
+                handler.handle(packet, onClientSide);
             }
         });
     }

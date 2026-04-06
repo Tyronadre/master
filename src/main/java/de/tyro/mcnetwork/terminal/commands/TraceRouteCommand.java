@@ -1,6 +1,10 @@
 package de.tyro.mcnetwork.terminal.commands;
 
-
+import de.tyro.mcnetwork.routing.IP;
+import de.tyro.mcnetwork.routing.SimulationEngine;
+import de.tyro.mcnetwork.routing.exceptions.DestinationUnreachableException;
+import de.tyro.mcnetwork.routing.packet.application.TraceRoutePacket;
+import de.tyro.mcnetwork.routing.packet.application.TraceRouteReplyPacket;
 import de.tyro.mcnetwork.terminal.Terminal;
 
 public class TraceRouteCommand extends Command {
@@ -21,16 +25,56 @@ public class TraceRouteCommand extends Command {
             return;
         }
 
-        String host = args[0];
-        println("traceroute to " + host);
+        var destIPString = args[0];
 
-        for (int hop = 1; hop <= 8; hop++) {
-            if (isCancelled()) return;
-
-            sleep(800);
-            println(hop + "  192.168.0." + hop + "  " + (10 + hop * 5) + " ms");
+        if (!IP.validateIp(destIPString)) {
+            println("invalid ip address: " + destIPString);
+            return;
         }
 
-        println("trace complete");
+        var destIP = new IP(destIPString);
+        SimulationEngine sim = SimulationEngine.getInstance(terminal.getNode().getLevel().isClientSide());
+
+        println("traceroute to " + destIP + " (max 30 hops)");
+
+        boolean reachedDestination = false;
+
+        for (int ttl = 1; ttl <= 30; ttl++) {
+            if (isCancelled()) return;
+
+            long sendTime = sim.getSimTime();
+            var traceRoutePacket = new TraceRoutePacket(terminal.getNode().getIP(), destIP, sendTime);
+
+            terminal.getNode().sendApplicationPacket(traceRoutePacket, ttl);
+
+            // Warte auf Antwort (entweder vom Router (TTL überschritten) oder vom Ziel)
+            TraceRouteReplyPacket rep;
+            try {
+                rep = terminal.getNode().getApplicationBus().waitFor(TraceRouteReplyPacket.class, 
+                    it -> it.replyUUID.equals(traceRoutePacket.id), 5000);
+            } catch (DestinationUnreachableException due) {
+                println(ttl + " * * * (no response)");
+                continue;
+            }
+
+            long rtt = sim.getSimTime() - sendTime;
+            if (rep != null) {
+                println(ttl + "  " + rep.getOriginatorIP() + "  " + rtt + " ms");
+                
+                // Wenn wir die Zieladresse erreicht haben, beenden
+                if (rep.getOriginatorIP().equals(destIP)) {
+                    reachedDestination = true;
+                    break;
+                }
+            } else {
+                println(ttl + " * * * (timeout)");
+            }
+        }
+
+        if (reachedDestination) {
+            println("trace complete - destination reached");
+        } else {
+            println("trace complete - destination not reachable");
+        }
     }
 }

@@ -7,7 +7,9 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.phys.Vec2;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -18,7 +20,7 @@ public class SubTopic {
     private final UUID id;
     private final String title;
     private final Vec2 position;
-    private final List<SubTopic> prerequisites = new ArrayList<>();
+    private final Set<SubTopic> prerequisites = new HashSet<>();
     private final MarkdownRenderer markdown;
     private final ResourceLocation icon;
 
@@ -33,9 +35,7 @@ public class SubTopic {
     }
 
     public void addPrerequisite(SubTopic subtopic) {
-        if (!prerequisites.contains(subtopic)) {
-            prerequisites.add(subtopic);
-        }
+        prerequisites.add(subtopic);
     }
 
     public UUID getId() {
@@ -66,7 +66,19 @@ public class SubTopic {
         return icon;
     }
 
-    public List<SubTopic> getPrerequisite() {
+    public Set<SubTopic> getPrerequisite() {
         return prerequisites;
+    }
+
+    public boolean isShown() {
+        if (prerequisites.isEmpty()) return true;
+
+        return prerequisites.stream().anyMatch(SubTopic::isShown);
+    }
+
+    public boolean isInteractable() {
+        if (prerequisites.isEmpty()) return true;
+
+        return (prerequisites.stream().allMatch(SubTopic::isCompleted));
     }
 }

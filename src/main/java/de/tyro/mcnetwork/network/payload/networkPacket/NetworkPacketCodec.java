@@ -1,7 +1,6 @@
 package de.tyro.mcnetwork.network.payload.networkPacket;
 
 import de.tyro.mcnetwork.network.BetterByteBuf;
-import de.tyro.mcnetwork.routing.INetworkNode;
 import de.tyro.mcnetwork.routing.IP;
 import de.tyro.mcnetwork.routing.packet.INetworkPacket;
 import net.minecraft.network.FriendlyByteBuf;
@@ -34,11 +33,11 @@ public abstract class NetworkPacketCodec<T extends INetworkPacket> implements St
     }
 
     @SuppressWarnings("unchecked")
-    public void handle(INetworkPacket packet, IPayloadContext context) {
-        handleActual((T) packet, context);
+    public void handle(INetworkPacket packet, Boolean onClientSide) {
+        handleActual((T) packet, onClientSide);
     }
 
-    protected void handleActual(T packet, IPayloadContext context) {
+    protected void handleActual(T packet, Boolean onClientSide) {
     }
 
 
@@ -54,7 +53,7 @@ public abstract class NetworkPacketCodec<T extends INetworkPacket> implements St
 
     @FunctionalInterface
     public interface Handler<T extends INetworkPacket> {
-        void handle(T packet, IPayloadContext context);
+        void handle(T packet, Boolean onClientSide);
     }
 
 }

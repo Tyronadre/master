@@ -46,7 +46,7 @@ public class PingCommand extends Command {
             // Warten auf Echo
             PingRepPacket rep;
             try {
-                 rep = terminal.getNode().getApplicationBus().waitFor(PingRepPacket.class, it -> it.replyUUID.equals(ping.id), 10000);
+                 rep = terminal.getNode().getApplicationBus().waitFor(PingRepPacket.class, it -> it.replyUUID.equals(ping.id), 5000);
             } catch (DestinationUnreachableException due) {
                 println("Destination unreachable");
                 break;

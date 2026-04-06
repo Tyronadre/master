@@ -1,9 +1,9 @@
 package de.tyro.mcnetwork.gui.networkBook;
 
+import de.tyro.mcnetwork.client.RenderUtil;
 import de.tyro.mcnetwork.networkBook.data.SubTopic;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Style;
 import net.minecraft.world.phys.Vec2;
 
@@ -30,25 +30,37 @@ public class SubtopicTile {
         this.font = Minecraft.getInstance().font;
     }
 
-    public void render(GuiGraphics gg, double mouseXLocal, double mouseYLocal) {
-        gg.fill(x, y, x + w, y + h, subtopic.isCompleted() ? COMPLETED_COLOR : BACKGROUND_COLOR);
+    public void render(RenderUtil renderer, double mouseX, double mouseY, boolean highlight) {
+        if (!subtopic.isShown()) return;
 
-        if (subtopic.getIcon() == null) gg.fill(x + 16, y + 8, w - 32, h - 32, BACKGROUND_COLOR);
-        else gg.blit(subtopic.getIcon(), x + 2, y + 2, w - 4, h - 4, 0, 0, w - 4, h - 4, w - 4, h - 4);
+        //background
+        var x2 = x + getWidth();
+        var y2 = y + getHeight();
+        renderer.fillRectangle(x, y, x2, y2, subtopic.isCompleted() ? COMPLETED_COLOR : BACKGROUND_COLOR);
 
+        //highlight border
+        if (highlight || isMouseOver(mouseX, mouseY)) {
+            renderer.drawLine(x,y,x2,y, 0xFFFFFFFF,10);
+            renderer.drawRectangle(x, y, x2, y2, RenderUtil.Color.GREEN.value, 20);
+        }
+
+        //icon
+        if (subtopic.getIcon() == null)
+            renderer.fillRectangle(x + 16, y + 8, w - 32, h - 32, BACKGROUND_COLOR);
+        else
+            renderer.blit(subtopic.getIcon(), x + 2, y + 2, w - 4, h - 4, 0, 0, w - 4, h - 4, w - 4, h - 4);
+
+        //text
         var split = font.getSplitter().splitLines(subtopic.getTitle(), w - 4, Style.EMPTY);
         if (split.size() > 3) split = split.subList(0, 3);
         int i = split.size();
-        if (i > 1) for (var line : split) {
-            gg.drawCenteredString(font, line.getString(), x + w / 2, y + h - font.lineHeight * i--, NetworkBookScreen.TEXT_COLOR);
-        }
-        else {
-            gg.drawCenteredString(font, subtopic.getTitle(), x + w / 2, y + h - font.lineHeight * 2, NetworkBookScreen.TEXT_COLOR);
-        }
+        if (i > 1) for (var line : split) renderer.drawString(RenderUtil.Align.CENTER, line.getString(), x + w / 2, y + h - font.lineHeight * i--, NetworkBookScreen.TEXT_COLOR);
+        else renderer.drawString(RenderUtil.Align.CENTER, subtopic.getTitle(), x + w / 2, y + h - font.lineHeight * 2, NetworkBookScreen.TEXT_COLOR);
+
     }
 
-    public boolean isMouseOver(double localX, double localY) {
-        return localX >= x && localX <= x + w && localY >= y && localY <= y + h;
+    public boolean isMouseOver(double mX, double mY) {
+        return mX >= x && mX <= x + w && mY >= y && mY <= y + h;
     }
 
     public int getCenterX() {

@@ -32,7 +32,7 @@ public class AODVProtocol implements IRoutingProtocol, IHudRenderer {
     //CONSTANTS
     public static final int ACTIVE_ROUTE_TIMEOUT = 3_000;
     public static final int MY_ROUTE_TIMEOUT = 2 * ACTIVE_ROUTE_TIMEOUT;
-    public static final int NODE_TRAVERSAL_TIME = 40;
+    public static final int NODE_TRAVERSAL_TIME = 5;
     public static final int LOCAL_ADD_TTL = 2;
     public static final int NET_DIAMETER = 35;
     public static final int MAX_REPAIR_TTL = (int) (0.3 * NET_DIAMETER);
@@ -772,7 +772,7 @@ public class AODVProtocol implements IRoutingProtocol, IHudRenderer {
             }
 
             var nextNode = simulator.getNode(entry.nextHop);
-            if (simulator.unicast(node, nextNode, packet, 100)) {
+            if (simulator.unicast(node, nextNode, packet, ttl)) {
                 entry.lifetime = simulator.getSimTime() + MY_ROUTE_TIMEOUT;
             }
             return;

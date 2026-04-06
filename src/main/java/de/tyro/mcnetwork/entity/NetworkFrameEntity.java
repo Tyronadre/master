@@ -7,6 +7,8 @@ import de.tyro.mcnetwork.block.entity.ComputerBlockEntity;
 import de.tyro.mcnetwork.client.RenderUtil;
 import de.tyro.mcnetwork.network.NetworkUtil;
 import de.tyro.mcnetwork.network.payload.NewNetworkFramePayload;
+import de.tyro.mcnetwork.network.payload.networkPacket.NetworkPacketCodecRegistry;
+import de.tyro.mcnetwork.network.payload.networkPacket.NetworkPacketPayload;
 import de.tyro.mcnetwork.routing.INetworkNode;
 import de.tyro.mcnetwork.routing.SimulationEngine;
 import de.tyro.mcnetwork.routing.packet.INetworkPacket;
@@ -35,9 +37,6 @@ public class NetworkFrameEntity extends Entity implements IEntityWithComplexSpaw
 
     private State state = State.TRAVELING;
     private int interferedTicks = 0;
-
-    private static final EntityDataAccessor<Integer> DATA_STATE = SynchedEntityData.defineId(NetworkFrameEntity.class, EntityDataSerializers.INT);
-    private static final EntityDataAccessor<Integer> DATA_INTERFERED_TICKS = SynchedEntityData.defineId(NetworkFrameEntity.class, EntityDataSerializers.INT);
 
     public INetworkNode getFrom() {
         return from;
@@ -93,20 +92,14 @@ public class NetworkFrameEntity extends Entity implements IEntityWithComplexSpaw
 
     @Override
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
-        builder.define(DATA_STATE, State.TRAVELING.ordinal());
-        builder.define(DATA_INTERFERED_TICKS, 0);
     }
 
     @Override
     protected void readAdditionalSaveData(CompoundTag compound) {
-        state = State.values()[compound.getInt("state")];
-        interferedTicks = compound.getInt("interferedTicks");
     }
 
     @Override
     protected void addAdditionalSaveData(CompoundTag compound) {
-        compound.putInt("state", state.ordinal());
-        compound.putInt("interferedTicks", interferedTicks);
     }
 
     public void simTick() {
@@ -119,7 +112,6 @@ public class NetworkFrameEntity extends Entity implements IEntityWithComplexSpaw
                 setPos(simulationPosition);
 
                 state = State.ARRIVED;
-//                entityData.set(DATA_STATE, state.ordinal());
 
                 try {
                     to.onFrameReceive(this);
@@ -135,7 +127,6 @@ public class NetworkFrameEntity extends Entity implements IEntityWithComplexSpaw
 
         if (state == State.INTERFERED) {
             interferedTicks++;
-//            entityData.set(DATA_INTERFERED_TICKS, interferedTicks);
             if (interferedTicks > 100) {
                 SimulationEngine.getInstance(level().isClientSide).removeNetworkFrame(this);
                 discard();
@@ -148,11 +139,14 @@ public class NetworkFrameEntity extends Entity implements IEntityWithComplexSpaw
         super.tick();
         if (!initialized) return;
 
-//        if (!level().isClientSide) return
+
+        if (!level().isClientSide) return;
 
         Vec3 currentPos = getPosition(1);
         Vec3 diff = simulationPosition.subtract(currentPos);
         if (state != State.TRAVELING) return;
+
+        this.setDeltaMovement(diff);
         if (diff.lengthSqr() > 1e-6) move(MoverType.SELF, diff);
     }
 
@@ -198,6 +192,7 @@ public class NetworkFrameEntity extends Entity implements IEntityWithComplexSpaw
             to = NetworkUtil.getBlockEntityAt(ComputerBlockEntity.class, level(), payload.to());
             ttl = payload.ttl();
             packet = payload.packet();
+            NetworkPacketCodecRegistry.handlerOf(packet.getClass()).handle(packet, level().isClientSide());
             packet.setFrame(this);
             this.simulationPosition = from.getPos();
 
@@ -207,8 +202,6 @@ public class NetworkFrameEntity extends Entity implements IEntityWithComplexSpaw
             initialized = true;
             state = State.TRAVELING;
             interferedTicks = 0;
-            entityData.set(DATA_STATE, state.ordinal());
-            entityData.set(DATA_INTERFERED_TICKS, interferedTicks);
         } catch (Exception e) {
             this.discard();
         }
@@ -216,7 +209,7 @@ public class NetworkFrameEntity extends Entity implements IEntityWithComplexSpaw
 
 
     public void render(PoseStack poseStack, MultiBufferSource bufferSource, int packedLight, float alpha) {
-        State currentState = State.values()[entityData.get(DATA_STATE)];
+        State currentState = state;
         if (currentState == State.ARRIVED) return;
 
         var renderer = new RenderUtil(poseStack, bufferSource, alpha, packedLight);
@@ -249,8 +242,6 @@ public class NetworkFrameEntity extends Entity implements IEntityWithComplexSpaw
 
     public void setInterfered() {
         state = State.INTERFERED;
-        entityData.set(DATA_STATE, state.ordinal());
         interferedTicks = 0;
-        entityData.set(DATA_INTERFERED_TICKS, 0);
     }
 }

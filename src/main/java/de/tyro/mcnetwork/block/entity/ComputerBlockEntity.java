@@ -10,6 +10,8 @@ import de.tyro.mcnetwork.routing.packet.IApplicationPacket;
 import de.tyro.mcnetwork.routing.packet.IProtocolPaket;
 import de.tyro.mcnetwork.routing.packet.application.PingPacket;
 import de.tyro.mcnetwork.routing.packet.application.PingRepPacket;
+import de.tyro.mcnetwork.routing.packet.application.TraceRoutePacket;
+import de.tyro.mcnetwork.routing.packet.application.TraceRouteReplyPacket;
 import de.tyro.mcnetwork.routing.protocol.AODVProtocol;
 import de.tyro.mcnetwork.routing.protocol.IRoutingProtocol;
 import de.tyro.mcnetwork.routing.protocol.LARProtocol;
@@ -98,13 +100,21 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
         var sim = SimulationEngine.getInstance(level.isClientSide);
 
         if (packet instanceof PingPacket ping) {
-            routingProtocol.send(new PingRepPacket(getIP(), ping.getOriginatorIP(), (long) (sim.getSimTime() - ping.sendStartTime), sim.getSimTime(), ping.id), Integer.MAX_VALUE);
+            routingProtocol.send(new PingRepPacket(getIP(), ping.getOriginatorIP(), (int) (sim.getSimTime() - ping.sendStartTime), sim.getSimTime(), ping.id), Integer.MAX_VALUE);
             return;
         }
 
+        if (packet instanceof TraceRoutePacket traceRoute) {
+            routingProtocol.send(new TraceRouteReplyPacket(getIP(), traceRoute.getOriginatorIP(), (int) (sim.getSimTime() - traceRoute.sendStartTime), sim.getSimTime(), traceRoute.id, 0), Integer.MAX_VALUE);
+            return;
+        }
 
         //All the packets that are for the client are packets that will be processed by the applications on this Computer. Therefor we send them to the internal application bus.
         if (!level.isClientSide && packet instanceof PingRepPacket pingRep) {
+            NewNetworkPacketPayload.sendToSelf(packet, this);
+        }
+
+        if (!level.isClientSide && packet instanceof TraceRouteReplyPacket traceRep) {
             NewNetworkPacketPayload.sendToSelf(packet, this);
         }
 
@@ -136,6 +146,11 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
             routingProtocol.onProtocolPacketReceived(pp);
         else if (!level.isClientSide && packet instanceof IApplicationPacket ap && packet.getDestinationIP().equals(this.ipAddress))
             this.onApplicationPacketReceived(ap);
+        else if (!level.isClientSide && packet instanceof TraceRoutePacket traceRoute && frame.getTtl() == 1) {
+            // TTL expired at this node, send TraceRouteReply
+            var sim = SimulationEngine.getInstance(level.isClientSide);
+            routingProtocol.send(new TraceRouteReplyPacket(getIP(), traceRoute.getOriginatorIP(), (int) (sim.getSimTime() - traceRoute.sendStartTime), sim.getSimTime(), traceRoute.id, 0), Integer.MAX_VALUE);
+        }
         else if (frame.getTtl() > 0 && !packet.getDestinationIP().equals(this.ipAddress))
             routingProtocol.send(packet, frame.getTtl() - 1);
     }
@@ -170,7 +185,7 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
 
         if (packet.getDestinationIP().equals(ipAddress)) onApplicationPacketReceived(packet);
 
-        if (!level.isClientSide()) routingProtocol.send(packet, ttl);
+        routingProtocol.send(packet, ttl);
     }
 
     @Override

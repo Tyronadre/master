@@ -1,6 +1,7 @@
 package de.tyro.mcnetwork.client;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -11,21 +12,25 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
-import org.joml.Vector4f;
-import org.lwjgl.opengl.GL11;
 
-import java.util.Vector;
+import java.util.OptionalDouble;
+import java.util.function.Function;
+import java.util.function.Supplier;
+
+import static net.minecraft.client.renderer.RenderStateShard.*;
 
 public class RenderUtil {
-
 
     private float alpha;
 
@@ -37,6 +42,10 @@ public class RenderUtil {
         return font;
     }
 
+    public void setPose(PoseStack pose) {
+        this.poseStack = pose;
+    }
+
     public enum Align {
         LEFT,
         RIGHT,
@@ -46,7 +55,7 @@ public class RenderUtil {
     public enum Color {
         BLACK(0xFFFFFF),
         RED(0xFF0000),
-        GREEN(0x00FF00),
+        GREEN(0xFF00FF00),
         BLUE(0x0000FF),
         MAGENTA(0xf400f4);
 
@@ -60,7 +69,7 @@ public class RenderUtil {
 
     private final Minecraft mc;
     private Font font;
-    private final PoseStack poseStack;
+    private PoseStack poseStack;
     private final MultiBufferSource buffer;
     private final int packedLight;
     private final GuiGraphics guiGraphics;
@@ -207,15 +216,50 @@ public class RenderUtil {
         vc.addVertex(mat, x2, y1, 0).setColor(r, g, b, bgAlpha);
     }
 
-    public void renderLine(float x1, float y1, float x2, float y2, int color) {
-        VertexConsumer vc = buffer.getBuffer(RenderType.debugLineStrip(1));
-        Matrix4f mat = poseStack.last().pose();
+    public void drawLine(float x1, float y1, float x2, float y2, int color, float width) {
+        if (width <= 1f) {
+            VertexConsumer vc = buffer.getBuffer(RenderType.debugLineStrip(1));
+            Matrix4f mat = poseStack.last().pose();
 
-        vc.addVertex(mat, x1, y1, 0).setColor(color);
-        vc.addVertex(mat, x2, y2, 0).setColor(color);
+            vc.addVertex(mat, x1, y1, 0).setColor(color);
+            vc.addVertex(mat, x2, y2, 0).setColor(color);
+            return;
+        }
+
+        float dx = x2 - x1;
+        float dy = y2 - y1;
+
+        float len = (float) Math.sqrt(dx * dx + dy * dy);
+        if (len == 0) return;
+
+        // Normalize direction
+        dx /= len;
+        dy /= len;
+
+        // Perpendicular (normal)
+        float nx = -dy;
+        float ny = dx;
+
+        float halfW = width / 2f;
+
+        // Offset vector
+        float ox = nx * halfW;
+        float oy = ny * halfW;
+
+        Matrix4f mat = poseStack.last().pose();
+        VertexConsumer vc = buffer.getBuffer(RenderType.DEBUG_QUADS);
+
+        vc.addVertex(mat, x1 - ox, y1 - oy, 0).setColor(color);
+        vc.addVertex(mat, x1 + ox, y1 + oy, 0).setColor(color);
+        vc.addVertex(mat, x2 + ox, y2 + oy, 0).setColor(color);
+        vc.addVertex(mat, x2 - ox, y2 - oy, 0).setColor(color);
     }
 
-    public void renderRectangle(float x1, float y1, float x2, float y2, int color) {
+    public void drawLine(float x1, float y1, float x2, float y2, int color) {
+        drawLine(x1, y1, x2, y2, color, 1);
+    }
+
+    public void fillRectangle(float x1, float y1, float x2, float y2, int color) {
         VertexConsumer vc = buffer.getBuffer(RenderType.debugQuads());
         Matrix4f mat = poseStack.last().pose();
 
@@ -223,6 +267,13 @@ public class RenderUtil {
         vc.addVertex(mat, x1, y2, 0).setColor(color);
         vc.addVertex(mat, x2, y2, 0).setColor(color);
         vc.addVertex(mat, x2, y1, 0).setColor(color);
+    }
+
+    public void drawRectangle(float x1, float y1, float x2, float y2, int color, int width) {
+        drawLine(x1, y1, x2, y1, color, width);
+        drawLine(x2, y1, x2, y2, color, width);
+        drawLine(x2, y2, x1, y2, color, width);
+        drawLine(x1, y2, x1, y1, color, width);
     }
 
     public static int getTextColorFromAlpha(float alpha) {
@@ -260,4 +311,113 @@ public class RenderUtil {
 
         drawString(line, color, x, y);
     }
+
+    /**
+     * Blits a portion of the texture specified by the atlas location onto the screen at the given position and dimensions with texture coordinates.
+     *
+     * @param atlasLocation the location of the texture atlas.
+     * @param x             the x-coordinate of the top-left corner of the blit
+     *                      position.
+     * @param y             the y-coordinate of the top-left corner of the blit
+     *                      position.
+     * @param width         the width of the blitted portion.
+     * @param height        the height of the blitted portion.
+     * @param uOffset       the horizontal texture coordinate offset.
+     * @param vOffset       the vertical texture coordinate offset.
+     * @param uWidth        the width of the blitted portion in texture coordinates.
+     * @param vHeight       the height of the blitted portion in texture coordinates.
+     * @param textureWidth  the width of the texture.
+     * @param textureHeight the height of the texture.
+     */
+    public void blit(
+            ResourceLocation atlasLocation,
+            int x,
+            int y,
+            int width,
+            int height,
+            float uOffset,
+            float vOffset,
+            int uWidth,
+            int vHeight,
+            int textureWidth,
+            int textureHeight
+    ) {
+        this.blit(
+                atlasLocation, x, x + width, y, y + height, 0, uWidth, vHeight, uOffset, vOffset, textureWidth, textureHeight
+        );
+    }
+
+    /**
+     * Performs the inner blit operation for rendering a texture with the specified coordinates and texture coordinates.
+     *
+     * @param atlasLocation the location of the texture atlas.
+     * @param x1            the x-coordinate of the first corner of the blit position.
+     * @param x2            the x-coordinate of the second corner of the blit position
+     *                      .
+     * @param y1            the y-coordinate of the first corner of the blit position.
+     * @param y2            the y-coordinate of the second corner of the blit position
+     *                      .
+     * @param blitOffset    the z-level offset for rendering order.
+     * @param uWidth        the width of the blitted portion in texture coordinates.
+     * @param vHeight       the height of the blitted portion in texture coordinates.
+     * @param uOffset       the horizontal texture coordinate offset.
+     * @param vOffset       the vertical texture coordinate offset.
+     * @param textureWidth  the width of the texture.
+     * @param textureHeight the height of the texture.
+     */
+    public void blit(
+            ResourceLocation atlasLocation,
+            int x1,
+            int x2,
+            int y1,
+            int y2,
+            int blitOffset,
+            int uWidth,
+            int vHeight,
+            float uOffset,
+            float vOffset,
+            int textureWidth,
+            int textureHeight
+    ) {
+        this.innerBlit(
+                atlasLocation,
+                x1,
+                x2,
+                y1,
+                y2,
+                blitOffset,
+                (uOffset + 0.0F) / (float) textureWidth,
+                (uOffset + (float) uWidth) / (float) textureWidth,
+                (vOffset + 0.0F) / (float) textureHeight,
+                (vOffset + (float) vHeight) / (float) textureHeight
+        );
+    }
+
+    void innerBlit(
+            ResourceLocation atlasLocation,
+            int x1,
+            int x2,
+            int y1,
+            int y2,
+            int blitOffset,
+            float minU,
+            float maxU,
+            float minV,
+            float maxV
+    ) {
+        //finish whatever we were drawing up till now, otherwise the order might be fked
+        ((MultiBufferSource.BufferSource) buffer).endBatch();
+
+        RenderSystem.setShaderColor(1,1,1,1);
+        RenderSystem.setShaderTexture(0, atlasLocation);
+        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        Matrix4f matrix4f = poseStack.last().pose();
+        BufferBuilder bufferbuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+        bufferbuilder.addVertex(matrix4f, (float) x1, (float) y1, (float) blitOffset).setUv(minU, minV);
+        bufferbuilder.addVertex(matrix4f, (float) x1, (float) y2, (float) blitOffset).setUv(minU, maxV);
+        bufferbuilder.addVertex(matrix4f, (float) x2, (float) y2, (float) blitOffset).setUv(maxU, maxV);
+        bufferbuilder.addVertex(matrix4f, (float) x2, (float) y1, (float) blitOffset).setUv(maxU, minV);
+        BufferUploader.drawWithShader(bufferbuilder.buildOrThrow());
+    }
+
 }
