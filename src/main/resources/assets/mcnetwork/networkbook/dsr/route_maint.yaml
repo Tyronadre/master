@@ -1,0 +1,43 @@
+title: "Route Maintenance und Cache"
+posX: 4
+posY: 3
+icon: "minecraft:textures/item/chest.png"
+pre: ["Source Routing"]
+content: |
+  # Route Maintenance und Cache
+
+  ---
+  
+  DSR nutzt einen **Route Cache**, um bekannte Routen zu speichern.
+
+  ---
+  
+  ## Route Cache
+
+  - Knoten speichern mehrere bekannte Routen
+  - Neue Kommunikation kann sofort starten
+
+  ---
+  
+  ![Darstellung eines Knotens mit mehreren gespeicherten Routen](image:dsr_route_cache)
+
+  ---
+  
+  ## Fehlerfall
+
+  Wenn eine Verbindung bricht:
+
+  - Fehler wird erkannt
+  - Route wird verworfen
+  - Alternative Route aus Cache wird genutzt
+
+  ---
+  
+  ## Unterschied zu AODV
+
+  - AODV: neue Route wird gesucht  
+  - DSR: oft bereits alternative Route vorhanden  
+
+  ---
+  
+  @task[Was speichert der Cache?|Routen;Was passiert bei Fehlern?|Alternative Route oder neue Suche]

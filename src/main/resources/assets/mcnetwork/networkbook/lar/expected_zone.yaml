@@ -1,0 +1,43 @@
+title: "Expected Zone"
+posX: 6
+posY: 1
+icon: "minecraft:textures/item/compass.png"
+pre: ["Route Discovery in LAR"]
+content: |
+  # Expected Zone
+
+  ---
+  
+  Die **Expected Zone** beschreibt den Bereich, in dem sich das Ziel wahrscheinlich befindet.
+
+  ---
+  
+  ## Grundlage
+
+  - Letzte bekannte Position
+  - Bewegungsgeschwindigkeit
+  - Zeit seit letzter Information
+
+  ---
+  
+  ![Ein Kreis oder Bereich um die letzte bekannte Position eines Knotens](image:lar_expected_zone)
+
+  ---
+  
+  ## Zusammenhang
+
+  - Expected Zone → Schätzung der Zielposition  
+  - Request Zone → tatsächlicher Suchbereich  
+
+  ---
+  
+  ## Bedeutung
+
+  Je genauer die Expected Zone:
+
+  - desto effizienter das Routing
+  - desto geringer der Overhead
+
+  ---
+  
+  @task[Was beschreibt die Expected Zone?|Wahrscheinliche Position des Ziels;Wovon hängt sie ab?|Position, Zeit, Bewegung]

@@ -1,0 +1,39 @@
+title: "OLSR – Einführung"
+posX: 0
+posY: 0
+icon: "minecraft:textures/item/book.png"
+pre: ["Routing und mobile Netzwerke"]
+content: |
+  # OLSR – Einführung
+
+  ---
+  
+  **OLSR (Optimized Link State Routing)** ist ein **proaktives Routing-Protokoll**.
+
+  ---
+  
+  ## Grundprinzip
+
+  Routen werden **ständig aktuell gehalten**, unabhängig davon, ob sie gerade benötigt werden.
+
+  ---
+  
+  ## Unterschied zu AODV / DSR / LAR
+
+  - Diese sind **reaktiv** → suchen Routen bei Bedarf  
+  - OLSR ist **proaktiv** → kennt Routen jederzeit  
+
+  ---
+  
+  ![Ein Netzwerk, bei dem alle Knoten kontinuierlich Verbindungsinformationen austauschen](image:olsr_full_knowledge)
+
+  ---
+  
+  ## Konsequenz
+
+  - Sofortige Kommunikation möglich
+  - Kein initialer Suchprozess notwendig
+
+  ---
+  
+  @task[Ist OLSR reaktiv oder proaktiv?|Proaktiv;Was ist der Vorteil?|Routen sind sofort verfügbar]

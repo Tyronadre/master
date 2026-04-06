@@ -1,0 +1,46 @@
+title: "Source Routing"
+posX: 6
+posY: 1
+icon: "minecraft:textures/item/map.png"
+pre: ["Route Reply (RREP)"]
+content: |
+  # Source Routing
+
+  ---
+  
+  Beim **Source Routing** steht der gesamte Pfad im Datenpaket.
+
+  ---
+  
+  ## Beispiel
+
+  Paket enthält:
+
+  A → B → C → D
+
+  Jeder Knoten liest:
+
+  - Wo bin ich in der Liste?
+  - Wer ist der nächste Hop?
+
+  ---
+  
+  ![Ein Paket mit einer Liste von Knoten, die nacheinander abgearbeitet werden](image:dsr_packet_route_list)
+
+  ---
+  
+  ## Vorteile
+
+  - Kein Routingtabellen-Lookup nötig
+  - Klare, deterministische Pfade
+
+  ---
+  
+  ## Nachteile
+
+  - Größere Pakete (Overhead)
+  - Weniger flexibel bei Änderungen
+
+  ---
+  
+  @task[Wo steht die Route?|Im Paket selbst;Was ist ein Nachteil?|Größere Pakete]

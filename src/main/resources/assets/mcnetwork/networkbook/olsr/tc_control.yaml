@@ -1,0 +1,40 @@
+title: "Topology Control (TC)"
+posX: 4
+posY: 3
+icon: "minecraft:textures/item/comparator.png"
+pre: ["Multipoint Relays (MPR)"]
+content: |
+  # Topology Control (TC)
+
+  ---
+  
+  **TC Messages** verbreiten Netzwerkstrukturinformationen.
+
+  ---
+  
+  ## Ablauf
+
+  - MPRs senden TC-Nachrichten
+  - Informationen werden im Netzwerk verteilt
+  - Jeder Knoten erhält globale Sicht
+
+  ---
+  
+  ![Netzwerk, in dem strukturierte Informationen über MPRs verteilt werden](image:olsr_tc_messages)
+
+  ---
+  
+  ## Inhalt
+
+  - Verbindungen zwischen Knoten
+  - Struktur des Netzwerks
+
+  ---
+  
+  ## Ergebnis
+
+  Jeder Knoten kann vollständige Routen berechnen.
+
+  ---
+  
+  @task[Wer sendet TC Messages?|MPRs;Was enthalten sie?|Netzwerkinformationen]

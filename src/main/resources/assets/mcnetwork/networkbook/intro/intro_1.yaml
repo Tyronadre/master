@@ -1,0 +1,39 @@
+title: "Willkommen zu MCNetwork"
+posX: 0
+posY: 0
+icon: "minecraft:textures/item/book.png"
+pre: []
+content: |
+  # Willkommen zu MCNetwork
+
+  ---
+  
+  **MCNetwork** ist ein Mod zur Simulation und Analyse von Netzwerkprotokollen.
+
+  Du untersuchst, wie sich Daten in einem Netzwerk bewegen und wie unterschiedliche Routing-Algorithmen Entscheidungen treffen.
+
+  ---
+  
+  ## Ziel des Mods
+
+  - Verständnis von **Netzwerkstrukturen**
+  - Analyse von **Routing-Entscheidungen**
+  - Vergleich verschiedener Protokolle:
+    - **AODV**
+    - **DSR**
+    - **LAR**
+    - **OLSR**
+
+  ---
+  
+  ![Diagramm eines Netzwerks mit mehreren Knoten und Verbindungen](image:network_topology_overview)
+
+  ---
+  
+  ## Grundidee
+
+  Ein Netzwerk besteht aus **Knoten (Nodes)**, die Datenpakete austauschen.
+
+  Die zentrale Frage ist:
+  
+  **Wie findet ein Paket seinen Weg zum Ziel?**

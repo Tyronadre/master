@@ -1,0 +1,44 @@
+title: "Route Discovery in LAR"
+posX: 4
+posY: 1
+icon: "minecraft:textures/item/paper.png"
+pre: ["Request Zone"]
+content: |
+  # Route Discovery in LAR
+
+  ---
+  
+  Der Ablauf ähnelt DSR, aber mit Einschränkung:
+
+  → Nur Knoten in der Request Zone beteiligen sich.
+
+  ---
+  
+  ## Ablauf
+
+  1. Sender kennt ungefähre Zielposition  
+  2. Request Zone wird berechnet  
+  3. RREQ wird nur innerhalb dieser Zone verbreitet  
+
+  ---
+  
+  ![Ein Broadcast, der sich nur innerhalb eines bestimmten Bereichs ausbreitet](image:lar_limited_broadcast)
+
+  ---
+  
+  ## Ergebnis
+
+  - Weniger Pakete im Netzwerk
+  - Schnellere Suche bei guter Positionsschätzung
+
+  ---
+  
+  ## Risiko
+
+  Wenn die Schätzung falsch ist:
+
+  - Ziel wird möglicherweise nicht gefunden
+
+  ---
+  
+  @task[Wo wird das RREQ verbreitet?|Nur in der Request Zone;Was passiert bei falscher Schätzung?|Route wird evtl. nicht gefunden]

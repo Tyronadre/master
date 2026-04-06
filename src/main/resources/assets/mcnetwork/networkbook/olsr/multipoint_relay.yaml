@@ -1,0 +1,47 @@
+title: "Multipoint Relays (MPR)"
+posX: 6
+posY: 1
+icon: "minecraft:textures/item/beacon.png"
+pre: ["Hello Messages"]
+content: |
+  # Multipoint Relays (MPR)
+
+  ---
+  
+  Eine zentrale Optimierung in OLSR sind die **Multipoint Relays (MPRs)**.
+
+  ---
+  
+  ## Problem
+
+  Klassisches Link-State Routing erzeugt viel Broadcast.
+
+  ---
+  
+  ## Lösung
+
+  Nur ausgewählte Knoten (MPRs) leiten Nachrichten weiter.
+
+  ---
+  
+  ![Ein Netzwerk, bei dem nur bestimmte Knoten Nachrichten weiterleiten](image:olsr_mpr_selection)
+
+  ---
+  
+  ## Auswahl
+
+  Ein Knoten wählt MPRs so, dass:
+
+  - alle Nachbarn erreichbar bleiben
+  - möglichst wenige Knoten benötigt werden
+
+  ---
+  
+  ## Effekt
+
+  - Reduzierter Overhead
+  - Effizientere Verteilung von Informationen
+
+  ---
+  
+  @task[Was sind MPRs?|Ausgewählte Weiterleitungsknoten;Warum gibt es sie?|Zur Reduktion von Broadcast]

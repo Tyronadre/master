@@ -1,0 +1,42 @@
+title: "Hello Messages"
+posX: 4
+posY: 1
+icon: "minecraft:textures/item/paper.png"
+pre: ["Link State Prinzip"]
+content: |
+  # Hello Messages
+
+  ---
+  
+  OLSR verwendet **Hello Messages**, um Nachbarn zu erkennen.
+
+  ---
+  
+  ## Funktion
+
+  - Knoten senden regelmäßig kurze Nachrichten
+  - Nachbarn werden identifiziert
+  - Verbindungen werden überprüft
+
+  ---
+  
+  ![Knoten senden kleine Nachrichten an ihre direkten Nachbarn](image:olsr_hello_messages)
+
+  ---
+  
+  ## Ergebnis
+
+  Jeder Knoten kennt seine **direkten Verbindungen**.
+
+  ---
+  
+  ## Bedeutung
+
+  Diese Information ist die Grundlage für:
+
+  - Netzwerkkarte
+  - Routingberechnung
+
+  ---
+  
+  @task[Wozu dienen Hello Messages?|Nachbarn erkennen;Was wird aufgebaut?|Nachbarschaftsinformation]

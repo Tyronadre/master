@@ -1,0 +1,42 @@
+title: "Link State Prinzip"
+posX: 2
+posY: 1
+icon: "minecraft:textures/item/map.png"
+pre: ["OLSR – Einführung"]
+content: |
+  # Link State Prinzip
+
+  ---
+  
+  OLSR basiert auf dem **Link-State-Ansatz**.
+
+  ---
+  
+  ## Idee
+
+  Jeder Knoten kennt:
+
+  - seine direkten Nachbarn
+  - Informationen über das gesamte Netzwerk
+
+  ---
+  
+  ## Ablauf
+
+  - Knoten senden regelmäßig Statusinformationen
+  - Netzwerkzustand wird verteilt
+  - Jeder berechnet eigene Routen
+
+  ---
+  
+  ![Ein Netzwerk, in dem jeder Knoten Informationen über alle Verbindungen besitzt](image:olsr_link_state)
+
+  ---
+  
+  ## Ergebnis
+
+  Jeder Knoten kann unabhängig den besten Pfad bestimmen.
+
+  ---
+  
+  @task[Was kennt ein Knoten?|Das Netzwerk;Wie entstehen Routen?|Durch lokale Berechnung]

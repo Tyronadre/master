@@ -1,0 +1,51 @@
+title: "Simulation Controller"
+posX: 2
+posY: 1
+icon: "minecraft:clock"
+pre: ["Willkommen zu MCNetwork"]
+content: |
+  # Simulation Controller
+
+  ---
+  
+  Der **Simulation Controller** steuert den Ablauf der Netzwerksimulation.
+
+  Er erlaubt dir, das Verhalten der Protokolle gezielt zu analysieren.
+
+  ---
+  
+  ## Funktionen
+
+  - Simulation **starten / pausieren**
+  - **Geschwindigkeit anpassen**
+  - Zeitverlauf kontrollieren
+
+  ---
+  
+  ![Ein technisches Item mit Zeit- oder Kontrollsymbol](image:simulation_controller_item)
+
+  ---
+  
+  ## Warum ist das wichtig?
+
+  Netzwerkprotokolle sind **zeitabhängig**.
+
+  Durch Kontrolle kannst du:
+  
+  - einzelne Schritte beobachten
+  - Routing-Entscheidungen nachvollziehen
+  - Unterschiede zwischen Protokollen erkennen
+
+  ---
+  
+  ## Beispiel
+
+  | Zustand | Effekt |
+  |--------|--------|
+  | Pause | Keine Paketbewegung |
+  | Langsam | Details sichtbar |
+  | Schnell | Gesamtablauf beobachten |
+
+  ---
+  
+  @task[Was kann der Controller steuern?|Geschwindigkeit und Pause;Warum ist das wichtig?|Um Abläufe zu analysieren]

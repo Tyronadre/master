@@ -1,0 +1,51 @@
+title: "Datenpakete im Netzwerk"
+posX: 6
+posY: 1
+icon: "minecraft:textures/item/paper.png"
+pre: ["Willkommen zu MCNetwork"]
+content: |
+  # Datenpakete im Netzwerk
+
+  ---
+  
+  **Fliegende Pakete** visualisieren den Datenverkehr zwischen Knoten.
+
+  Sie zeigen in Echtzeit, wie Informationen durch das Netzwerk übertragen werden.
+
+  ---
+  
+  ![Leuchtende Objekte, die sich zwischen Knoten bewegen](image:data_packets_flying_between_nodes)
+
+  ---
+  
+  ## Bedeutung
+
+  Ein Paket enthält:
+
+  - Zieladresse
+  - Herkunft
+  - Routing-Informationen
+
+  ---
+  
+  ## Beobachtung
+
+  Durch die Bewegung der Pakete kannst du erkennen:
+
+  - welchen Weg sie nehmen
+  - ob sie ihr Ziel erreichen
+  - wie effizient ein Protokoll arbeitet
+
+  ---
+  
+  ## Zusammenhang mit Protokollen
+
+  Unterschiedliche Protokolle führen zu:
+
+  - unterschiedlichen Routen
+  - unterschiedlichem Overhead
+  - variierendem Verhalten bei Änderungen im Netzwerk
+
+  ---
+  
+  @task[Was stellen die fliegenden Objekte dar?|Datenpakete;Was kann man daran erkennen?|Den Routing-Weg]

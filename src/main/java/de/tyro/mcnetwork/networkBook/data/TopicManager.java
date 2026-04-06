@@ -69,8 +69,8 @@ public class TopicManager {
                 String title = map.get("title") == null ? "" : map.get("title").toString();
                 ResourceLocation icon = map.get("icon") == null ? null : ResourceLocation.parse((String) map.get("icon"));
                 String content = map.get("content") == null ? "" : map.get("content").toString();
-                int posx = map.get("posX") == null ? 0 : (int) map.get("posX");
-                int posy = map.get("posY") == null ? 0 : (int) map.get("posY");
+                int posx = map.get("posX") == null ? 0 : (int) map.get("posX") * 100;
+                int posy = map.get("posY") == null ? 0 : (int) map.get("posY") * 100;
                 var sub = new SubTopic(topic, title, icon, content, posx, posy);
                 if (map.get("pre") != null) {
                     pres.put(sub, (List<String>) map.get("pre"));

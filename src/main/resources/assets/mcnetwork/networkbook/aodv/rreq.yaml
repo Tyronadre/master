@@ -1,0 +1,44 @@
+title: "Route Discovery (RREQ)"
+posX: 2
+posY: 1
+icon: "minecraft:textures/item/paper.png"
+pre: ["AODV – Einführung"]
+content: |
+  # Route Discovery (RREQ)
+
+  ---
+  
+  Wenn ein Knoten keine Route kennt, startet er eine **Route Request (RREQ)**.
+
+  ---
+  
+  ## Ablauf
+
+  1. Knoten erstellt ein RREQ-Paket  
+  2. Paket wird an alle Nachbarn gesendet (**Broadcast**)  
+  3. Jeder Knoten leitet es weiter  
+
+  ---
+  
+  ![Ein Paket breitet sich von einem Startknoten in alle Richtungen aus](image:aodv_rreq_broadcast)
+
+  ---
+  
+  ## Inhalte eines RREQ
+
+  | Feld | Bedeutung |
+  |------|----------|
+  | Source | Ursprung |
+  | Destination | Ziel |
+  | Sequence Number | Aktualität |
+  | Hop Count | Anzahl der Hops |
+
+  ---
+  
+  ## Ziel
+
+  Das Paket sucht einen Pfad zum Zielknoten.
+
+  ---
+  
+  @task[Was ist ein RREQ?|Route Request;Wie wird es verbreitet?|Broadcast]

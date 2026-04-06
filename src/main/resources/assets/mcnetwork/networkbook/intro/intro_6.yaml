@@ -1,0 +1,88 @@
+title: "Routing und mobile Netzwerke"
+posX: 2
+posY: 3
+icon: "minecraft:textures/item/compass_00.png"
+pre: ["Willkommen zu MCNetwork"]
+content: |
+  # Routing und mobile Netzwerke
+
+  ---
+  
+  **Routing** beschreibt den Prozess, mit dem ein Datenpaket seinen Weg durch ein Netzwerk findet.
+
+  Ein Netzwerk kann als **Graph** betrachtet werden:
+  
+  - Knoten (Nodes) = Computer
+  - Kanten (Edges) = Verbindungen
+
+  ---
+  
+  ![Ein einfaches Graph-Diagramm mit Knoten und Verbindungen](image:graph_network_basic)
+
+  ---
+  
+  ## Pfade und Entscheidungen
+
+  Ein Paket kann oft mehrere Wege zum Ziel nehmen.
+
+  Routing-Protokolle entscheiden:
+  
+  - welcher Pfad gewählt wird
+  - wann ein neuer Pfad gesucht wird
+  - wie mit Fehlern umgegangen wird
+
+  ---
+  
+  ## Mobile Netzwerke (MANET)
+
+  In einem **mobilen Netzwerk** bewegen sich die Knoten.
+
+  Das bedeutet:
+  
+  - Verbindungen entstehen und verschwinden
+  - Topologien ändern sich ständig
+  - stabile Routen sind nicht garantiert
+
+  ---
+  
+  ![Ein Netzwerk, bei dem sich Knoten bewegen und Verbindungen dynamisch ändern](image:mobile_network_dynamic)
+
+  ---
+  
+  ## Herausforderungen
+
+  | Problem | Beschreibung |
+  |--------|-------------|
+  | Dynamik | Netzwerk ändert sich laufend |
+  | Reichweite | Knoten sind nur lokal verbunden |
+  | Ausfälle | Verbindungen brechen ab |
+  | Overhead | Kommunikation für Routing kostet Ressourcen |
+
+  ---
+  
+  ## Routing-Strategien
+
+  Es gibt unterschiedliche Ansätze:
+
+  - **Reaktiv** (z. B. AODV, DSR)  
+    → Routen werden bei Bedarf gesucht
+  
+  - **Proaktiv** (z. B. OLSR)  
+    → Routen werden ständig aktuell gehalten
+  
+  - **Geografisch** (z. B. LAR)  
+    → Positionen werden genutzt
+
+  ---
+  
+  ## Bedeutung für MCNetwork
+
+  In der Simulation kannst du beobachten:
+
+  - wie sich Routen verändern
+  - wie Protokolle auf Bewegung reagieren
+  - welche Strategie effizienter ist
+
+  ---
+  
+  @task[Was ist Routing?|Bestimmung eines Pfades für Datenpakete;Was ist ein MANET?|Ein mobiles Netzwerk mit dynamischer Topologie;Nenne zwei Routing-Strategien|Reaktiv und proaktiv]

@@ -1,0 +1,47 @@
+title: "DSR – Analyse"
+posX: 6
+posY: 3
+icon: "minecraft:textures/item/comparator.png"
+pre: ["Route Maintenance und Cache"]
+content: |
+  # DSR – Analyse
+
+  ---
+  
+  DSR zeigt ein anderes Verhalten als AODV.
+
+  ---
+  
+  ## Eigenschaften
+
+  | Eigenschaft | Bewertung |
+  |------------|----------|
+  | Overhead | Hoch (große Pakete) |
+  | Reaktionszeit | Schnell bei Cache |
+  | Speicherbedarf | Höher |
+  | Flexibilität | Eingeschränkt bei Änderungen |
+
+  ---
+  
+  ![Vergleich von mehreren gespeicherten Routen und deren Nutzung](image:dsr_analysis_routes)
+
+  ---
+  
+  ## Beobachtungen in MCNetwork
+
+  - Schnelle Kommunikation bei bekannten Routen
+  - Probleme bei stark dynamischen Netzwerken
+  - Zunehmender Overhead bei langen Pfaden
+
+  ---
+  
+  ## Einordnung
+
+  DSR eignet sich besonders für:
+
+  - kleinere Netzwerke
+  - Szenarien mit wiederholter Kommunikation
+
+  ---
+  
+  @task[Warum kann DSR schnell sein?|Durch den Cache;Was ist ein Nachteil?|Große Pakete]

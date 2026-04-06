@@ -1,0 +1,42 @@
+title: "Route Maintenance"
+posX: 4
+posY: 3
+icon: "minecraft:textures/item/barrier.png"
+pre: ["Routingtabellen und Sequenznummern"]
+content: |
+  # Route Maintenance
+
+  ---
+  
+  In mobilen Netzwerken brechen Verbindungen häufig ab.
+
+  AODV reagiert darauf mit **Fehlermeldungen (RERR)**.
+
+  ---
+  
+  ## Ablauf
+
+  - Verbindung bricht
+  - Knoten erkennt Fehler
+  - **Route Error (RERR)** wird gesendet
+
+  ---
+  
+  ![Ein unterbrochener Pfad im Netzwerk](image:aodv_route_break)
+
+  ---
+  
+  ## Konsequenz
+
+  - Betroffene Routen werden gelöscht
+  - Neue Route Discovery kann gestartet werden
+
+  ---
+  
+  ## Ziel
+
+  Netzwerk bleibt konsistent trotz Änderungen.
+
+  ---
+  
+  @task[Was passiert bei einem Verbindungsabbruch?|RERR wird gesendet;Was folgt danach?|Neue Routensuche]

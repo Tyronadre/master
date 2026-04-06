@@ -1,6 +1,18 @@
-- title: Anwendungsprotokolle
-  path: chapter1
-  icon: minecraft:textures/item/book.png
 - title: Debug
   path: debug
+  icon: minecraft:textures/item/book.png
+- title: Intro
+  path: intro
+  icon: minecraft:textures/item/book.png
+- title: AODV
+  path: aodv
+  icon: minecraft:textures/item/book.png
+- title: DSR
+  path: dsr
+  icon: minecraft:textures/item/book.png
+- title: LAR
+  path: lar
+  icon: minecraft:textures/item/book.png
+- title: OLSR
+  path: OLSR
   icon: minecraft:textures/item/book.png

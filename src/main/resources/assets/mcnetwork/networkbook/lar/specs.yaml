@@ -1,0 +1,39 @@
+title: "Vorteile und Grenzen von LAR"
+posX: 4
+posY: 3
+icon: "minecraft:textures/item/barrier.png"
+pre: ["Expected Zone"]
+content: |
+  # Vorteile und Grenzen von LAR
+
+  ---
+  
+  LAR optimiert klassische Routing-Verfahren durch räumliche Einschränkung.
+
+  ---
+  
+  ## Vorteile
+
+  | Vorteil | Beschreibung |
+  |--------|-------------|
+  | Geringer Overhead | Weniger Broadcast |
+  | Effizienz | Schnellere Routensuche |
+  | Skalierbarkeit | Gut für große Netzwerke |
+
+  ---
+  
+  ## Grenzen
+
+  | Problem | Beschreibung |
+  |--------|-------------|
+  | Positionsfehler | Falsche Schätzung |
+  | Mobilität | Schnelle Bewegung erschwert Vorhersage |
+  | Abhängigkeit | Benötigt Positionsdaten |
+
+  ---
+  
+  ![Vergleich zwischen großem Broadcast und eingeschränkter Suche](image:lar_comparison)
+
+  ---
+  
+  @task[Nenne einen Vorteil von LAR|Weniger Overhead;Was ist ein Risiko?|Falsche Positionsschätzung]

@@ -1,0 +1,47 @@
+title: "Computerblock als Netzwerkknoten"
+posX: 4
+posY: 1
+icon: "minecraft:observer"
+pre: ["Willkommen zu MCNetwork"]
+content: |
+  # Computerblock als Netzwerkknoten
+
+  ---
+  
+  Der **Computerblock** repräsentiert einen Computer im Netzwerk.
+
+  Jeder Block ist ein eigenständiger **Node**, der:
+
+  - Daten senden und empfangen kann
+  - Routing-Entscheidungen trifft
+  - Teil eines größeren Netzwerks ist
+
+  ---
+  
+  ![Mehrere Blöcke, verbunden durch Linien, die ein Netzwerk darstellen](image:computer_nodes_network)
+
+  ---
+  
+  ## Terminal
+
+  Jeder Computerblock besitzt ein **Terminal**.
+
+  Dort kannst du:
+
+  - Netzwerkaktivität beobachten
+  - Nachrichten senden
+  - Protokollverhalten analysieren
+
+  ---
+  
+  ## Rolle im Netzwerk
+
+  | Funktion | Beschreibung |
+  |----------|-------------|
+  | Sender | Startet Pakete |
+  | Router | Leitet Pakete weiter |
+  | Empfänger | Ziel eines Pakets |
+
+  ---
+  
+  @task[Was repräsentiert ein Computerblock?|Einen Netzwerkknoten;Welche Rollen kann er haben?|Sender, Router, Empfänger]

@@ -1,0 +1,41 @@
+title: "Route Reply (RREP)"
+posX: 4
+posY: 1
+icon: "minecraft:textures/item/arrow.png"
+pre: ["Route Discovery in DSR"]
+content: |
+  # Route Reply (RREP)
+
+  ---
+  
+  Sobald das Ziel erreicht ist, wird eine **Route Reply (RREP)** erzeugt.
+
+  ---
+  
+  ## Ablauf
+
+  - Ziel erhält vollständige Route
+  - Route wird im RREP zurückgesendet
+  - Sender speichert diese Route
+
+  ---
+  
+  ![Ein Paket bewegt sich entlang des gefundenen Pfades zurück](image:dsr_rrep_return)
+
+  ---
+  
+  ## Ergebnis
+
+  Der Sender kennt nun den gesamten Pfad:
+
+  **z. B.: A → B → C → D**
+
+  ---
+  
+  ## Nutzung
+
+  Alle zukünftigen Pakete enthalten diese Route direkt.
+
+  ---
+  
+  @task[Was enthält das RREP?|Die komplette Route;Was macht der Sender damit?|Er nutzt sie für zukünftige Pakete]

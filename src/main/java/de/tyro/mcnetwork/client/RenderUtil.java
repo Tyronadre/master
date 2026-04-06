@@ -1,5 +1,6 @@
 package de.tyro.mcnetwork.client;
 
+import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.BufferUploader;
@@ -8,6 +9,9 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import net.minecraft.CrashReport;
+import net.minecraft.CrashReportCategory;
+import net.minecraft.ReportedException;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -16,8 +20,12 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemDisplayContext;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
@@ -44,6 +52,43 @@ public class RenderUtil {
 
     public void setPose(PoseStack pose) {
         this.poseStack = pose;
+    }
+
+    public void renderItem(Item item, int x, int y, float scale) {
+        var stack = new ItemStack(item, 1);
+        var model = mc.getItemRenderer().getModel(stack, null, null, 0);
+
+        poseStack.pushPose();
+        poseStack.translate((float) (x + 8), (float) (y + 8), (float) (150));
+
+        try {
+            poseStack.scale(16.0F, -16.0F, 16.0F);
+            boolean flag = !model.usesBlockLight();
+            if (flag) {
+                Lighting.setupForFlatItems();
+            }
+
+            mc.getItemRenderer()
+                    .render(stack, ItemDisplayContext.GUI, false, poseStack, this.buffer, 15728880, OverlayTexture.NO_OVERLAY, model);
+
+            RenderSystem.disableDepthTest();
+            mc.renderBuffers().bufferSource().endBatch();
+            RenderSystem.enableDepthTest();
+
+            if (flag) {
+                Lighting.setupFor3DItems();
+            }
+        } catch (Throwable throwable) {
+            CrashReport crashreport = CrashReport.forThrowable(throwable, "Rendering item");
+            CrashReportCategory crashreportcategory = crashreport.addCategory("Item being rendered");
+            crashreportcategory.setDetail("Item Type", () -> String.valueOf(stack.getItem()));
+            crashreportcategory.setDetail("Item Components", () -> String.valueOf(stack.getComponents()));
+            crashreportcategory.setDetail("Item Foil", () -> String.valueOf(stack.hasFoil()));
+            throw new ReportedException(crashreport);
+        }
+
+        poseStack.popPose();
+
     }
 
     public enum Align {
@@ -270,10 +315,12 @@ public class RenderUtil {
     }
 
     public void drawRectangle(float x1, float y1, float x2, float y2, int color, int width) {
-        drawLine(x1, y1, x2, y1, color, width);
-        drawLine(x2, y1, x2, y2, color, width);
-        drawLine(x2, y2, x1, y2, color, width);
-        drawLine(x1, y2, x1, y1, color, width);
+        ((MultiBufferSource.BufferSource) buffer).endBatch();
+        var offset = (float) width / 2;
+        drawLine(x2, y1 + offset, x2, y2 - offset, color, width);
+        drawLine(x2 + offset, y2, x1 - offset, y2, color, width);
+        drawLine(x1, y2 - offset, x1, y1 + offset, color, width);
+        drawLine(x1 - offset, y1, x2 + offset, y1, color, width);
     }
 
     public static int getTextColorFromAlpha(float alpha) {
@@ -408,7 +455,7 @@ public class RenderUtil {
         //finish whatever we were drawing up till now, otherwise the order might be fked
         ((MultiBufferSource.BufferSource) buffer).endBatch();
 
-        RenderSystem.setShaderColor(1,1,1,1);
+        RenderSystem.setShaderColor(1, 1, 1, 1);
         RenderSystem.setShaderTexture(0, atlasLocation);
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         Matrix4f matrix4f = poseStack.last().pose();

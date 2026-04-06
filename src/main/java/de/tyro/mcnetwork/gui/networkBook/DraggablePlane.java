@@ -77,6 +77,7 @@ public class DraggablePlane {
             t.render(renderer, mouseX - x - offsetX, mouseY - y - offsetY, highlight);
         }
 
+
         gg.pose().popPose();
 
         clampOffsets(shownTiles);

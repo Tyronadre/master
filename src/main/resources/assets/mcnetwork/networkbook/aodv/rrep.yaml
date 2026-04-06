@@ -1,0 +1,42 @@
+title: "Route Reply (RREP)"
+posX: 4
+posY: 1
+icon: "minecraft:textures/item/arrow.png"
+pre: ["Route Discovery (RREQ)"]
+content: |
+  # Route Reply (RREP)
+
+  ---
+  
+  Sobald das Ziel erreicht wird, wird eine **Route Reply (RREP)** erzeugt.
+
+  ---
+  
+  ## Ablauf
+
+  - Zielknoten empfängt RREQ
+  - Antwort wird erstellt
+  - Antwort läuft den Weg **zurück zum Ursprung**
+
+  ---
+  
+  ![Ein Paket bewegt sich entlang eines Pfades zurück zum Sender](image:aodv_rrep_path)
+
+  ---
+  
+  ## Wichtig
+
+  Beim Rückweg entsteht eine **gültige Route**:
+
+  - Jeder Knoten speichert den nächsten Hop
+  - Eine durchgehende Verbindung entsteht
+
+  ---
+  
+  ## Ergebnis
+
+  Der Sender kennt nun eine Route zum Ziel.
+
+  ---
+  
+  @task[Wer erzeugt das RREP?|Der Zielknoten;In welche Richtung läuft es?|Zurück zum Sender]

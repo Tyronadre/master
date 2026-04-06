@@ -1,0 +1,38 @@
+title: "Zusammenspiel der Komponenten"
+posX: 4
+posY: 3
+icon: "minecraft:textures/item/comparator.png"
+pre: ["Simulation Controller", "Computerblock als Netzwerkknoten", "Datenpakete im Netzwerk"]
+content: |
+  # Zusammenspiel der Komponenten
+
+  ---
+  
+  In MCNetwork arbeiten alle Komponenten zusammen, um ein Netzwerk zu simulieren.
+
+  ---
+  
+  ## Ablauf einer Simulation
+
+  1. Du startest die Simulation mit dem Controller  
+  2. Computerblöcke senden Datenpakete  
+  3. Routing-Protokolle bestimmen den Weg  
+  4. Pakete bewegen sich durch das Netzwerk  
+
+  ---
+  
+  ![Komplettes Netzwerk mit mehreren Knoten und sichtbaren Paketbewegungen](image:full_network_simulation)
+
+  ---
+  
+  ## Zentrale Fragestellung
+
+  Wie unterscheiden sich die Protokolle in ihrem Verhalten?
+
+  - Finden sie immer den kürzesten Weg?
+  - Wie reagieren sie auf Änderungen?
+  - Wie viel Kommunikation ist notwendig?
+
+  ---
+  
+  @task[Welche Komponenten arbeiten zusammen?|Controller, Nodes, Pakete;Was bestimmt den Weg eines Pakets?|Das Routing-Protokoll]

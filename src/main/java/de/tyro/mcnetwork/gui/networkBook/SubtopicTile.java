@@ -1,11 +1,17 @@
 package de.tyro.mcnetwork.gui.networkBook;
 
 import de.tyro.mcnetwork.client.RenderUtil;
+import de.tyro.mcnetwork.item.ItemRegistry;
 import de.tyro.mcnetwork.networkBook.data.SubTopic;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Style;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.Vec2;
+import net.neoforged.neoforge.common.Tags;
 
 /**
  * Visual tile for a Subtopic.
@@ -15,7 +21,7 @@ import net.minecraft.world.phys.Vec2;
  */
 public class SubtopicTile {
     public static final int BACKGROUND_COLOR = 0xFF222228;
-    public static final int COMPLETED_COLOR = 0xFF222238;
+    public static final int COMPLETED_COLOR = 0xFF224428;
 
     private final int x, y, w, h;
     private final SubTopic subtopic;
@@ -40,15 +46,19 @@ public class SubtopicTile {
 
         //highlight border
         if (highlight || isMouseOver(mouseX, mouseY)) {
-            renderer.drawLine(x,y,x2,y, 0xFFFFFFFF,10);
-            renderer.drawRectangle(x, y, x2, y2, RenderUtil.Color.GREEN.value, 20);
+            if (!subtopic.isInteractable()) renderer.drawRectangle(x, y, x2, y2, 0x99FF0000, 5);
+            else renderer.drawRectangle(x, y, x2, y2, 0x990000FF, 5);
         }
 
         //icon
         if (subtopic.getIcon() == null)
             renderer.fillRectangle(x + 16, y + 8, w - 32, h - 32, BACKGROUND_COLOR);
-        else
+        else if (subtopic.getIcon().getPath().endsWith(".png"))
             renderer.blit(subtopic.getIcon(), x + 2, y + 2, w - 4, h - 4, 0, 0, w - 4, h - 4, w - 4, h - 4);
+        else {
+            BuiltInRegistries.ITEM.getOptional(subtopic.getIcon()).ifPresent(it ->
+                    renderer.renderItem(it.asItem(), x, y));
+        }
 
         //text
         var split = font.getSplitter().splitLines(subtopic.getTitle(), w - 4, Style.EMPTY);
