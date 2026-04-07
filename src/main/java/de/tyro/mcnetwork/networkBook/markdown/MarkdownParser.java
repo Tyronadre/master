@@ -38,6 +38,26 @@ public class MarkdownParser {
         while (i < lines.length) {
             String line = lines[i];
 
+            Matcher codeBlock = fencedCodePattern.matcher(line);
+            if (codeBlock.matches()) {
+                if (!inCode) {
+                    inCode = true;
+                    codeBuf.setLength(0);
+                    codeLang = codeBlock.group(1);
+                } else {
+                    doc.addCodeBlock(codeBuf.toString(), codeLang);
+                    inCode = false;
+                    codeLang = null;
+                }
+                i++;
+                continue;
+            }
+            if (inCode) {
+                codeBuf.append(line).append("\n");
+                i++;
+                continue;
+            }
+
             //image
             Matcher img = imagePattern.matcher(line);
             if (img.find()) {
@@ -100,26 +120,6 @@ public class MarkdownParser {
                     } else break;
                 }
                 flushListBuffer(listBuffer, doc, true);
-                continue;
-            }
-
-            Matcher codeBlock = fencedCodePattern.matcher(line);
-            if (codeBlock.matches()) {
-                if (!inCode) {
-                    inCode = true;
-                    codeBuf.setLength(0);
-                    codeLang = codeBlock.group(1);
-                } else {
-                    doc.addCodeBlock(codeBuf.toString(), codeLang);
-                    inCode = false;
-                    codeLang = null;
-                }
-                i++;
-                continue;
-            }
-            if (inCode) {
-                codeBuf.append(line).append("\n");
-                i++;
                 continue;
             }
 

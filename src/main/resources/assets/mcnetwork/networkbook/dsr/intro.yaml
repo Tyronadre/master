@@ -1,7 +1,7 @@
 title: "DSR – Einführung"
 posX: 0
 posY: 0
-icon: "minecraft:textures/item/book.png"
+icon: "minecraft:book"
 pre: ["Routing und mobile Netzwerke"]
 content: |
   # DSR – Einführung
@@ -21,10 +21,22 @@ content: |
   Im Gegensatz zu AODV speichert DSR den **kompletten Pfad im Paket selbst**.
 
   → Dieses Verfahren nennt man **Source Routing**
-
-  ---
-  
-  ![Ein Paket, das eine vollständige Liste von Knoten enthält, die es durchläuft](image:dsr_source_routing)
+ 
+  ```
+   0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |  Option Type  |  Opt Data Len |F|L|Reservd|Salvage| Segs Left |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                           Address[1]                          |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                           Address[2]                          |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                              ...                              |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                           Address[n]                          |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+  ```
 
   ---
   

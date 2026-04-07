@@ -1,7 +1,7 @@
 title: "Expected Zone"
 posX: 6
 posY: 1
-icon: "minecraft:textures/item/compass.png"
+icon: "minecraft:compass"
 pre: ["Route Discovery in LAR"]
 content: |
   # Expected Zone

@@ -48,8 +48,7 @@ public class NetworkBookScreen extends Screen {
         var topics = topicManager.getTopics();
         tabBar.setTopics(topics);
 
-        Optional<Topic> maybe = topics.stream().findFirst();
-        currentTopic = maybe.orElse(null);
+        currentTopic = topicManager.getLastTopic();
 
         draggablePlane = new DraggablePlane(this, 64, 24, this.width - 64 - 18, this.height - 48);
         if (currentTopic != null) draggablePlane.setSubtopics(currentTopic.getSubtopics());
@@ -66,15 +65,16 @@ public class NetworkBookScreen extends Screen {
         if (clicked == null) return;
 
         Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.BOOK_PAGE_TURN, 1.0f));
-        this.currentTopic = clicked;
-        this.currentSubtopic = null;
+        currentTopic = clicked;
+        currentSubtopic = null;
+        topicManager.setLastTopic(clicked);
         draggablePlane.setSubtopics(currentTopic.getSubtopics());
 
         this.transitionProgress = 0.0f;
     }
 
     void onSubtopicClicked(SubTopic s) {
-        this.currentSubtopic = s;
+        currentSubtopic = s;
         contentPane.setSubtopic(s);
         Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0f));
 
@@ -82,7 +82,7 @@ public class NetworkBookScreen extends Screen {
     }
 
     void closeSubtopic() {
-        this.currentSubtopic = null;
+        currentSubtopic = null;
         this.transitionProgress = 0.0f;
     }
 
@@ -101,6 +101,8 @@ public class NetworkBookScreen extends Screen {
         gg.drawCenteredString(this.font, title, this.width / 2, 8, 0xFFFFFF);
 
         tabBar.render(gg, mouseX, mouseY, partialTicks);
+
+        gg.flush();
 
         gg.enableScissor(64, 24, this.width - 18, this.height - 24);
 

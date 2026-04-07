@@ -1,7 +1,7 @@
 title: "Route Discovery (RREQ)"
 posX: 2
 posY: 1
-icon: "minecraft:textures/item/paper.png"
+icon: "minecraft:paper"
 pre: ["AODV – Einführung"]
 content: |
   # Route Discovery (RREQ)

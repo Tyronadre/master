@@ -43,7 +43,7 @@ public class Topic extends SavedData {
         tag.putString("icon", icon.toString());
         tag.putInt("subtopics", subtopics.size());
         for (int i = 0; i < subtopics.size(); i++) {
-            tag.putUUID("sub_"+i, subtopics.get(i).getId());
+            tag.putString("sub_"+i, subtopics.get(i).getId());
         }
 
         return tag;

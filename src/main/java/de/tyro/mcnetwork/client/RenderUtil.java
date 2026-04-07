@@ -59,10 +59,10 @@ public class RenderUtil {
         var model = mc.getItemRenderer().getModel(stack, null, null, 0);
 
         poseStack.pushPose();
-        poseStack.translate((float) (x + 8), (float) (y + 8), (float) (150));
+        poseStack.translate(x + scale/2, y + scale/2, 0);
 
         try {
-            poseStack.scale(16.0F, -16.0F, 16.0F);
+            poseStack.scale(scale, -scale, 0);
             boolean flag = !model.usesBlockLight();
             if (flag) {
                 Lighting.setupForFlatItems();
@@ -134,56 +134,6 @@ public class RenderUtil {
 
     public void setFont(Font font) {
         this.font = font;
-    }
-
-    public void beginStencilClip(float x, float y, float width, float height) {
-//
-//        if (clipEnabled) return;
-//        clipEnabled = true;
-//
-//        mc.renderBuffers().bufferSource().endBatch();
-//        mc.getMainRenderTarget().enableStencil();
-//
-//        RenderSystem.clear(GL11.GL_STENCIL_BUFFER_BIT, Minecraft.ON_OSX);
-//
-//        // Write 1s into stencil where rectangle is drawn
-//        RenderSystem.stencilFunc(GL11.GL_ALWAYS, 1, 0xFF);
-//        RenderSystem.stencilOp(GL11.GL_KEEP, GL11.GL_KEEP, GL11.GL_KEEP);
-//        RenderSystem.stencilMask(0xFF);
-//
-//        // Disable color & depth writing
-//        RenderSystem.colorMask(false, false, false, false);
-//        RenderSystem.depthMask(false);
-//
-//        Matrix4f mat = poseStack.last().pose();
-//        var vc = buffer.getBuffer(RenderType.DEBUG_QUADS);
-//
-//        float x2 = x + width;
-//        float y2 = y + height;
-//
-//        vc.addVertex(mat, x, y, 0).setColor(-1);
-//        vc.addVertex(mat, x, y2, 0).setColor(-1);
-//        vc.addVertex(mat, x2, y2, 0).setColor(-1);
-//        vc.addVertex(mat, x2, y, 0).setColor(-1);
-//
-//
-//        // Re-enable color/depth writing
-//        RenderSystem.colorMask(true, true, true, true);
-//        RenderSystem.depthMask(true);
-//
-//        // Only draw where stencil == 1
-//        RenderSystem.stencilMask(0x00);
-//        RenderSystem.stencilFunc(GL11.GL_EQUAL, 1, 0xFF);
-//        RenderSystem.stencilOp(GL11.GL_REPLACE, GL11.GL_REPLACE, GL11.GL_REPLACE);
-    }
-
-    public void endStencilClip() {
-        if (!clipEnabled) return;
-
-        mc.renderBuffers().bufferSource().endBatch();
-
-        RenderSystem.clearStencil(0);
-        clipEnabled = false;
     }
 
     public void renderHLineWithAlphaColor(float width, float y) {
@@ -327,9 +277,6 @@ public class RenderUtil {
         return ((int) (alpha * 255) << 24) | 0xFFFFFF;
     }
 
-    public void drawStringWithAlphaColor(String line, float x, float y) {
-        drawString(line, getTextColorFromAlpha(getAlpha()), x, y);
-    }
 
     public float getAlpha() {
         return alpha;
@@ -339,15 +286,53 @@ public class RenderUtil {
         this.alpha = alpha;
     }
 
-    public void drawString(String line, int color, float x, float y) {
-        Minecraft.getInstance().font.drawInBatch(line, x, y, color, false, poseStack.last().pose(), buffer, Font.DisplayMode.SEE_THROUGH, 0, packedLight);
+
+    /**
+     * Draws a string
+     * @param line the string
+     * @param color the color
+     * @param x the x origin where the string will be drawn (left side of the string)
+     * @param y the y origin where the string will be drawn (top side of the string)
+     * @param shadow if the string should have a shadow
+     */
+    public void drawString(String line, int color, float x, float y, boolean shadow) {
+        Minecraft.getInstance().font.drawInBatch(line, x, y, color, shadow, poseStack.last().pose(), buffer, Font.DisplayMode.SEE_THROUGH, 0, packedLight);
     }
 
-    public void drawStringWithAlphaColor(Align align, String line, float width, float y) {
-        drawString(align, line, getTextColorFromAlpha(alpha), width, y);
+    /**
+     * Draws an aligned string with shadow
+     * @param align where it should be aligned
+     * @param line the string
+     * @param color the color
+     * @param width the width which it will be aligned to
+     * @param y the y coordinate (height)
+     */
+    public void drawStringWithShadow(Align align, String line, int color, float width, float y) {
+        drawString(align, line, color, width, y, true);
     }
 
+    /**
+     * Draws an aligned string without shadow
+     * @param align where it should be aligned
+     * @param line the string
+     * @param color the color
+     * @param width the width which it will be aligned to
+     * @param y the y coordinate (height)
+     */
     public void drawString(Align align, String line, int color, float width, float y) {
+        drawString(align, line, color, width, y, false);
+    }
+
+    /**
+     * Draws an aligned string
+     * @param align where it should be aligned
+     * @param line the string
+     * @param color the color
+     * @param width the width which it will be aligned to
+     * @param y the y coordinate (height)
+     * @param shadow if the string should have a shadow
+     */
+    public void drawString(Align align, String line, int color, float width, float y, boolean shadow) {
         var font = Minecraft.getInstance().font;
 
         float x = switch (align) {
@@ -356,8 +341,20 @@ public class RenderUtil {
             case RIGHT -> width / 2 - font.width(line);
         };
 
-        drawString(line, color, x, y);
+        drawString(line, color, x, y, shadow);
     }
+
+    /**
+     * Draws an aligned string without shadow with a grayscale color according to the current alpha value of the renderer
+     * @param align where it should be aligned
+     * @param line the string
+     * @param width the width which it will be aligned to
+     * @param y the y coordinate (height)
+     */
+    public void drawStringWithAlphaColor(Align align, String line, float width, float y) {
+        drawString(align, line, getTextColorFromAlpha(alpha), width, y, false);
+    }
+
 
     /**
      * Blits a portion of the texture specified by the atlas location onto the screen at the given position and dimensions with texture coordinates.

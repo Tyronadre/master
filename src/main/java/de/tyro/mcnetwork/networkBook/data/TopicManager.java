@@ -28,6 +28,7 @@ public class TopicManager {
     private static final String CHAPTER_FOLDER = "networkbook/";
     private static final TopicManager INSTANCE = new TopicManager();
     private final List<Topic> topics = new ArrayList<>();
+    private Topic lastTopic;
 
 
     private TopicManager() {
@@ -62,7 +63,7 @@ public class TopicManager {
         topics.add(topic);
 
         var pres = new HashMap<SubTopic, List<String>>();
-        var files = rm.listResources(topic.getContentLocation().getPath(), it ->it.getPath().endsWith(".yaml"));
+        var files = rm.listResources(topic.getContentLocation().getPath(), it -> it.getPath().endsWith(".yaml"));
         for (var entry : files.entrySet()) {
             try (var r = entry.getValue().openAsReader()) {
                 Map<String, Object> map = new Yaml().load(r);
@@ -100,12 +101,11 @@ public class TopicManager {
     }
 
     public void markCompleted(Player player, SubTopic subtopic) {
-        // Example: store completion in player's persistent NBT under "networkbook_completed"
         if (player == null) return;
         CompoundTag tag = player.getPersistentData();
         CompoundTag mod = tag.getCompound("mod_networkbook");
-        mod.putBoolean("completed:" + subtopic.getId(), true);
         tag.put("mod_networkbook", mod);
+        mod.putBoolean("completed:" + subtopic.getId(), true);
     }
 
     public boolean isCompleted(Player player, SubTopic subtopic) {
@@ -113,5 +113,13 @@ public class TopicManager {
         CompoundTag tag = player.getPersistentData();
         CompoundTag mod = tag.getCompound("mod_networkbook");
         return mod.getBoolean("completed:" + subtopic.getId());
+    }
+
+    public Topic getLastTopic() {
+        return lastTopic == null ? topics.getFirst() == null ? null : topics.getFirst() : lastTopic;
+    }
+
+    public void setLastTopic(Topic lastTopic) {
+        this.lastTopic = lastTopic;
     }
 }

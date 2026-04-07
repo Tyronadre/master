@@ -1,7 +1,7 @@
 title: "OLSR – Analyse"
 posX: 6
 posY: 3
-icon: "minecraft:textures/item/barrier.png"
+icon: "minecraft:barrier"
 pre: ["Topology Control (TC)"]
 content: |
   # OLSR – Analyse

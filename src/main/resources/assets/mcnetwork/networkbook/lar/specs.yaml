@@ -1,7 +1,7 @@
 title: "Vorteile und Grenzen von LAR"
 posX: 4
 posY: 3
-icon: "minecraft:textures/item/barrier.png"
+icon: "minecraft:barrier"
 pre: ["Expected Zone"]
 content: |
   # Vorteile und Grenzen von LAR

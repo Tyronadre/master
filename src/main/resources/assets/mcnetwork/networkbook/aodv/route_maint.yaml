@@ -1,8 +1,8 @@
 title: "Route Maintenance"
 posX: 4
 posY: 3
-icon: "minecraft:textures/item/barrier.png"
-pre: ["Routingtabellen und Sequenznummern"]
+icon: "minecraft:barrier"
+pre: ["Routingtabellen Sequenznummern"]
 content: |
   # Route Maintenance
 

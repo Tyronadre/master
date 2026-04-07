@@ -17,7 +17,7 @@ import java.util.UUID;
  */
 public class SubTopic {
     private final Topic topic;
-    private final UUID id;
+    private final String id;
     private final String title;
     private final Vec2 position;
     private final Set<SubTopic> prerequisites = new HashSet<>();
@@ -25,7 +25,7 @@ public class SubTopic {
     private final ResourceLocation icon;
 
     public SubTopic(Topic topic, String title, ResourceLocation icon, String content, int posX, int posY) {
-        this.id = UUID.randomUUID();
+        this.id = topic.getTitle() + ":" + title;
         this.topic = topic;
         this.title = title;
         this.position = new Vec2(posX, posY);
@@ -38,7 +38,7 @@ public class SubTopic {
         prerequisites.add(subtopic);
     }
 
-    public UUID getId() {
+    public String getId() {
         return id;
     }
 
@@ -73,7 +73,7 @@ public class SubTopic {
     public boolean isShown() {
         if (prerequisites.isEmpty()) return true;
 
-        return prerequisites.stream().anyMatch(SubTopic::isShown);
+        return prerequisites.stream().anyMatch(SubTopic::isInteractable);
     }
 
     public boolean isInteractable() {

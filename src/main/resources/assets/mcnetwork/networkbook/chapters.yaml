@@ -1,18 +1,18 @@
-- title: Debug
-  path: debug
-  icon: minecraft:textures/item/book.png
+#- title: Debug
+#  path: debug
+#  icon: minecraft:book
 - title: Intro
   path: intro
-  icon: minecraft:textures/item/book.png
+  icon: minecraft:book
 - title: AODV
   path: aodv
-  icon: minecraft:textures/item/book.png
+  icon: minecraft:book
 - title: DSR
   path: dsr
-  icon: minecraft:textures/item/book.png
+  icon: minecraft:book
 - title: LAR
   path: lar
-  icon: minecraft:textures/item/book.png
+  icon: minecraft:book
 - title: OLSR
-  path: OLSR
-  icon: minecraft:textures/item/book.png
+  path: olsr
+  icon: minecraft:book

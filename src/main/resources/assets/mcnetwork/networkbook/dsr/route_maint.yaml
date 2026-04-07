@@ -1,7 +1,7 @@
 title: "Route Maintenance und Cache"
 posX: 4
 posY: 3
-icon: "minecraft:textures/item/chest.png"
+icon: "minecraft:chest"
 pre: ["Source Routing"]
 content: |
   # Route Maintenance und Cache

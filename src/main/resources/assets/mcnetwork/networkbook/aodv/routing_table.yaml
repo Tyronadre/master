@@ -1,7 +1,7 @@
 title: "Routingtabellen und Sequenznummern"
 posX: 6
 posY: 1
-icon: "minecraft:textures/item/map.png"
+icon: "minecraft:map"
 pre: ["Route Reply (RREP)"]
 content: |
   # Routingtabellen und Sequenznummern

@@ -813,7 +813,7 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
     /**
      * Indexed by SourceIP of the route Request
      */
-    private class RouteRequestTable {
+    private static class RouteRequestTable {
         private final Map<IP, RouteRequestTableEntry> routeRequestTable = new HashMap<>();
 
         public void put(IP originIP, RouteRequestTableEntry routeRequestTableEntry) {
@@ -826,7 +826,7 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
     }
 
 
-    private class RouteRequestTableEntry {
+    private static class RouteRequestTableEntry {
         private int ttl;
         private int numberOfRREQ;
         private long lastRequestTime;
@@ -1133,8 +1133,6 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
             renderer.drawLine(x2R, y2R, x2R, y1R, 0xFFFFFFFF);
             renderer.drawLine(x2R, y1R, x1R, y1R, 0xFFFFFFFF);
 
-//            renderer.beginStencilClip(-50, -50, 100, 100);
-
             var nodesToRender = new ArrayList<INetworkNode>();
             for (Link link : graph.values().stream().flatMap(it -> it.values().stream()).distinct().toList()) {
                 long remaining = link.remainingLifetime(now);
@@ -1154,29 +1152,92 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
                 Vec3 posA = nodeA.getPos().subtract(offset).scale(2);
                 Vec3 posB = nodeB.getPos().subtract(offset).scale(2);
 
-                float x1 = (float) Math.clamp(posA.x, -500, 500);
-                float y1 = (float) Math.clamp(posA.z, -500, 500);
-                float x2 = (float) Math.clamp(posB.x, -500, 500);
-                float y2 = (float) Math.clamp(posB.z, -500, 500);
 
-                renderer.drawLine(x1, y1, x2, y2, 0xFF000000 | ((int) r * 255) << 16 | ((int) g * 255) << 8);
+                float x1 = (float) posA.x;
+                float y1 = (float) posA.z;
+                float x2 = (float) posB.x;
+                float y2 = (float) posB.z;
 
+                var clipped = clipLine(x1, y1, x2, y2, x1R, y1R, x2R, y2R);
+
+                if (clipped != null) {
+                    renderer.drawLine(
+                            clipped.x1, clipped.y1,
+                            clipped.x2, clipped.y2,
+                            0xFF000000 | ((int) (r * 255)) << 16 | ((int) (g * 255)) << 8
+                    );
+                }
             }
 
             for (var node : nodesToRender) {
                 var pos = node.getPos().subtract(offset).scale(2);
+                float x = (float) pos.x();
+                float y = (float) pos.z();
+
+                if (!isInside(x, y, x1R, y1R, x2R, y2R)) continue;
 
                 poseStack.pushPose();
                 poseStack.scale(0.25f, 0.25f, 0);
-                renderer.drawString(node.getIP().toString(), 0x00ff00, (float) pos.x() * 4 - 15, (float) pos.z() * 4 - 12);
+                renderer.drawString(node.getIP().toString(), 0x00ff00, (float) pos.x() * 4 - 15, (float) pos.z() * 4 - 12, false);
                 poseStack.popPose();
 
                 renderer.fillRectangle((float) (pos.x() - 1), (float) (pos.z() - 1), (float) (pos.x() + 1), (float) (pos.z() + 1), 0xFFFFFFFF);
             }
 
-//            renderer.endStencilClip();
-
             poseStack.popPose();
+        }
+
+        private boolean isInside(float x, float y, float minX, float minY, float maxX, float maxY) {
+            return x >= minX && x <= maxX && y >= minY && y <= maxY;
+        }
+
+        private static class ClippedLine {
+            float x1, y1, x2, y2;
+            ClippedLine(float x1, float y1, float x2, float y2) {
+                this.x1 = x1;
+                this.y1 = y1;
+                this.x2 = x2;
+                this.y2 = y2;
+            }
+        }
+
+        private ClippedLine clipLine(
+                float x1, float y1,
+                float x2, float y2,
+                float minX, float minY,
+                float maxX, float maxY
+        ) {
+            float dx = x2 - x1;
+            float dy = y2 - y1;
+
+            float t0 = 0.0f;
+            float t1 = 1.0f;
+
+            float[] p = {-dx, dx, -dy, dy};
+            float[] q = {x1 - minX, maxX - x1, y1 - minY, maxY - y1};
+
+            for (int i = 0; i < 4; i++) {
+                if (p[i] == 0) {
+                    if (q[i] < 0) return null; // parallel and outside
+                } else {
+                    float t = q[i] / p[i];
+
+                    if (p[i] < 0) {
+                        if (t > t1) return null;
+                        if (t > t0) t0 = t;
+                    } else {
+                        if (t < t0) return null;
+                        if (t < t1) t1 = t;
+                    }
+                }
+            }
+
+            return new ClippedLine(
+                    x1 + t0 * dx,
+                    y1 + t0 * dy,
+                    x1 + t1 * dx,
+                    y1 + t1 * dy
+            );
         }
 
         private float computeLifetimeRatio(Link link, long now) {

@@ -1,7 +1,7 @@
 title: "Datenpakete im Netzwerk"
 posX: 6
 posY: 1
-icon: "minecraft:textures/item/paper.png"
+icon: "minecraft:paper"
 pre: ["Willkommen zu MCNetwork"]
 content: |
   # Datenpakete im Netzwerk
@@ -12,40 +12,23 @@ content: |
 
   Sie zeigen in Echtzeit, wie Informationen durch das Netzwerk übertragen werden.
 
-  ---
   
-  ![Leuchtende Objekte, die sich zwischen Knoten bewegen](image:data_packets_flying_between_nodes)
+  ![HUD](packet_hud.png)
 
   ---
   
   ## Bedeutung
 
-  Ein Paket enthält:
-
-  - Zieladresse
-  - Herkunft
-  - Routing-Informationen
-
-  ---
+  Ein Paket ist immer in genau einen Netzwerk Frame eingebunden. Aktuell werden ausschließlich UDP Frames verwendet, um den durch TCP entstehenden Overhead nicht visualisieren und verstehen zu müssen. 
+  In der obersten Zeile wird dabei die Herkunfts- und Zieladresse des Frames gezeigt, sowie die verbleiben Time To Live (TTL).
   
-  ## Beobachtung
-
-  Durch die Bewegung der Pakete kannst du erkennen:
-
-  - welchen Weg sie nehmen
-  - ob sie ihr Ziel erreichen
-  - wie effizient ein Protokoll arbeitet
-
-  ---
+  Darunter werden PaketTyp, ID, sowie Herkunfts- und Zieladresse des Pakets angezeigt.
+  Der Rest des HUDs wird mit paketspezifischen Informationen gefüllt.
   
-  ## Zusammenhang mit Protokollen
-
-  Unterschiedliche Protokolle führen zu:
-
-  - unterschiedlichen Routen
-  - unterschiedlichem Overhead
-  - variierendem Verhalten bei Änderungen im Netzwerk
-
-  ---
+  --- 
   
-  @task[Was stellen die fliegenden Objekte dar?|Datenpakete;Was kann man daran erkennen?|Den Routing-Weg]
+  ## Kollision
+  
+  Frames können an ihrer Zieladresse kollidieren, wenn dort in der selben Zeiteinheit bereits zu viele Frames angekommen sind. Diese Frames bleiben einen Moment an der Zieladresse stehen, und werden rot markiert.
+  
+  ![error packet](packet_hud_error.png)

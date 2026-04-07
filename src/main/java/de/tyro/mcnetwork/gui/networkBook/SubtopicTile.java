@@ -39,6 +39,8 @@ public class SubtopicTile {
     public void render(RenderUtil renderer, double mouseX, double mouseY, boolean highlight) {
         if (!subtopic.isShown()) return;
 
+        renderer.getPoseStack().pushPose();
+
         //background
         var x2 = x + getWidth();
         var y2 = y + getHeight();
@@ -46,8 +48,12 @@ public class SubtopicTile {
 
         //highlight border
         if (highlight || isMouseOver(mouseX, mouseY)) {
-            if (!subtopic.isInteractable()) renderer.drawRectangle(x, y, x2, y2, 0x99FF0000, 5);
-            else renderer.drawRectangle(x, y, x2, y2, 0x990000FF, 5);
+            var color = 0;
+            if (!subtopic.isInteractable()) color = 0x99FF0000;
+            else if (subtopic.isCompleted()) color = 0x9900FF00;
+            else color = 0x990000FF;
+
+            renderer.drawRectangle(x, y, x2, y2, color, 5);
         }
 
         //icon
@@ -55,17 +61,20 @@ public class SubtopicTile {
             renderer.fillRectangle(x + 16, y + 8, w - 32, h - 32, BACKGROUND_COLOR);
         else if (subtopic.getIcon().getPath().endsWith(".png"))
             renderer.blit(subtopic.getIcon(), x + 2, y + 2, w - 4, h - 4, 0, 0, w - 4, h - 4, w - 4, h - 4);
-        else {
-            BuiltInRegistries.ITEM.getOptional(subtopic.getIcon()).ifPresent(it ->
-                    renderer.renderItem(it.asItem(), x, y));
-        }
+        else
+            BuiltInRegistries.ITEM.getOptional(subtopic.getIcon()).ifPresent(it -> renderer.renderItem(it.asItem(), x + 5, y + 5, 70));
+
 
         //text
+        renderer.getPoseStack().translate(x + 41, 0, 0);
+
         var split = font.getSplitter().splitLines(subtopic.getTitle(), w - 4, Style.EMPTY);
         if (split.size() > 3) split = split.subList(0, 3);
         int i = split.size();
-        if (i > 1) for (var line : split) renderer.drawString(RenderUtil.Align.CENTER, line.getString(), x + w / 2, y + h - font.lineHeight * i--, NetworkBookScreen.TEXT_COLOR);
-        else renderer.drawString(RenderUtil.Align.CENTER, subtopic.getTitle(), x + w / 2, y + h - font.lineHeight * 2, NetworkBookScreen.TEXT_COLOR);
+        if (i > 1) for (var line : split) renderer.drawStringWithShadow(RenderUtil.Align.CENTER, line.getString(), NetworkBookScreen.TEXT_COLOR, x + (float) w / 2, y + h - font.lineHeight * i--);
+        else renderer.drawStringWithShadow(RenderUtil.Align.CENTER, subtopic.getTitle(), NetworkBookScreen.TEXT_COLOR, x + (float) w / 2, y + h - font.lineHeight * 2);
+
+        renderer.getPoseStack().popPose();
 
     }
 

@@ -18,34 +18,24 @@ content: |
 
   - Simulation **starten / pausieren**
   - **Geschwindigkeit anpassen**
-  - Zeitverlauf kontrollieren
+  - Protokolle aller Computer ändern.
 
   ---
   
-  ![Ein technisches Item mit Zeit- oder Kontrollsymbol](image:simulation_controller_item)
+  ![Der Simulation Controller](simulation_controller.png)
+  ![Das Menu](simulation_controller_menu.png)
 
   ---
   
-  ## Warum ist das wichtig?
-
-  Netzwerkprotokolle sind **zeitabhängig**.
-
-  Durch Kontrolle kannst du:
+  In der Realität sind Pakte natürlich mit ansatzweise Lichtgeschwindigkeit unterwegs, und alle Zeiteinheiten wie z.B. Timeouts sind davon abhängig.
+  Da damit aber eine Beobachtung der Pakete unmöglich wäre, sind sie in der Simulation extrem verlangsamt. Mithilfe des Items kannst du diesen Faktor steuern, insbesondere um in wichtigen Momementen die Simulation zu verlangsamen oder auch ganz zu pausieren.
+  Außerdem sind nicht alle Beobachtungen genau so wie in der realen Welt. Wenn wir ein Paket mit 300.000 m/s so langsam simulieren würden, dass es beobachtet werden kann, dann wäre ein Timeout von z.B. 5 ms über 17 Tage lang. Dementsprechend wurden die Geschwindkeit von Paketen drastisch reduziert.
+  Die grundsätzlichen Funktionsweisen der Protokolle veränderen sich nicht, es kann aber zu anderen Timeout Bedingungen kommen.
   
-  - einzelne Schritte beobachten
-  - Routing-Entscheidungen nachvollziehen
-  - Unterschiede zwischen Protokollen erkennen
-
+  Für das Verstehen der Paketbewegungen empfehlen wir generell eine niedrige Simulationsgeschwindigkeit.
+  
   ---
   
-  ## Beispiel
-
-  | Zustand | Effekt |
-  |--------|--------|
-  | Pause | Keine Paketbewegung |
-  | Langsam | Details sichtbar |
-  | Schnell | Gesamtablauf beobachten |
-
-  ---
+  Die zweite wichtige Funktion ist die Auswahl des benutzen Protokolls. Hiermit werden alle Computer auf das gewählte Protokol umgestellt. Mögliche laufenden Commands werden nicht unterbrochen, läuft z.B. ein Ping Command, so wird mit dem nächste Ping direkt eine Route Discovery ausgeführt.
   
-  @task[Was kann der Controller steuern?|Geschwindigkeit und Pause;Warum ist das wichtig?|Um Abläufe zu analysieren]
+  ---

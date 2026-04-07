@@ -1,7 +1,7 @@
 title: "Zusammenspiel der Komponenten"
 posX: 4
 posY: 3
-icon: "minecraft:textures/item/comparator.png"
+icon: "minecraft:comparator"
 pre: ["Simulation Controller", "Computerblock als Netzwerkknoten", "Datenpakete im Netzwerk"]
 content: |
   # Zusammenspiel der Komponenten
@@ -13,15 +13,15 @@ content: |
   ---
   
   ## Ablauf einer Simulation
-
-  1. Du startest die Simulation mit dem Controller  
-  2. Computerblöcke senden Datenpakete  
-  3. Routing-Protokolle bestimmen den Weg  
-  4. Pakete bewegen sich durch das Netzwerk  
+  
+  1. Das Proktoll wird mit dem Controller Item gewählt.
+  2. Mit einem Computer wird z.B. ein Ping ausgeführt.
+  3. Das Routingprotkoll entscheidet, welchen Weg Pakete nehmen, oder ob z.B. ein Kontrollpaket geschickt werden muss, um eine Route Discovery durchzuführen.
+  4. Pakete bewegen sich durch das Netzwerk, jeweils von dem entsprechenden Routingprotokoll kontrolliert.
 
   ---
   
-  ![Komplettes Netzwerk mit mehreren Knoten und sichtbaren Paketbewegungen](image:full_network_simulation)
+  ![Ein Netzwerk](network.png)
 
   ---
   
@@ -32,7 +32,3 @@ content: |
   - Finden sie immer den kürzesten Weg?
   - Wie reagieren sie auf Änderungen?
   - Wie viel Kommunikation ist notwendig?
-
-  ---
-  
-  @task[Welche Komponenten arbeiten zusammen?|Controller, Nodes, Pakete;Was bestimmt den Weg eines Pakets?|Das Routing-Protokoll]

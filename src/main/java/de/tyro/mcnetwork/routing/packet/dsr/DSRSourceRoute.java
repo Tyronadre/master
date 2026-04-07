@@ -1,10 +1,14 @@
 package de.tyro.mcnetwork.routing.packet.dsr;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.tyro.mcnetwork.client.RenderUtil;
 import de.tyro.mcnetwork.routing.IP;
 import de.tyro.mcnetwork.routing.packet.INetworkPacket;
 import de.tyro.mcnetwork.routing.packet.IProtocolPaket;
 import de.tyro.mcnetwork.routing.packet.NetworkPacket;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.world.phys.Vec2;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,17 +51,37 @@ public class DSRSourceRoute extends NetworkPacket implements IProtocolPaket {
         return address;
     }
 
+
     @Override
-    public void render(RenderUtil renderer) {
+    protected void renderPacketContent(RenderUtil renderer, PoseStack poseStack, float width) {
+        var pose = renderer.getPoseStack();
+        pose.pushPose();
+
+        pose.scale(0.5f, 0.5f, 0.5f);
+        width *= 2;
+
+        renderer.drawStringWithAlphaColor(RenderUtil.Align.LEFT, "Route: ", width, 0);
+
         int y = 0;
         for (IP address : addresses) {
-            renderer.drawStringWithAlphaColor(RenderUtil.Align.LEFT, address.toString(), 200, y);
+            renderer.drawStringWithAlphaColor(RenderUtil.Align.RIGHT, address.toString(), width, y);
             y += 10;
         }
-        renderer.renderHLineWithAlphaColor(200, y);
-        y += 5;
+        renderer.renderHLineWithAlphaColor(width, y);
+        y += 7;
+
+        pose.translate(0,y,0);
+        pose.scale(2f,2f,2f);
 
         packet.render(renderer);
+        pose.popPose();
+    }
+
+    @Override
+    public Vec2 getRenderSize(Font font) {
+        var innerSize = packet.getRenderSize(font);
+
+        return new Vec2(Math.max(100, innerSize.x), 23 + innerSize.y + getHeaderSize(font).y);
     }
 
     public List<IP> getAddresses() {

@@ -1,16 +1,18 @@
 title: "Willkommen zu MCNetwork"
 posX: 0
 posY: 0
-icon: "minecraft:textures/item/book.png"
+icon: "minecraft:book"
 pre: []
 content: |
   # Willkommen zu MCNetwork
 
   ---
   
-  **MCNetwork** ist ein Mod zur Simulation und Analyse von Netzwerkprotokollen.
+  **MCNetwork** ist ein Mod zur Simulation und Analyse von Mobile Ad Hoc Netzwerkprotokollen (MANNETs).
 
   Du untersuchst, wie sich Daten in einem Netzwerk bewegen und wie unterschiedliche Routing-Algorithmen Entscheidungen treffen.
+
+  ![Diagramm eines Netzwerks mit mehreren Knoten und Verbindungen](intro1_1.png)
 
   ---
   
@@ -24,9 +26,6 @@ content: |
     - **LAR**
     - **OLSR**
 
-  ---
-  
-  ![Diagramm eines Netzwerks mit mehreren Knoten und Verbindungen](image:network_topology_overview)
 
   ---
   
@@ -34,6 +33,21 @@ content: |
 
   Ein Netzwerk besteht aus **Knoten (Nodes)**, die Datenpakete austauschen.
 
-  Die zentrale Frage ist:
+  Die zentrale Frage ist: Wie findet ein Paket seinen Weg zum Ziel?
   
-  **Wie findet ein Paket seinen Weg zum Ziel?**
+  ## Übersicht
+  
+  In diesem Kaptitel findest du grundlegenden Informationen zu den Möglichkeiten des Mods.
+  
+  In den folgenden vier Kapiteln werden die Protokolle genauer untersucht.
+  
+  
+  ## Questbuch
+  
+  Dieses Questbuch soll dir helfen die Funktionsweise der Protokoll zu verstehen und dich Schritt für Schritt an diese heranführen.
+  
+  Links siehst du die einzelnen Kapitel. In jedem Kapitel gibt es eine gewisse Menge and Quests die du abschließen kannst. Dabei sind Abschnitte die du noch nicht ansehen kannst mit einem roten Rahmen markiert. Die Abschnitte die vorher abgeschlossen werden müssen, werden durch einen blauen Rahmen gekennzeichnet.
+  
+  !['Willkommen zu MCNetwork' muss abgeschlossen werden bevor du 'Simulation Controller' lesen kannst](intro1_2.png)
+  
+  Außerdem gibt es Abschnitten in denen du Aufgaben abschließen kannst, um dein Wissen zu testen.

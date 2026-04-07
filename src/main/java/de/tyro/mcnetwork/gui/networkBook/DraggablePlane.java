@@ -18,11 +18,10 @@ public class DraggablePlane {
     private final int x, y, width, height;
     private final Map<SubTopic, SubtopicTile> tiles = new HashMap<>();
     private final NetworkBookScreen screen;
-    private float offsetX = 0, offsetY = 0; // pan offset
+    private float offsetX = 10, offsetY = 10; // pan offset
     private float lastDragMouseX, lastDragMouseY;
     private boolean dragging = false;
     private final RenderUtil renderer;
-    private SubtopicTile hoveredTile = null;
 
     public DraggablePlane(NetworkBookScreen screen, int x, int y, int width, int height) {
         this.screen = screen;
@@ -31,7 +30,6 @@ public class DraggablePlane {
         this.width = width;
         this.height = height;
         this.renderer = new RenderUtil(new PoseStack(), Minecraft.getInstance().renderBuffers().bufferSource(), 1, 0);
-
     }
 
     public void setSubtopics(List<SubTopic> subs) {
@@ -50,7 +48,7 @@ public class DraggablePlane {
 
         List<SubtopicTile> shownTiles = tiles.values().stream().filter(t -> t.getSubtopic().isShown()).toList();
 
-        hoveredTile = null;
+        SubtopicTile hoveredTile = null;
         for (SubtopicTile t : shownTiles) {
             if (t.isMouseOver(mouseX - x - offsetX, mouseY - y - offsetY)) {
                 hoveredTile = t;
@@ -109,35 +107,12 @@ public class DraggablePlane {
         lastDragMouseY = (float) my;
         offsetX += dx;
         offsetY += dy;
-        clampOffsets();
+        clampOffsets(tiles.values());
         return true;
     }
 
-    private void clampOffsets() {
-        // clamp so plane cannot be dragged to show empty space:
-        // compute content bounds
-        int minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE, maxX = Integer.MIN_VALUE, maxY = Integer.MIN_VALUE;
-        for (SubtopicTile t : tiles.values()) {
-            minX = Math.min(minX, t.getX());
-            minY = Math.min(minY, t.getY());
-            maxX = Math.max(maxX, t.getX() + t.getWidth());
-            maxY = Math.max(maxY, t.getY() + t.getHeight());
-        }
-        if (minX == Integer.MAX_VALUE) return; // no tiles
 
-        // allowed range so that at least part of content visible
-        float minOffsetX = Math.min(0, width - (maxX + 32));
-        float maxOffsetX = Math.max(0, -minX + 16);
-        float minOffsetY = Math.min(0, height - (maxY + 32));
-        float maxOffsetY = Math.max(0, -minY + 16);
-
-        if (offsetX < minOffsetX) offsetX = minOffsetX;
-        if (offsetX > maxOffsetX) offsetX = maxOffsetX;
-        if (offsetY < minOffsetY) offsetY = minOffsetY;
-        if (offsetY > maxOffsetY) offsetY = maxOffsetY;
-    }
-
-    private void clampOffsets(List<SubtopicTile> shownTiles) {
+    private void clampOffsets(Iterable<SubtopicTile> shownTiles) {
         // clamp so plane cannot be dragged to show empty space:
         // compute content bounds of shown tiles
         int minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE, maxX = Integer.MIN_VALUE, maxY = Integer.MIN_VALUE;

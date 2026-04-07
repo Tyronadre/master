@@ -1,7 +1,7 @@
 title: "Hello Messages"
 posX: 4
 posY: 1
-icon: "minecraft:textures/item/paper.png"
+icon: "minecraft:paper"
 pre: ["Link State Prinzip"]
 content: |
   # Hello Messages

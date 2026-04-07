@@ -1,7 +1,7 @@
 title: "Topology Control (TC)"
 posX: 4
 posY: 3
-icon: "minecraft:textures/item/comparator.png"
+icon: "minecraft:comparator"
 pre: ["Multipoint Relays (MPR)"]
 content: |
   # Topology Control (TC)

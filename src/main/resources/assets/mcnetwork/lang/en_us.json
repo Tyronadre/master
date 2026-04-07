@@ -1,13 +1,6 @@
 {
-  "itemGroup.mcnetwork": "Example Mod Tab",
-  "block.mcnetwork.example_block": "Example Block",
-  "item.mcnetwork.example_item": "Example Item",
-
-  "mcnetwork.configuration.title": "MCNetwork Configs",
-  "mcnetwork.configuration.section.mcnetwork.common.toml": "MCNetwork Configs",
-  "mcnetwork.configuration.section.mcnetwork.common.toml.title": "MCNetwork Configs",
-  "mcnetwork.configuration.items": "Item List",
-  "mcnetwork.configuration.logDirtBlock": "Log Dirt Block",
-  "mcnetwork.configuration.magicNumberIntroduction": "Magic Number Text",
-  "mcnetwork.configuration.magicNumber": "Magic Number"
+  "creativetab.mcnetwork.creative_tab": "MCNetwork",
+  "block.mcnetwork.computer": "Computer",
+  "item.mcnetwork.network_book": "Questbuch",
+  "item.mcnetwork.sim_controller": "Simulation Controller"
 }
