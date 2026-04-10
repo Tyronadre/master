@@ -35,7 +35,7 @@ public class AODVRERRPacket extends NetworkPacket implements IProtocolPaket {
 
     @Override
     public INetworkPacket copy() {
-        return null;
+        return new AODVRERRPacket(id, getOriginatorIP(), getDestinationIP(), noDelete, unreachable);
     }
 
 }

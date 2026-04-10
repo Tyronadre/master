@@ -53,7 +53,7 @@ public class PingPacket extends NetworkPacket implements IApplicationPacket {
 
     @Override
     public INetworkPacket copy() {
-        return new PingPacket(getOriginatorIP(), getDestinationIP(), sendStartTime);
+        return new PingPacket(getId(), getOriginatorIP(), getDestinationIP(), sendStartTime);
     }
 
 }

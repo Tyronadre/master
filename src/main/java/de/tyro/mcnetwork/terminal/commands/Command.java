@@ -40,5 +40,21 @@ public abstract class Command {
     protected String getHelp() {
         return getName();
     }
+
+    protected <T> T getOrDefault(Class<T> clazz, int argPos, T defaultValue) {
+        if (argPos < 0 || argPos >= args.length) return defaultValue;
+
+        var  arg = args[argPos];
+        if (!clazz.isInstance(arg)) return defaultValue;
+        return clazz.cast(arg);
+    }
+
+    protected <T> T getOrThrow(Class<T> clazz, int argPos) {
+        if  (argPos < 0 || argPos >= args.length) throw new IndexOutOfBoundsException("Argument out of bounds: " + argPos + ", " + args.length);
+
+        var arg =  args[argPos];
+        if (!clazz.isInstance(arg)) throw new ClassCastException("Argument at pos " + argPos + " is not an instance of " + clazz.getName());
+        return clazz.cast(arg);
+    }
 }
 

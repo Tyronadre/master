@@ -8,7 +8,6 @@ import de.tyro.mcnetwork.client.RenderUtil;
 import de.tyro.mcnetwork.network.NetworkUtil;
 import de.tyro.mcnetwork.network.payload.NewNetworkFramePayload;
 import de.tyro.mcnetwork.network.payload.networkPacket.NetworkPacketCodecRegistry;
-import de.tyro.mcnetwork.network.payload.networkPacket.NetworkPacketPayload;
 import de.tyro.mcnetwork.routing.INetworkNode;
 import de.tyro.mcnetwork.routing.SimulationEngine;
 import de.tyro.mcnetwork.routing.packet.INetworkPacket;
@@ -16,14 +15,16 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.syncher.EntityDataAccessor;
-import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.bus.api.Event;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.entity.IEntityWithComplexSpawn;
+import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 import org.slf4j.Logger;
 
 public class NetworkFrameEntity extends Entity implements IEntityWithComplexSpawn {
@@ -61,7 +62,7 @@ public class NetworkFrameEntity extends Entity implements IEntityWithComplexSpaw
     private boolean initialized = false;
     private Vec3 simulationPosition; // Position calculated from simulation
 
-    public static double M_PER_MS = 300000; //~lightspeed
+    public static double M_PER_NS = 300000; //~lightspeed
 
     public NetworkFrameEntity(Level level, Vec3 pos) {
         super(EntityRegistry.NETWORK_FRAME_ENTITY.get(), level);
@@ -162,7 +163,7 @@ public class NetworkFrameEntity extends Entity implements IEntityWithComplexSpaw
         //return zero if we are really close
         if (distance < 1e-9) return Vec3.ZERO;
 
-        var movement = toTarget.normalize().scale(M_PER_MS / 100_000 * sim.getSimSpeed() * SimulationEngine.MS_PER_SIM_TICK);
+        var movement = toTarget.normalize().scale(M_PER_NS / 150_000 * sim.getSimSpeed() * SimulationEngine.MS_PER_SIM_TICK);
 //        System.out.println(movement.length());
 
         // Prevent overshooting
@@ -224,16 +225,20 @@ public class NetworkFrameEntity extends Entity implements IEntityWithComplexSpaw
         poseStack.scale(0.025f, 0.025f, 0.025f);
 
         poseStack.pushPose();
+
         poseStack.scale(0.5f, 0.5f, 0.5f);
 
-        if (currentState == State.INTERFERED) {
-            renderer.renderBackgroundQuadWithColor(100, 20, 0xFF0000);
-        }
+        int textColor = currentState == State.INTERFERED ? 0xFFFF0000 : renderer.getTextColorFromAlpha();
+        renderer.drawString(RenderUtil.Align.CENTER, "UDP @ " + (from.getIP() == null ? "?" : from.getIP().toString()) + " -> " + (to.getIP() == null ? "?" : to.getIP().toString()) + " TTL: " + ttl, textColor, 0, -15);
 
-        int textColor = currentState == State.INTERFERED ? 0xFFFF0000 : RenderUtil.getTextColorFromAlpha(alpha);
-        renderer.drawString(RenderUtil.Align.CENTER, "UDP @ " + from.getIP().toString() + " -> " + to.getIP().toString() + " TTL: " + ttl, textColor, 0, -15);
-
+        var size = packet.getRenderSize(renderer.getFont());
         poseStack.popPose();
+
+        if (currentState == State.INTERFERED) {
+            renderer.renderBackgroundQuadWithColor(size.x + 8, size.y, RenderUtil.Color.RED.value);
+        } else {
+            renderer.renderBackgroundQuad(size.x + 8, size.y);
+        }
 
         packet.render(renderer);
 

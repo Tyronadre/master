@@ -67,13 +67,14 @@ public class AODVRREPPacket extends NetworkPacket implements IProtocolPaket {
 
     @Override
     public Vec2 getRenderSize(Font font) {
+        var superSize = super.getRenderSize(font);
         var width = font.width("Lifetime " + lifetime)/2;
 
-        return new Vec2(width, 24);
+        return new Vec2(Math.max(superSize.x, width), superSize.y + 24);
     }
 
     @Override
     public INetworkPacket copy() {
-        return new AODVRREPPacket(getOriginatorIP(), getDestinationIP(), repairFlag, ackRequiredFlag, hopCount, destSeqNumber, lifetime);
+        return new AODVRREPPacket(getId(), getOriginatorIP(), getDestinationIP(), repairFlag, ackRequiredFlag, hopCount, destSeqNumber, lifetime);
     }
 }

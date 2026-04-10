@@ -2,7 +2,6 @@ package de.tyro.mcnetwork.network.payload.networkPacket;
 
 
 import de.tyro.mcnetwork.network.BetterByteBuf;
-import de.tyro.mcnetwork.routing.IP;
 import de.tyro.mcnetwork.routing.SimulationEngine;
 import de.tyro.mcnetwork.routing.packet.aodv.AODVRERRPacket;
 import de.tyro.mcnetwork.routing.packet.aodv.AODVRREPPacket;
@@ -18,21 +17,10 @@ import de.tyro.mcnetwork.routing.packet.dsr.DSRSourceRoute;
 import de.tyro.mcnetwork.routing.packet.lar.LARRouteError;
 import de.tyro.mcnetwork.routing.packet.lar.LARRouteReply;
 import de.tyro.mcnetwork.routing.packet.lar.LARRouteRequest;
-import de.tyro.mcnetwork.routing.packet.olsr.HelloPacket;
-import de.tyro.mcnetwork.routing.packet.olsr.TCPacket;
+import de.tyro.mcnetwork.routing.packet.olsr.OLSRPacket;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.codec.StreamDecoder;
-import net.minecraft.network.codec.StreamEncoder;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
-import org.apache.logging.log4j.core.pattern.FormattingInfo;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.function.IntFunction;
-import java.util.stream.Collectors;
 
 import static de.tyro.mcnetwork.network.payload.networkPacket.NetworkPacketCodecRegistry.register;
 
@@ -157,12 +145,12 @@ public class NetworkPacketCodecGenerator {
                         destinationIP,
                         buf.readInt(),
                         buf.readIP(),
-                        buf.readIPList()
+                        buf.readIPCollection(ArrayList::new)
                 ),
                 (buf, packet) -> buf
                         .writeInt(packet.getIdentificationValue())
                         .writeIP(packet.getTargetAddress())
-                        .writeIPList(new ArrayList<>(packet.getAddresses())
+                        .writeIPCollection(new ArrayList<>(packet.getAddresses())
                         ));
 
         register(DSRRouteReply.class,
@@ -171,11 +159,11 @@ public class NetworkPacketCodecGenerator {
                         originatorIP,
                         destinationIP,
                         buf.readBoolean(),
-                        buf.readIPList()
+                        buf.readIPCollection(ArrayList::new)
                 ),
                 (buf, packet) -> buf
                         .writeBoolean(packet.getLastHopExternalFlag())
-                        .writeIPList(new ArrayList<>(packet.getAddresses())
+                        .writeIPCollection(new ArrayList<>(packet.getAddresses())
                         ));
 
         register(DSRSourceRoute.class,
@@ -186,14 +174,14 @@ public class NetworkPacketCodecGenerator {
                         buf.readBoolean(),
                         buf.readBoolean(),
                         buf.readInt(),
-                        buf.readIPList(),
+                        buf.readIPCollection(ArrayList::new),
                         buf.readPacket()
                 ),
                 (buf, packet) -> buf
                         .writeBoolean(packet.getFirstHopExternalFlag())
                         .writeBoolean(packet.getLastHopExternalFlag())
                         .writeInt(packet.getSegLeft())
-                        .writeIPList(packet.getAddresses())
+                        .writeIPCollection(packet.getAddresses())
                         .writePacket(packet.getPacket()));
 
         register(LARRouteError.class,
@@ -237,33 +225,8 @@ public class NetworkPacketCodecGenerator {
                         .writeVec3R(packet.destPos)
         );
 
-        register(HelloPacket.class,
-                (buf, uuid, originatorIP, destinationIP) -> new HelloPacket(
-                        uuid,
-                        originatorIP,
-                        new HashSet<>(buf.readIPList()),
-                        buf.readInt()
-                ),
-                (buf, packet) -> buf
-                        .writeIPList(new ArrayList<>(packet.neighbors))
-                        .writeInt(packet.willingness)
-        );
 
-        register(TCPacket.class,
-                (buf, uuid, originatorIP, destinationIP) -> new TCPacket(
-                        uuid,
-                        originatorIP,
-                        buf.readMap(
-                                buffer -> BetterByteBuf.IP_STREAM_CODEC.decode(buf),
-                                (StreamDecoder<FriendlyByteBuf, Set<IP>>) buffer -> new HashSet<>(buffer.readCollection(HashSet::new, buffer1 -> BetterByteBuf.IP_STREAM_CODEC.decode(buffer1)))
-                        )
-                ),
-                (buf, packet) ->
-                        buf.writeMap(packet.advertisedLinks,
-                                (buffer, value) -> BetterByteBuf.IP_STREAM_CODEC.encode(buffer, value),
-                                (buffer, value) -> buffer.writeCollection(value, (buffer1, value1) -> BetterByteBuf.IP_STREAM_CODEC.encode(buffer1, value1))
-                        )
-        );
+        register(OLSRPacket.class, OLSRPacket.STREAM_CODEC);
 
     }
 

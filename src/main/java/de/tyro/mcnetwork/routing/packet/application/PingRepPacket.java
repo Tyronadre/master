@@ -61,6 +61,6 @@ public class PingRepPacket extends NetworkPacket implements IApplicationPacket {
 
     @Override
     public INetworkPacket copy() {
-        return new PingRepPacket(getOriginatorIP(), getDestinationIP(), sendTime, returnStartTime, replyUUID);
+        return new PingRepPacket(getId(), getOriginatorIP(), getDestinationIP(), sendTime, returnStartTime, replyUUID);
     }
 }

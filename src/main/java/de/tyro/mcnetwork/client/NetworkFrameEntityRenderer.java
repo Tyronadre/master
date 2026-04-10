@@ -2,6 +2,9 @@ package de.tyro.mcnetwork.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.tyro.mcnetwork.entity.NetworkFrameEntity;
+import de.tyro.mcnetwork.routing.packet.IApplicationPacket;
+import de.tyro.mcnetwork.routing.packet.IProtocolPaket;
+import de.tyro.mcnetwork.routing.packet.application.TraceRoutePacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -40,6 +43,8 @@ public class NetworkFrameEntityRenderer extends EntityRenderer<NetworkFrameEntit
 
         float alpha = RenderUtil.computeFadeAlpha(Math.sqrt(distanceSq), FADE_START_DISTANCE, MAX_DISTANCE);
         if (alpha <= 0.05f) return;
+
+        if (entity.getPacket() instanceof IProtocolPaket) return;
 
         entity.render(poseStack, bufferSource, packedLight, alpha);
     }

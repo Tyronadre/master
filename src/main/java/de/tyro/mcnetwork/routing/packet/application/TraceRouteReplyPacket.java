@@ -67,7 +67,7 @@ public class TraceRouteReplyPacket extends NetworkPacket implements IApplication
 
     @Override
     public INetworkPacket copy() {
-        return new TraceRouteReplyPacket(id, getOriginatorIP(), getDestinationIP(), sendTime, returnStartTime, replyUUID, hopCount);
+        return new TraceRouteReplyPacket(getId(), getOriginatorIP(), getDestinationIP(), sendTime, returnStartTime, replyUUID, hopCount);
     }
 
 }

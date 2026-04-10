@@ -92,6 +92,6 @@ public class AODVRREQPacket extends NetworkPacket implements IProtocolPaket {
 
     @Override
     public INetworkPacket copy() {
-        return new AODVRREQPacket(getOriginatorIP(), getDestinationIP(), joinFlag, repairFlag, gratuitousFlag, destinationOnlyFlag, unknownSeqFlag, hopCount, rreqId, destinationSequenceNumber, originatorSequenceNumber);
+        return new AODVRREQPacket(getId(), getOriginatorIP(), getDestinationIP(), joinFlag, repairFlag, gratuitousFlag, destinationOnlyFlag, unknownSeqFlag, hopCount, rreqId, destinationSequenceNumber, originatorSequenceNumber);
     }
 }

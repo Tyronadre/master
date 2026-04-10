@@ -902,7 +902,6 @@ public class AODVProtocol implements IRoutingProtocol, IHudRenderer {
         renderer.drawStringWithAlphaColor(RenderUtil.Align.RIGHT, "TickActions=" + tickActions.size(), width, y);
     }
 
-
     @Override
     public void simTick() {
         long now = simulator.getSimTime();

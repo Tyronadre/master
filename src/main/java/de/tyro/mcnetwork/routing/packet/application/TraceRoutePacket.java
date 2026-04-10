@@ -50,7 +50,7 @@ public class TraceRoutePacket extends NetworkPacket implements IApplicationPacke
 
     @Override
     public INetworkPacket copy() {
-        return new TraceRoutePacket(id, getOriginatorIP(), getDestinationIP(), sendStartTime);
+        return new TraceRoutePacket(getId(), getOriginatorIP(), getDestinationIP(), sendStartTime);
     }
 
 }

@@ -66,23 +66,15 @@ public abstract class NetworkPacket implements INetworkPacket {
         var poseStack = renderer.getPoseStack();
 
         //Calculate the sizes
-        var headerSize = getHeaderSize(font);
-        var contentSize = getRenderSize(font);
-
-        var size = new Vec2(MathUtil.max(headerSize.x, contentSize.x, 70), headerSize.y + contentSize.y + 2);
-
-        // Background
-        renderer.renderBackgroundQuad(size.x + 8, size.y);
+        var size = getRenderSize(font);
 
         // Slight Z offset to avoid z-fighting
         poseStack.pushPose();
         poseStack.translate(0, 0, -0.01f);
 
         renderHeader(renderer, poseStack, size.x);
-        renderer.renderHLineWithAlphaColor(size.x, headerSize.y);
-        renderer.renderHLineWithAlphaColor(size.x, headerSize.y + 0.5f);
 
-        poseStack.translate(0, headerSize.y + 2, 0);
+        poseStack.translate(0, 11, 0);
 
         renderPacketContent(renderer, poseStack,  size.x);
 
@@ -90,7 +82,9 @@ public abstract class NetworkPacket implements INetworkPacket {
     }
 
     public Vec2 getRenderSize(Font font) {
-        return Vec2.ZERO;
+        var headerSize = getHeaderSize(font);
+
+        return new Vec2(MathUtil.max(headerSize.x, 70), headerSize.y + 2);
     }
 
     protected void renderPacketContent(RenderUtil renderer, PoseStack poseStack, float width) {
@@ -99,11 +93,10 @@ public abstract class NetworkPacket implements INetworkPacket {
 
     protected Vec2 getHeaderSize(Font font) {
         String line = getClass().getSimpleName() + " " + id.toString().substring(0, 8);
-        String line2 = originatorIP + " -> " + destinationIP;
 
-        var width = Math.max(font.width(line), font.width(line2));
+        var width = MathUtil.max(font.width(line), font.width(originatorIP.toString())* 2 + font.width(" -> "), font.width(destinationIP.toString()) * 2 + font.width(" -> ")) * 0.5f;
 
-        return new Vec2(width, font.lineHeight * 2).scale(0.5f);
+        return new Vec2(width, font.lineHeight * 2);
     }
 
     protected void renderHeader(RenderUtil renderer, PoseStack poseStack, float width) {
@@ -116,6 +109,9 @@ public abstract class NetworkPacket implements INetworkPacket {
         renderer.drawStringWithAlphaColor(RenderUtil.Align.LEFT, originatorIP == null ? "?" : originatorIP.toString(), width, 8);
         renderer.drawStringWithAlphaColor(RenderUtil.Align.CENTER, "->", width, 8);
         renderer.drawStringWithAlphaColor(RenderUtil.Align.RIGHT, destinationIP == null ? "?" : destinationIP.toString(), width, 8);
+
+        renderer.renderHLineWithAlphaColor(width, 18);
+        renderer.renderHLineWithAlphaColor(width, 18.5f);
 
         poseStack.popPose();
     }

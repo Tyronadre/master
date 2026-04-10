@@ -91,4 +91,8 @@ public class IP implements INBTSerializable<CompoundTag> {
     public void deserializeNBT(HolderLookup.@NotNull Provider provider, @NotNull CompoundTag nbt) {
         for (int i = 0; i < 4; i++) address[i] = nbt.getInt(String.valueOf(i));
     }
+
+    public int compareTo(IP neighborAddress) {
+        return hashCode() - neighborAddress.hashCode();
+    }
 }

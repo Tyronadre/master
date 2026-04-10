@@ -16,6 +16,6 @@ public class DSRRouteError extends NetworkPacket implements IProtocolPaket {
 
     @Override
     public INetworkPacket copy() {
-        return null;
+        return new DSRRouteError(this.getOriginatorIP(), this.getDestinationIP());
     }
 }

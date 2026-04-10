@@ -32,6 +32,7 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 
+import java.util.Collection;
 import java.util.OptionalDouble;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -41,6 +42,15 @@ import static net.minecraft.client.renderer.RenderStateShard.*;
 public class RenderUtil {
 
     private float alpha;
+    private float width;
+
+    public float getWidth() {
+        return width;
+    }
+
+    public void setWidth(float width) {
+        this.width = width;
+    }
 
     public PoseStack getPoseStack() {
         return poseStack;
@@ -59,7 +69,7 @@ public class RenderUtil {
         var model = mc.getItemRenderer().getModel(stack, null, null, 0);
 
         poseStack.pushPose();
-        poseStack.translate(x + scale/2, y + scale/2, 0);
+        poseStack.translate(x + scale / 2, y + scale / 2, 0);
 
         try {
             poseStack.scale(scale, -scale, 0);
@@ -98,11 +108,13 @@ public class RenderUtil {
     }
 
     public enum Color {
-        BLACK(0xFFFFFF),
-        RED(0xFF0000),
+        BLACK(0xFFFFFFFF),
+        RED(0xFFFF0000),
         GREEN(0xFF00FF00),
-        BLUE(0x0000FF),
-        MAGENTA(0xf400f4);
+        BLUE(0xFF0000FF),
+        MAGENTA(0xFFf400f4),
+        WHITE(0xFFFFFFFF),
+        YELLOW(0xFFFFFF00);
 
         public final int value;
 
@@ -137,7 +149,7 @@ public class RenderUtil {
     }
 
     public void renderHLineWithAlphaColor(float width, float y) {
-        var color = getTextColorFromAlpha(alpha);
+        var color = getTextColorFromAlpha();
 
         VertexConsumer vc = buffer.getBuffer(RenderType.debugLineStrip(1));
         Matrix4f mat = poseStack.last().pose();
@@ -273,7 +285,7 @@ public class RenderUtil {
         drawLine(x1 - offset, y1, x2 + offset, y1, color, width);
     }
 
-    public static int getTextColorFromAlpha(float alpha) {
+    public int getTextColorFromAlpha() {
         return ((int) (alpha * 255) << 24) | 0xFFFFFF;
     }
 
@@ -289,10 +301,11 @@ public class RenderUtil {
 
     /**
      * Draws a string
-     * @param line the string
-     * @param color the color
-     * @param x the x origin where the string will be drawn (left side of the string)
-     * @param y the y origin where the string will be drawn (top side of the string)
+     *
+     * @param line   the string
+     * @param color  the color
+     * @param x      the x origin where the string will be drawn (left side of the string)
+     * @param y      the y origin where the string will be drawn (top side of the string)
      * @param shadow if the string should have a shadow
      */
     public void drawString(String line, int color, float x, float y, boolean shadow) {
@@ -301,11 +314,12 @@ public class RenderUtil {
 
     /**
      * Draws an aligned string with shadow
+     *
      * @param align where it should be aligned
-     * @param line the string
+     * @param line  the string
      * @param color the color
      * @param width the width which it will be aligned to
-     * @param y the y coordinate (height)
+     * @param y     the y coordinate (height)
      */
     public void drawStringWithShadow(Align align, String line, int color, float width, float y) {
         drawString(align, line, color, width, y, true);
@@ -313,11 +327,12 @@ public class RenderUtil {
 
     /**
      * Draws an aligned string without shadow
+     *
      * @param align where it should be aligned
-     * @param line the string
+     * @param line  the string
      * @param color the color
      * @param width the width which it will be aligned to
-     * @param y the y coordinate (height)
+     * @param y     the y coordinate (height)
      */
     public void drawString(Align align, String line, int color, float width, float y) {
         drawString(align, line, color, width, y, false);
@@ -325,11 +340,12 @@ public class RenderUtil {
 
     /**
      * Draws an aligned string
-     * @param align where it should be aligned
-     * @param line the string
-     * @param color the color
-     * @param width the width which it will be aligned to
-     * @param y the y coordinate (height)
+     *
+     * @param align  where it should be aligned
+     * @param line   the string
+     * @param color  the color
+     * @param width  the width which it will be aligned to
+     * @param y      the y coordinate (height)
      * @param shadow if the string should have a shadow
      */
     public void drawString(Align align, String line, int color, float width, float y, boolean shadow) {
@@ -346,13 +362,47 @@ public class RenderUtil {
 
     /**
      * Draws an aligned string without shadow with a grayscale color according to the current alpha value of the renderer
+     *
      * @param align where it should be aligned
-     * @param line the string
+     * @param line  the string
      * @param width the width which it will be aligned to
-     * @param y the y coordinate (height)
+     * @param y     the y coordinate (height)
      */
     public void drawStringWithAlphaColor(Align align, String line, float width, float y) {
-        drawString(align, line, getTextColorFromAlpha(alpha), width, y, false);
+        drawString(align, line, getTextColorFromAlpha(), width, y, false);
+    }
+
+    /**
+     * Draws each element of the collection as a string, up to maxWidth elements, aligned and colored.
+     * If there are more elements, draws "..." to indicate truncation.
+     *
+     * @param align      the alignment for each string
+     * @param collection the collection of elements to draw
+     * @param maxWidth   the maximum number of elements to draw
+     * @param color      the color for the strings
+     * @param width      the width for alignment
+     * @param y          the starting y coordinate
+     */
+    public <T extends Collection<?>> void drawCollectionAsString(Align align, T collection, int maxWidth, int color, float width, float y) {
+        var iterator = collection.iterator();
+        int currentWidth = 0;
+        StringBuilder string = new StringBuilder("[");
+        while (iterator.hasNext()) {
+            var element = iterator.next();
+            String str = element.toString();
+            if (!iterator.hasNext()) {
+                if (currentWidth + font.width(str) + font.width("]") > maxWidth) string.append(", ...");
+                else string.append(str);
+            } else {
+                if (font.width(str) + currentWidth + font.width(", ...")>= maxWidth) {
+                    string.append(", ...");
+                    break;
+                } else string.append(str).append(", ");
+                currentWidth += font.width(str + ", ");
+            }
+        }
+        string.append("]");
+        drawString(align, string.toString(), color, width, y, false);
     }
 
 

@@ -25,7 +25,8 @@ public class PingCommand extends Command {
             return;
         }
 
-        var destIPString = args[0];
+        var destIPString = getOrThrow(String.class, 0);
+        var timeout = getOrDefault(Integer.class, 1, 1000);
 
         if (!IP.validateIp(destIPString)) {
             println("invalid ip address: " + destIPString);
@@ -46,7 +47,7 @@ public class PingCommand extends Command {
             // Warten auf Echo
             PingRepPacket rep;
             try {
-                 rep = terminal.getNode().getApplicationBus().waitFor(PingRepPacket.class, it -> it.replyUUID.equals(ping.id), 5000);
+                 rep = terminal.getNode().getApplicationBus().waitFor(PingRepPacket.class, it -> it.replyUUID.equals(ping.id), 1000);
             } catch (DestinationUnreachableException due) {
                 println("Destination unreachable");
                 break;
@@ -57,5 +58,7 @@ public class PingCommand extends Command {
             else println("Request timed out");
         }
     }
+
+
 }
 

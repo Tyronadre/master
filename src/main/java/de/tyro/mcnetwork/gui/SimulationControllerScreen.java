@@ -21,6 +21,7 @@ import java.util.function.Function;
 
 public class SimulationControllerScreen extends AbstractContainerScreen<SimulationControllerMenu> {
     Player player;
+    public Button receiveWindowToggleButton;
     public Button pauseButton;
     public LogSlider simulationSpeedSlider;
     public LogSlider frameSpeedSlider;
@@ -43,6 +44,12 @@ public class SimulationControllerScreen extends AbstractContainerScreen<Simulati
         int centerX = this.leftPos + this.imageWidth / 2;
         int y = this.topPos + 30;
 
+        receiveWindowToggleButton = this.addRenderableWidget(Button.builder(
+                getReceiveWindowLabel(sim),
+                btn -> PacketDistributor.sendToServer(SimulationEngineSettingsPayload.Builder(sim).receiveWindowActive(!sim.receiveWindowActive()).build()))
+                .bounds(centerX-40, y-25, 80, 20)
+                .build());
+
         pauseButton = this.addRenderableWidget(Button.builder(
                         getPauseLabel(sim),
                         btn -> PacketDistributor.sendToServer(SimulationEngineSettingsPayload.Builder(sim).paused(!sim.isPaused()).build()))
@@ -62,13 +69,22 @@ public class SimulationControllerScreen extends AbstractContainerScreen<Simulati
                 (value) -> PacketDistributor.sendToServer(SimulationEngineSettingsPayload.Builder(sim).simSpeed(value).build())
         ));
 
-        commRadiusEditBox = this.addRenderableWidget(new EditBox(font, centerX - 70, y + 90, 140, 20, Component.literal("Reichweite")));
+        commRadiusEditBox = this.addRenderableWidget(new EditBox(font, centerX - 70, y + 80, 140, 20, Component.literal("Reichweite")));
         commRadiusEditBox.setResponder((value) -> {
             try {
                 PacketDistributor.sendToServer(SimulationEngineSettingsPayload.Builder(sim).commRadius(Double.parseDouble(value)).build());
             } catch (Exception ignored) {
             }
         });
+
+
+        var reloadQuestButton = this.addRenderableWidget(Button.builder(
+                        Component.literal("Reload Quests"),
+                        btn -> TopicManager.getInstance().reloadTopics())
+                .bounds(centerX - 70,
+                        y + 100, 140, 20)
+                .build()
+        );
 
         // Protocol buttons
         String[] protocols = {"AODV", "DSR", "LAR", "OLSR"};
@@ -88,15 +104,10 @@ public class SimulationControllerScreen extends AbstractContainerScreen<Simulati
                     .build());
         }
 
-        var reloadQuestButton = this.addRenderableWidget(Button.builder(
-                Component.literal("Reload Quests"),
-                btn -> TopicManager.getInstance().reloadTopics())
-                .bounds(centerX - 70,
-                        y + 100, 140, 20)
-                .build()
-        );
 
     }
+
+
 
     @Override
     protected void containerTick() {
@@ -126,6 +137,10 @@ public class SimulationControllerScreen extends AbstractContainerScreen<Simulati
 
     private Component getPauseLabel(SimulationEngine sim) {
         return Component.literal(sim.isPaused() ? "Resume" : "Pause");
+    }
+
+    public Component getReceiveWindowLabel(SimulationEngine sim) {
+        return Component.literal(sim.receiveWindowActive() ? "Collision Active": "Ignore Collisions");
     }
 
     // --------------------------------------------------

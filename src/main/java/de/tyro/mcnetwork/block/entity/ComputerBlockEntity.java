@@ -14,7 +14,7 @@ import de.tyro.mcnetwork.routing.packet.application.TraceRoutePacket;
 import de.tyro.mcnetwork.routing.packet.application.TraceRouteReplyPacket;
 import de.tyro.mcnetwork.routing.protocol.AODVProtocol;
 import de.tyro.mcnetwork.routing.protocol.IRoutingProtocol;
-import de.tyro.mcnetwork.routing.protocol.LARProtocol;
+import de.tyro.mcnetwork.routing.protocol.OLSRProtocol;
 import de.tyro.mcnetwork.terminal.Terminal;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
@@ -34,7 +34,7 @@ import java.util.List;
 
 public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
     //server
-    private IP ipAddress = IP.getNextFreeIP();
+    private final IP ipAddress = IP.getNextFreeIP();
     private IRoutingProtocol routingProtocol;
 
     //client
@@ -52,7 +52,7 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
 
         terminal = new Terminal(this);
         applicationMessageBus = new ApplicationMessageBus(this);
-        routingProtocol = new AODVProtocol(this);
+        routingProtocol = new OLSRProtocol(this);
         SimulationEngine.getInstance(level.isClientSide).registerNode(this);
         receiveWindow = new ReceiveWindow(5, 2);
     }
@@ -150,8 +150,7 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
             // TTL expired at this node, send TraceRouteReply
             var sim = SimulationEngine.getInstance(level.isClientSide);
             routingProtocol.send(new TraceRouteReplyPacket(getIP(), traceRoute.getOriginatorIP(), (int) (sim.getSimTime() - traceRoute.sendStartTime), sim.getSimTime(), traceRoute.id, 0), Integer.MAX_VALUE);
-        }
-        else if (frame.getTtl() > 0 && !packet.getDestinationIP().equals(this.ipAddress))
+        } else if (frame.getTtl() > 0 && !packet.getDestinationIP().equals(this.ipAddress))
             routingProtocol.send(packet, frame.getTtl() - 1);
     }
 
@@ -206,7 +205,10 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
         }
 
         public boolean tryAccept() {
-            var currentTick = SimulationEngine.getInstance(level.isClientSide).getSimTime();
+            var sim = SimulationEngine.getInstance(level.isClientSide);
+            if (!sim.receiveWindowActive()) return true;
+
+            var currentTick = sim.getSimTime();
 
             if (windowStartTick == -1 || currentTick - windowStartTick >= windowSizeMs) {
                 windowStartTick = currentTick;

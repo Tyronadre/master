@@ -4,8 +4,10 @@ import de.tyro.mcnetwork.entity.NetworkFrameEntity;
 import de.tyro.mcnetwork.network.payload.networkPacket.NetworkPacketCodecRegistry;
 import de.tyro.mcnetwork.routing.packet.IApplicationPacket;
 import de.tyro.mcnetwork.routing.packet.INetworkPacket;
+import net.minecraft.world.entity.Entity;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,6 +25,7 @@ public class SimulationEngine {
 
     private static final Logger log = LogManager.getLogger(SimulationEngine.class);
     private final boolean isClientSide;
+    private boolean receiveWindowActive;
 
     public static SimulationEngine getInstance(Boolean clientSide) {
         return clientSide ? CLIENT_INSTANCE : SERVER_INSTANCE;
@@ -70,6 +73,11 @@ public class SimulationEngine {
     public void onServerTickEvent(ServerTickEvent.Pre event) {
         if (isClientSide) return;
         tick();
+    }
+
+    @SubscribeEvent
+    public void onServerStop(ServerStoppingEvent event) {
+        new ArrayList<>(networkFrames).forEach(Entity::discard);
     }
 
     private void tick() {
@@ -157,7 +165,7 @@ public class SimulationEngine {
             return;
         }
 //        PacketDistributor.sendToSelf(new NewNetworkFramePayload(from.getBlockPos(), to.getBlockPos(), packet, ttl));
-        from.getLevel().addFreshEntity(new NetworkFrameEntity(from.getLevel(), from, to, ttl, packet));
+        from.getLevel().addFreshEntity(new NetworkFrameEntity(from.getLevel(), from, to, ttl, packet.copy()));
     }
 
     /**
@@ -214,5 +222,13 @@ public class SimulationEngine {
 
     public void removeNetworkFrame(NetworkFrameEntity networkFrameEntity) {
         networkFrames.remove(networkFrameEntity);
+    }
+
+    public boolean receiveWindowActive() {
+        return receiveWindowActive;
+    }
+
+    public void setReceiveWindowActive(boolean active) {
+        this.receiveWindowActive = active;
     }
 }

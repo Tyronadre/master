@@ -9,11 +9,13 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.UUID;
+import java.util.function.IntFunction;
 
 public class BetterByteBuf extends FriendlyByteBuf {
     public static StreamCodec<FriendlyByteBuf, IP> IP_STREAM_CODEC = new IPStreamCodec();
+
 
     private static class IPStreamCodec implements StreamCodec<FriendlyByteBuf, IP> {
 
@@ -70,14 +72,14 @@ public class BetterByteBuf extends FriendlyByteBuf {
         return this;
     }
 
-    public BetterByteBuf writeIPList(List<IP> ipList) {
-        writeCollection(ipList, (buffer, value) -> IP_STREAM_CODEC.encode(buffer, value));
+    public BetterByteBuf writeIPCollection(Collection<IP> ipCollection) {
+        writeCollection(ipCollection, (buffer, value) -> IP_STREAM_CODEC.encode(buffer, value));
         return this;
     }
 
 
-    public List<IP> readIPList() {
-        return readList(BetterByteBuf::readIP);
+    public <C extends Collection<IP>> C readIPCollection(IntFunction<C> collectionSupplier) {
+        return readCollection(collectionSupplier, BetterByteBuf::readIP);
     }
 
     @Override
