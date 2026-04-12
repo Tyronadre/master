@@ -182,7 +182,15 @@ public class NetworkPacketCodecGenerator {
                         .writeBoolean(packet.getLastHopExternalFlag())
                         .writeInt(packet.getSegLeft())
                         .writeIPCollection(packet.getAddresses())
-                        .writePacket(packet.getPacket()));
+                        .writePacket(packet.getPacket()),
+                (packet, onClientSide) -> {
+                    if (onClientSide) {
+                        var innerPacket = packet.getPacket();
+                        if (innerPacket instanceof PingPacket || innerPacket instanceof PingRepPacket) {
+                            NetworkPacketCodecRegistry.handlerOf(innerPacket.getClass()).handle(innerPacket, onClientSide);
+                        }
+                    }
+                });
 
         register(LARRouteError.class,
                 (buf, uuid, originatorIP, destinationIP) -> new LARRouteError(

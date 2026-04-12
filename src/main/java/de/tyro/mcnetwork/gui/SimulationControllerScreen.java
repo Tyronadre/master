@@ -96,10 +96,10 @@ public class SimulationControllerScreen extends AbstractContainerScreen<Simulati
         int startX = centerX - (protocols.length * (buttonWidth + spacing)) / 2;
 
         for (int i = 0; i < protocols.length; i++) {
-            final String protocol = protocols[i].toLowerCase();
+            final String protocol = protocols[i];
             protocolButtons[i] = this.addRenderableWidget(Button.builder(
                     Component.literal(protocols[i]),
-                    btn -> PacketDistributor.sendToServer(new SetProtocolPayload(protocol)))
+                    btn -> PacketDistributor.sendToServer(new SetProtocolPayload(protocol + "Protocol", null)))
                     .bounds(startX + i * (buttonWidth + spacing), protocolButtonY, buttonWidth, 20)
                     .build());
         }

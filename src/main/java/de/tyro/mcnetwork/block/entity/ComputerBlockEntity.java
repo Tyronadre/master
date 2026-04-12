@@ -2,7 +2,7 @@ package de.tyro.mcnetwork.block.entity;
 
 import de.tyro.mcnetwork.entity.NetworkFrameEntity;
 import de.tyro.mcnetwork.network.payload.NewNetworkPacketPayload;
-import de.tyro.mcnetwork.network.payload.RoutingProtocolSettingsPayload;
+import de.tyro.mcnetwork.network.payload.SetProtocolPayload;
 import de.tyro.mcnetwork.routing.ApplicationMessageBus;
 import de.tyro.mcnetwork.routing.INetworkNode;
 import de.tyro.mcnetwork.routing.IP;
@@ -13,7 +13,6 @@ import de.tyro.mcnetwork.routing.packet.application.PingPacket;
 import de.tyro.mcnetwork.routing.packet.application.PingRepPacket;
 import de.tyro.mcnetwork.routing.packet.application.TraceRoutePacket;
 import de.tyro.mcnetwork.routing.packet.application.TraceRouteReplyPacket;
-import de.tyro.mcnetwork.routing.protocol.AODVProtocol;
 import de.tyro.mcnetwork.routing.protocol.IRoutingProtocol;
 import de.tyro.mcnetwork.routing.protocol.OLSRProtocol;
 import de.tyro.mcnetwork.terminal.Terminal;
@@ -190,10 +189,7 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
 
     @Override
     public void setProtocol(IRoutingProtocol routingProtocol) {
-        if (level.isClientSide) {
-            PacketDistributor.sendToServer(new RoutingProtocolSettingsPayload(routingProtocol.getClass().getSimpleName(), getBlockPos()));
-            this.routingProtocol = routingProtocol;
-        }
+        this.routingProtocol = routingProtocol;
     }
 
     @Override
