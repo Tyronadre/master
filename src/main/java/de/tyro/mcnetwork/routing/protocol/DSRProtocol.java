@@ -9,6 +9,8 @@ import de.tyro.mcnetwork.routing.SimulationEngine;
 import de.tyro.mcnetwork.routing.packet.IApplicationPacket;
 import de.tyro.mcnetwork.routing.packet.INetworkPacket;
 import de.tyro.mcnetwork.routing.packet.IProtocolPaket;
+import de.tyro.mcnetwork.routing.packet.application.DestinationUnreachablePacket;
+import de.tyro.mcnetwork.routing.packet.application.TraceRoutePacket;
 import de.tyro.mcnetwork.routing.packet.dsr.DSRRouteError;
 import de.tyro.mcnetwork.routing.packet.dsr.DSRRouteReply;
 import de.tyro.mcnetwork.routing.packet.dsr.DSRRouteRequest;
@@ -25,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -32,26 +35,27 @@ import java.util.PriorityQueue;
 import java.util.Random;
 
 public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
+    private static final Logger log = LoggerFactory.getLogger(DSRProtocol.class);
 
     // CONSTANTS
-    private static final short DISCOVERY_HOP_LIMIT = 255;   //hops
-    private static final short BROADCAST_JITTER = 10;       //ms
-    private static final short ROUTE_CACHE_TIMEOUT = 300;   //sec
-    private static final short SEND_BUFFER_TIMEOUT = 30;    //sec
-    private static final short REQUEST_TABLE_SIZE = 64;     //nodes
-    private static final short REQUEST_TABLE_IDS = 16;      //identifiers
-    private static final short MAX_REQUEST_REXMT = 16;      //retransmissions
-    private static final short MAX_REQUEST_PERIOD = 10;     //sec
-    private static final short REQUEST_PERIOD = 500;        //ms
-    private static final short NON_PROP_REQUEST_TIMEOUT = 30; //ms
-    private static final short REXMT_BUFFER_SIZE = 50;      //packets
-    private static final short MAINT_HOLDOFF_TIME = 250;    //ms
-    private static final short MAX_MAINT_REXMT = 2;         //retransmissions
-    private static final short TRY_PASSIV_ACKS = 1;         //attempts
-    private static final short PASSIVE_ACK_TIMEOUT = 100;   //ms
-    private static final short GRAT_REPLY_HOLDOFF = 1;      //sec
-    private static final short MAX_SALVAGE_COUNT = 15;      //salvages
-    private static final Logger log = LoggerFactory.getLogger(DSRProtocol.class);
+    private final short DISCOVERY_HOP_LIMIT = 255;   //hops
+    private short BROADCAST_JITTER = 10;       //ms
+    private final short ROUTE_CACHE_TIMEOUT = 300;   //sec
+    private final short SEND_BUFFER_TIMEOUT = 30;    //sec
+    private short REQUEST_TABLE_SIZE = 64;     //nodes
+    private short REQUEST_TABLE_IDS = 16;      //identifiers
+    private final short MAX_REQUEST_REXMT = 16;      //retransmissions
+    private short MAX_REQUEST_PERIOD = 10;     //sec
+    private short REQUEST_PERIOD = 500;        //ms
+    private final short NON_PROP_REQUEST_TIMEOUT = 30; //ms
+    private final short REXMT_BUFFER_SIZE = 50;      //packets
+    private final short MAINT_HOLDOFF_TIME = 250;    //ms
+    private final short MAX_MAINT_REXMT = 2;         //retransmissions
+    private final short TRY_PASSIV_ACKS = 1;         //attempts
+    private final short PASSIVE_ACK_TIMEOUT = 100;   //ms
+    private final short GRAT_REPLY_HOLDOFF = 1;      //sec
+    private final short MAX_SALVAGE_COUNT = 15;      //salvages
+    private double RENDER_SCALE = 1;
 
     private final RouteRequestTable routeRequestTable;
     private final RouteCache routeCache;
@@ -152,8 +156,15 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
                 if (nextAddress == null) {
                     if (route.getPacket() instanceof IApplicationPacket ap) getNode().onApplicationPacketReceived(ap);
                     else if (route.getPacket() instanceof IProtocolPaket pp) onProtocolPacketReceived(pp);
+                } else if (route.getPacket() instanceof TraceRoutePacket tp && packet.getNetworkFrame().getTtl() == 1) {
+                    getNode().onApplicationPacketReceived(tp);
                 } else {
-                    sim.unicast(getNode(), sim.getNode(nextAddress), packet, packet.getNetworkFrame().getTtl() - 1);
+                    if (!createRERR(route, nextAddress))
+                        sim.unicast(getNode(), sim.getNode(nextAddress), packet, packet.getNetworkFrame().getTtl() - 1);
+                }
+
+                if (route.getPacket() instanceof DSRRouteError rerr) {
+                    handleRERR(rerr);
                 }
 
                 routeCache.addRoute(route.getAddresses());
@@ -170,7 +181,113 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
         }
     }
 
+    private boolean createRERR(DSRSourceRoute erroringRoute, IP nextAddress) {
+        if (sim.getNeighbors(node).stream().anyMatch(it -> it.getIP().equals(nextAddress))) return false;
+
+        routeCache.removeLink(routeCache.getLink(node.getIP(), nextAddress));
+        // 8.3.4.  Originating a Route Error
+        //
+        //   When a node is unable to verify reachability of a next-hop node after
+        //   reaching a maximum number of retransmission attempts, it SHOULD send
+        //   a Route Error to the IP Source Address of the packet.  When sending a
+        //   Route Error for a packet containing either a Route Error option or an
+        //   Acknowledgement option, a node SHOULD add these existing options to
+        //   its Route Error, subject to the limit described below.
+        //
+        //   A node transmitting a Route Error MUST perform the following steps:
+        //
+        //   -  Create an IP packet and set the IP Protocol field to the protocol
+        //      number assigned for DSR (48).  Set the Source Address field in
+        //      this packet's IP header to the address of this node.
+        //
+        //   -  If the Salvage field in the DSR Source Route option in the packet
+        //      triggering the Route Error is zero, then copy the Source Address
+        //      field of the packet triggering the Route Error into the
+        //      Destination Address field in the new packet's IP header;
+        //
+        //      otherwise, copy the Address[1] field from the DSR Source Route
+        //      option of the packet triggering the Route Error into the
+        //      Destination Address field in the new packet's IP header
+        var rerr = new DSRRouteError(node.getIP(), erroringRoute.getAddresses().getFirst());
+        //
+        //   -  Insert a DSR Options header into the new packet.
+        //
+        //   -  Add a Route Error Option to the new packet, setting the Error Type
+        //      to NODE_UNREACHABLE, the Salvage value to the Salvage value from
+        //      the DSR Source Route option of the packet triggering the Route
+        //      Error, and the Unreachable Node Address field to the address of
+        //      the next-hop node from the original source route.  Set the Error
+        //      Source Address field to this node's IP address, and the Error
+        //      Destination field to the new packet's IP Destination Address.
+        rerr.unreachableNodeAddress = erroringRoute.getNextAddress();
+        rerr.errorSourceAddress = node.getIP();
+        rerr.errorDestinationAddress = erroringRoute.getAddresses().getFirst();
+        //
+        //   -  If the packet triggering the Route Error contains any Route Error
+        //      or Acknowledgement options, the node MAY append to its Route Error
+        //      each of these options, with the following constraints:
+        //
+        //      o  The node MUST NOT include any Route Error option from the
+        //         packet triggering the new Route Error, for which the total
+        //         Salvage count (Section 6.4) of that included Route Error would
+        //         be greater than MAX_SALVAGE_COUNT in the new packet.
+        //
+        //      o  If any Route Error option from the packet triggering the new
+        //         Route Error is not included in the packet, the node MUST NOT
+        //         include any following Route Error or Acknowledgement options
+        //         from the packet triggering the new Route Error.
+        //
+        //      o  Any appended options from the packet triggering the Route Error
+        //         MUST follow the new Route Error in the packet.
+        //
+        //      o  In appending these options to the new Route Error, the order of
+        //         these options from the packet triggering the Route Error MUST
+        //         be preserved.
+        //
+        //   -  Send the packet as described in Section 8.1.1.
+        send(rerr, routeCache.getRoute(rerr.getDestinationIP()).size());
+        return true;
+    }
+
     private void handleRERR(DSRRouteError rerr) {
+        // 8.3.5.  Processing a Received Route Error Option
+        //   When a node receives a packet containing a Route Error option, that
+        //   node MUST process the Route Error option according to the following
+        //   sequence of steps:
+        //
+        //   -  The node MUST remove from its Route Cache the link from the node
+        //      identified by the Error Source Address field to the node
+        //      identified by the Unreachable Node Address field (if this link is
+        //      present in its Route Cache).  If the node implements its Route
+        //      Cache as a link cache, as described in Section 4.1, only this
+        //      single link is removed; if the node implements its Route Cache as
+        //      a path cache, however, all routes (paths) that use this link are
+        //      either truncated before the link or removed completely.
+
+        routeCache.removeLink(routeCache.getLink(rerr.errorSourceAddress, rerr.unreachableNodeAddress));
+
+        //   -  If the option following the Route Error is an Acknowledgement or
+        //      Route Error option sent by this node (that is, with
+        //      Acknowledgement or Error Source Address equal to this node's
+        //      address), copy the DSR options following the current Route Error
+        //      into a new packet with IP Source Address equal to this node's own
+        //      IP address and IP Destination Address equal to the Acknowledgement
+        //      or Error Destination Address.  Transmit this packet as described
+        //      in Section 8.1.1, with the Salvage count in the DSR Source Route
+        //      option set to the Salvage value of the Route Error.
+        //
+        //   In addition, after processing the Route Error as described above, the
+        //   node MAY initiate a new Route Discovery for any destination node for
+        //   which it then has no route in its Route Cache as a result of
+        //   processing this Route Error, if the node has indication that a route
+        //   to that destination is needed.  For example, if the node has an open
+        //   TCP connection to some destination node, then if the processing of
+        //   this Route Error removed the only route to that destination from this
+        //   node's Route Cache, then this node MAY initiate a new Route Discovery
+        //   for that destination node.  Any node, however, MUST limit the rate at
+        //   which it initiates new Route Discoveries for any single destination
+        //   address, and any new Route Discovery initiated in this way as part of
+        //   processing this Route Error MUST conform as a part of this limit.
     }
 
     private void handleRREQ(DSRRouteRequest rreq) {
@@ -254,11 +371,10 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
         //      Route Request Table, then the node MUST discard the entire packet
         //      carrying the Route Request option.
 
-        var entry = routeRequestTable.entryForOrigin(rreq.getOriginatorIP());
-        if (entry != null) {
-            for (var pair : entry.getDestinations())
-                if (pair != null && pair.getFirst().equals(rreq.getTargetAddress()) && pair.getSecond().equals(rreq.getIdentificationValue())) return;
-        }
+        var entry = routeRequestTable.forOrigin(rreq.getOriginatorIP());
+
+        if (entry.isDuplicate(rreq.getTargetAddress(), rreq.getIdentificationValue())) return;
+
 
         //   -  Else, this node SHOULD further process the Route Request according
         //      to the following sequence of steps:
@@ -267,10 +383,7 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
         //         (Identification, target address) values of recently received
         //         Route Requests.
 
-        if (entry == null) {
-            entry = new RouteRequestTableEntry(rreq.getTargetAddress(), rreq.getIdentificationValue());
-            routeRequestTable.put(rreq.getOriginatorIP(), entry);
-        }
+        entry.seen.add(Pair.of(rreq.getTargetAddress(), rreq.getIdentificationValue()));
 
         //      o  Conceptually create a copy of this entire packet and perform
         //         the following steps on the copy of the packet.
@@ -478,12 +591,14 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
         //   response to some Route Request, the IP Source Address of the Route
         //   Request).
 
+        var route = new ArrayList<>(rreq.getAddresses());
+        route.add(node.getIP());
+        Collections.reverse(route);
 
-        var rrep = new DSRRouteReply(node.getIP(), rreq.getSourceAddress());
+        var rrep = new DSRRouteReply(node.getIP(), rreq.getOriginatorIP());
+        rrep.setAddresses(route);
         rrep.setLastHopExternal(false);
         rrep.setIdentifificationValue(rreq.getIdentificationValue());
-        var addresses = new ArrayList<>(rreq.getAddresses());
-        addresses.add(node.getIP());
 
 
         //   After creating and initializing the Route Reply option and the IP
@@ -492,7 +607,7 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
         //   this node SHOULD delay the Reply by a small jitter period chosen
         //   randomly between 0 and BroadcastJitter.
 
-        tickActions.add(sim.getSimTime() + random.nextInt(BROADCAST_JITTER), () -> sim.unicast(getNode(), sim.getNode(rreq.getNetworkFrame().getFrom().getIP()), rrep, addresses.size()));
+        tickActions.add(sim.getSimTime() + random.nextInt(BROADCAST_JITTER), () -> sim.unicast(getNode(), sim.getNode(rreq.getNetworkFrame().getFrom().getIP()), rrep, route.size()));
 
         //   When returning any Route Reply in the case in which the MAC protocol
         //   in use in the network is not capable of transmitting unicast packets
@@ -604,16 +719,15 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
         var thisIP = node.getIP();
 
         //save the route
-
-
+        routeCache.addRoute(rrep.getRouteToHere(thisIP));
 
         // this is not the destination.
         if (!rrep.getDestinationIP().equals(getNode().getIP())) {
-            routeCache.addRoute(rrep.getRouteToHere(thisIP));
 
-            var nextIP = rrep.getNextAddress    ();
+            var nextIP = rrep.getNextAddress(thisIP);
 
-            sim.unicast(getNode(), sim.getNode(rrep.getAddresses().get(rrep.getNetworkFrame().getTtl() - 1)), rrep, rrep.getNetworkFrame().getTtl() - 1);
+            sim.unicast(getNode(), sim.getNode(nextIP), rrep, rrep.getNetworkFrame().getTtl() - 1);
+            return;
         }
 
         //we are the destination. check for any packets that are in the buffer and send them.
@@ -642,8 +756,10 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
         if (hasRoute(packet.getDestinationIP())) {
             var route = routeCache.getRoute(packet.getDestinationIP());
             var dsrRoutePacket = new DSRSourceRoute(packet.getOriginatorIP(), packet.getDestinationIP(), route, false, false, packet);
+            var nextAddress = dsrRoutePacket.getNextAddress();
 
-            sim.unicast(getNode(), sim.getNode(dsrRoutePacket.getNextAddress()), dsrRoutePacket, ttl);
+            if (!createRERR(dsrRoutePacket, nextAddress))
+                sim.unicast(getNode(), sim.getNode(nextAddress), dsrRoutePacket, ttl);
         }
 
         pendingData.computeIfAbsent(packet.getDestinationIP(), k -> new ArrayList<>()).add(new Pair<>(packet, ttl));
@@ -719,14 +835,20 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
         //   own IP address.  The Destination Address in the IP header of this
         //   packet MUST be the IP "limited broadcast" address (255.255.255.255).
 
-        var rreq = new DSRRouteRequest(getNode().getIP(), IP.BROADCAST, rreqID++);
+        var id = rreqID++;
+
+        var rreq = new DSRRouteRequest(getNode().getIP(), IP.BROADCAST, id);
         rreq.setTargetAddress(destinationIp);
 
-        var rreqState = routeRequestTable.entryForOrigin(getNode().getIP());
-        if (rreqState == null) {
-            rreqState = new RouteRequestTableEntry(destinationIp, rreqID++);
-            routeRequestTable.put(getNode().getIP(), rreqState);
+        var rreqState = routeRequestTable.forDestination(destinationIp);
+        if (rreqState.numberOfRREQ > MAX_REQUEST_REXMT) {
+            pendingData.remove(destinationIp);
+            node.onApplicationPacketReceived(new DestinationUnreachablePacket(node.getIP(), destinationIp));
+            routeRequestTable.removeForDestination(destinationIp);
+            return;
         }
+
+        var now = sim.getSimTime();
 
         //   A node MUST maintain, in its Route Request Table, information about
         //   Route Requests that it initiates.  When initiating a new Route
@@ -765,7 +887,7 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
         //      between consecutive Route Discovery initiations for this target
         //      node with the same hop limit SHOULD increase by doubling the
         //      timeout value on each new initiation.
-
+        //
         //   The behavior of a node processing a packet containing DSR Options
         //   header with both a DSR Source Route option and a Route Request option
         //   is unspecified.  Packets SHOULD NOT contain both a DSR Source Route
@@ -778,16 +900,19 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
         //   Request option is controlled solely by the logic described in this
         //   section.
 
-        rreqState.lastRequestTime = sim.getSimTime();
 
         sim.broadcast(getNode(), rreq, ttl);
 
-        tickActions.add(sim.getSimTime() + (long) Math.pow(2, rreqState.numberOfRREQ) * 100, () -> discoverRoute(destinationIp));
+        rreqState.nextTry = now + (long) (Math.min(MAX_REQUEST_PERIOD * 1000, REQUEST_PERIOD * Math.pow(2, rreqState.numberOfRREQ)));
+
     }
 
     @Override
     public void simTick() {
         tickActions.execute(sim.getSimTime());
+        for (var entry : routeRequestTable.sendEntries.entrySet()) {
+            if (entry.getValue().nextTry < sim.getSimTime()) discoverRoute(entry.getKey());
+        }
     }
 
     @Override
@@ -802,58 +927,91 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
 
     @Override
     public void render(RenderUtil renderer) {
+        var pose = renderer.getPoseStack();
+        var font = renderer.getFont();
+        var width = getRenderSize(renderer.getFont()).x;
+        renderer.setWidth(width);
+
+        int y = 0;
+        pose.pushPose();
+        pose.scale(0.5f, 0.5f, 0.5f);
+        width *= 2;
+
+        renderer.drawStringWithAlphaColor(RenderUtil.Align.LEFT, "Pending", width, y);
+        renderer.drawStringWithAlphaColor(RenderUtil.Align.RIGHT, String.valueOf(pendingData.size()), width, y);
+        y += 10;
+
+        var receivedEntries = String.valueOf(routeRequestTable.receivedEntries.size());
+        var sendEntries = String.valueOf(routeRequestTable.sendEntries.size());
+        renderer.drawStringWithAlphaColor(RenderUtil.Align.LEFT, "RREQ Cache (Out|In)", width, y);
+        renderer.drawString(sendEntries, RenderUtil.Color.MAGENTA.value, width / 2 - 5 - font.width(receivedEntries) - font.width(sendEntries), y, false);
+        renderer.drawString(receivedEntries, RenderUtil.Color.YELLOW.value, width / 2 - font.width(receivedEntries), y, false);
+        y+=5;
+
+        pose.popPose();
+
+        pose.translate(0, y, 0);
         routeCache.render(renderer);
     }
 
     @Override
     public Vec2 getRenderSize(Font font) {
-        return routeCache.getRenderSize(font);
+        var thisSize = new Vec2(100, 25);
+        var routeCacheSize = routeCache.getRenderSize(font);
+        return new Vec2(Math.max(thisSize.x, routeCacheSize.x), thisSize.y + routeCacheSize.y);
     }
 
     /**
      * Indexed by SourceIP of the route Request
      */
-    private static class RouteRequestTable {
-        private final Map<IP, RouteRequestTableEntry> routeRequestTable = new HashMap<>();
+    private class RouteRequestTable {
+        private final Map<IP, RouteRequestTableSendEntry> sendEntries = new HashMap<>();
+        private final Map<IP, RouteRequestTableReceivedEntry> receivedEntries = new LinkedHashMap<>(REQUEST_TABLE_SIZE, 0.75f, true) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<IP, RouteRequestTableReceivedEntry> eldest) {
+                return size() > REQUEST_TABLE_SIZE;
+            }
+        };
 
-        public void put(IP originIP, RouteRequestTableEntry routeRequestTableEntry) {
-            routeRequestTable.put(originIP, routeRequestTableEntry);
+        public RouteRequestTableSendEntry forDestination(IP destinationIP) {
+            return sendEntries.computeIfAbsent(destinationIP, k -> new RouteRequestTableSendEntry());
         }
 
-        public RouteRequestTableEntry entryForOrigin(IP originIP) {
-            return routeRequestTable.get(originIP);
+        public RouteRequestTableReceivedEntry forOrigin(IP originIP) {
+            return receivedEntries.computeIfAbsent(originIP, k -> new RouteRequestTableReceivedEntry());
+        }
+
+        public void removeForDestination(IP destinationIp) {
+            sendEntries.remove(destinationIp);
+        }
+
+        private static class RouteRequestTableSendEntry {
+            public long nextTry;
+            private int ttl;
+            private int numberOfRREQ;
+
+            public void setTTL(int ttl) {
+                this.ttl = ttl;
+            }
+
+            public int getNumberOfRREQ() {
+                return this.numberOfRREQ;
+            }
+
+            public void setNumberOfRREQ(int numberOfRREQ) {
+                this.numberOfRREQ = numberOfRREQ;
+            }
+        }
+
+        private class RouteRequestTableReceivedEntry {
+            private final FixedFiFoQueue<Pair<IP, Integer>> seen = new FixedFiFoQueue<>(REQUEST_TABLE_IDS);
+
+            public boolean isDuplicate(IP target, int id) {
+                return seen.stream().anyMatch(it -> it != null && it.getFirst().equals(target) && it.getSecond().equals(id));
+            }
         }
     }
 
-
-    private static class RouteRequestTableEntry {
-        private int ttl;
-        private int numberOfRREQ;
-        private long lastRequestTime;
-        private final FixedFiFoQueue<Pair<IP, Integer>> identificationValues = new FixedFiFoQueue<>(REQUEST_TABLE_IDS);
-
-        public RouteRequestTableEntry(IP destinationIP, Integer integer) {
-            this.identificationValues.add(Pair.of(destinationIP, integer));
-        }
-
-
-        public void setTTL(int ttl) {
-            this.ttl = ttl;
-        }
-
-        public int getNumberOfRREQ() {
-            return this.numberOfRREQ;
-        }
-
-        public void setNumberOfRREQ(int numberOfRREQ) {
-            this.numberOfRREQ = numberOfRREQ;
-        }
-
-
-        public Iterable<Pair<IP, Integer>> getDestinations() {
-            return identificationValues;
-        }
-    }
 
     //4.1.  Route Cache
     //
@@ -1116,14 +1274,17 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
         public void render(RenderUtil renderer) {
             var poseStack = renderer.getPoseStack();
 
-            long now = System.currentTimeMillis();
+            long now = sim.getSimTime();
 
             poseStack.pushPose();
             var offset = getNode().getPos();
 
-            renderer.drawStringWithAlphaColor(RenderUtil.Align.CENTER, "RoutingCache", 200, 0);
+            poseStack.scale(0.5f, 0.5f, 0.5f);
+            renderer.drawStringWithAlphaColor(RenderUtil.Align.LEFT, "Routing Cache", renderer.getWidth() * 2, -10);
+            poseStack.scale(2, 2, 2);
 
-            poseStack.translate(0, 60, -1);
+
+            poseStack.translate(0, 50, -1);
             var x1R = -50;
             var y1R = -50;
             var x2R = 50;
@@ -1149,8 +1310,8 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
                 nodesToRender.add(nodeA);
                 nodesToRender.add(nodeB);
 
-                Vec3 posA = nodeA.getPos().subtract(offset).scale(2);
-                Vec3 posB = nodeB.getPos().subtract(offset).scale(2);
+                Vec3 posA = nodeA.getPos().subtract(offset).scale(RENDER_SCALE);
+                Vec3 posB = nodeB.getPos().subtract(offset).scale(RENDER_SCALE);
 
 
                 float x1 = (float) posA.x;
@@ -1170,7 +1331,7 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
             }
 
             for (var node : nodesToRender) {
-                var pos = node.getPos().subtract(offset).scale(2);
+                var pos = node.getPos().subtract(offset).scale(RENDER_SCALE);
                 float x = (float) pos.x();
                 float y = (float) pos.z();
 
@@ -1193,6 +1354,7 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
 
         private static class ClippedLine {
             float x1, y1, x2, y2;
+
             ClippedLine(float x1, float y1, float x2, float y2) {
                 this.x1 = x1;
                 this.y1 = y1;
@@ -1240,6 +1402,11 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
             );
         }
 
+        @Override
+        public Vec2 getRenderSize(Font font) {
+            return new Vec2(100, 105);
+        }
+
         private float computeLifetimeRatio(Link link, long now) {
             long remaining = link.remainingLifetime(now);
             float max = (float) (USE_EXTENDS * 1000.0);
@@ -1247,10 +1414,6 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
             return Mth.clamp(remaining / max, 0.0f, 1.0f);
         }
 
-        @Override
-        public Vec2 getRenderSize(Font font) {
-            return new Vec2(200, 200);
-        }
 
         private class Link {
             IP a;
@@ -1341,12 +1504,19 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
         }
 
         private void removeLink(Link link) {
+            if (link == null) return;
+
             graph.getOrDefault(link.a, Collections.emptyMap()).remove(link.b);
             graph.getOrDefault(link.b, Collections.emptyMap()).remove(link.a);
 
             // Stability decrease on break
             stabilityTable.computeIfPresent(link.a, (k, v) -> v * STABILITY_DECR_FACTOR);
             stabilityTable.computeIfPresent(link.b, (k, v) -> v * STABILITY_DECR_FACTOR);
+        }
+
+
+        public Link getLink(IP ip, IP nextAddress) {
+            return graph.get(ip).get(nextAddress);
         }
 
         private void extendLinksOnUse(List<IP> path, long now) {
@@ -1451,5 +1621,29 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
         }
 
 
+    }
+
+
+    @Override
+    public Map<String, Object> getSettings() {
+        return Map.of(
+                "RENDER_SCALE", RENDER_SCALE,
+                "REQUEST_PERIOD", REQUEST_PERIOD,
+                "MAX_REQUEST_PERIOD", MAX_REQUEST_PERIOD,
+                "BROADCAST_JITTER", BROADCAST_JITTER
+
+        );
+    }
+
+    @Override
+    public void setSetting(String key, Object value) {
+        switch (key) {
+            case "RENDER_SCALE" -> RENDER_SCALE = (double) value;
+            case "REQUEST_PERIOD" -> REQUEST_PERIOD = (short) (int) value;
+            case "MAX_REQUEST_PERIOD" -> MAX_REQUEST_PERIOD = (short) (int) value;
+            case "BROADCAST_JITTER" -> BROADCAST_JITTER = (short) (int) value;
+
+            default -> throw new IllegalArgumentException("Unknown setting: " + key);
+        }
     }
 }

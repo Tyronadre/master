@@ -41,7 +41,7 @@ public class DSRSourceRoute extends NetworkPacket implements IProtocolPaket {
 
     @Override
     public INetworkPacket copy() {
-        return null;
+        return new DSRSourceRoute(getId(), getOriginatorIP(), getDestinationIP(), firstHopExternalFlag, lastHopExternalFlag, segLeft, addresses, packet);
     }
 
     public IP getNextAddress() {

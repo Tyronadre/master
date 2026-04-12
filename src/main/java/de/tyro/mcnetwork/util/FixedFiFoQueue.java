@@ -45,7 +45,7 @@ public class FixedFiFoQueue<V> extends AbstractQueue<V> {
     }
 
     private void shift() {
-        for (int i = 0; 1 < count; i++) {
+        for (int i = 0; i < count - 1; i++) {
             items[i] = items[i + 1];
         }
     }

@@ -44,7 +44,7 @@ public class NetworkFrameEntityRenderer extends EntityRenderer<NetworkFrameEntit
         float alpha = RenderUtil.computeFadeAlpha(Math.sqrt(distanceSq), FADE_START_DISTANCE, MAX_DISTANCE);
         if (alpha <= 0.05f) return;
 
-        if (entity.getPacket() instanceof IProtocolPaket) return;
+//        if (entity.getPacket() instanceof IProtocolPaket) return;
 
         entity.render(poseStack, bufferSource, packedLight, alpha);
     }

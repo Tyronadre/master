@@ -78,6 +78,7 @@ public class SimulationEngine {
     @SubscribeEvent
     public void onServerStop(ServerStoppingEvent event) {
         new ArrayList<>(networkFrames).forEach(Entity::discard);
+        new ArrayList<>(nodes.values()).forEach(INetworkNode::onServerStop);
     }
 
     private void tick() {
@@ -184,6 +185,7 @@ public class SimulationEngine {
 
     public void unregisterNode(INetworkNode node) {
         nodes.remove(node.getIP());
+        IP.freeAddress(node.getIP());
     }
 
     public double getSimSpeed() {

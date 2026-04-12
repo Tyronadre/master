@@ -2,6 +2,7 @@ package de.tyro.mcnetwork.block.entity;
 
 import de.tyro.mcnetwork.entity.NetworkFrameEntity;
 import de.tyro.mcnetwork.network.payload.NewNetworkPacketPayload;
+import de.tyro.mcnetwork.network.payload.RoutingProtocolSettingsPayload;
 import de.tyro.mcnetwork.routing.ApplicationMessageBus;
 import de.tyro.mcnetwork.routing.INetworkNode;
 import de.tyro.mcnetwork.routing.IP;
@@ -189,7 +190,15 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
 
     @Override
     public void setProtocol(IRoutingProtocol routingProtocol) {
-        this.routingProtocol = routingProtocol;
+        if (level.isClientSide) {
+            PacketDistributor.sendToServer(new RoutingProtocolSettingsPayload(routingProtocol.getClass().getSimpleName(), getBlockPos()));
+            this.routingProtocol = routingProtocol;
+        }
+    }
+
+    @Override
+    public void onServerStop() {
+        this.terminal.interrupt();
     }
 
     class ReceiveWindow {

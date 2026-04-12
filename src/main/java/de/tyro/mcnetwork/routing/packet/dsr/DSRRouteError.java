@@ -6,11 +6,12 @@ import de.tyro.mcnetwork.routing.packet.IProtocolPaket;
 import de.tyro.mcnetwork.routing.packet.NetworkPacket;
 
 public class DSRRouteError extends NetworkPacket implements IProtocolPaket {
+    public IP errorSourceAddress;
+    public IP errorDestinationAddress;
+    public IP unreachableNodeAddress;
 
-    short errorType;
-    short salvage;
 
-    protected DSRRouteError(IP originatorIP, IP destinationIP) {
+    public DSRRouteError(IP originatorIP, IP destinationIP) {
         super(originatorIP, destinationIP);
     }
 
@@ -18,4 +19,6 @@ public class DSRRouteError extends NetworkPacket implements IProtocolPaket {
     public INetworkPacket copy() {
         return new DSRRouteError(this.getOriginatorIP(), this.getDestinationIP());
     }
+
+
 }

@@ -66,4 +66,6 @@ public interface INetworkNode {
     Level getLevel();
 
     void setProtocol(IRoutingProtocol routingProtocol);
+
+    void onServerStop();
 }

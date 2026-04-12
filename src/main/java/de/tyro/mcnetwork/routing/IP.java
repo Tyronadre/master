@@ -57,6 +57,10 @@ public class IP implements INBTSerializable<CompoundTag> {
         throw new IllegalStateException("No free IP address found!");
     }
 
+    public static void freeAddress(IP ip) {
+        ips.remove(ip);
+    }
+
 
     public int[] asArray() {
         return address;

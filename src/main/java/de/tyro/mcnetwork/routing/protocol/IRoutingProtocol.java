@@ -7,6 +7,8 @@ import de.tyro.mcnetwork.routing.IP;
 import de.tyro.mcnetwork.routing.packet.INetworkPacket;
 import de.tyro.mcnetwork.routing.packet.IProtocolPaket;
 
+import java.util.Map;
+
 public interface IRoutingProtocol extends IHudRenderer {
 
     void onProtocolPacketReceived(IProtocolPaket packet);
@@ -20,4 +22,8 @@ public interface IRoutingProtocol extends IHudRenderer {
     boolean hasRoute(IP destination);
 
     INetworkNode getNode();
+
+    Map<String, Object> getSettings();
+
+    void setSetting(String key, Object value);
 }

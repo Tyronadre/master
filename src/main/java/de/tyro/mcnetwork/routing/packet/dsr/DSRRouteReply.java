@@ -1,16 +1,19 @@
 package de.tyro.mcnetwork.routing.packet.dsr;
 
+import com.mojang.blaze3d.vertex.PoseStack;
+import de.tyro.mcnetwork.client.RenderUtil;
 import de.tyro.mcnetwork.routing.IP;
 import de.tyro.mcnetwork.routing.packet.INetworkPacket;
 import de.tyro.mcnetwork.routing.packet.IProtocolPaket;
 import de.tyro.mcnetwork.routing.packet.NetworkPacket;
+import net.minecraft.client.gui.Font;
+import net.minecraft.world.phys.Vec2;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class DSRRouteReply extends NetworkPacket implements IProtocolPaket
-{
+public class DSRRouteReply extends NetworkPacket implements IProtocolPaket {
     // Set to indicate that the last hop given by the Route Reply (the
     // link from Address[n-1] to Address[n]) is actually an arbitrary
     // path in a network external to the DSR network; the exact route
@@ -60,7 +63,7 @@ public class DSRRouteReply extends NetworkPacket implements IProtocolPaket
 
     @Override
     public INetworkPacket copy() {
-        return null;
+        return new DSRRouteReply(getId(), getOriginatorIP(), getDestinationIP(), lastHopExternalFlag, addresses);
     }
 
     public boolean getLastHopExternalFlag() {
@@ -85,17 +88,31 @@ public class DSRRouteReply extends NetworkPacket implements IProtocolPaket
     public List<IP> getRouteToHere(IP ip) {
         var list = new ArrayList<IP>();
 
-        for (var address : addresses.reversed()) {
+        for (var address : addresses) {
             if (address.equals(ip)) break;
             list.add(address);
         }
 
+        if (getDestinationIP().equals(ip)) list.add(ip);
+
         return list;
     }
 
-    public IP getNextAddress() {
-        var index = getNetworkFrame().getTtl() - 1;
+    public IP getNextAddress(IP currentNodeAddress) {
+        var index = addresses.indexOf(currentNodeAddress);
+        if (index == addresses.size() - 1) return getDestinationIP();
+        else return addresses.get(index + 1);
+    }
 
-        return addresses.get(index);
+    @Override
+    protected void renderPacketContent(RenderUtil renderer, PoseStack poseStack, float width) {
+        var y = 0;
+
+        renderer.drawCollectionAsString(RenderUtil.Align.RIGHT, addresses, 100, renderer.getTextColorFromAlpha(), width, 0);
+    }
+
+    @Override
+    public Vec2 getRenderSize(Font font) {
+        return super.getRenderSize(font);
     }
 }

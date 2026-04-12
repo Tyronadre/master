@@ -1,5 +1,7 @@
 package de.tyro.mcnetwork.routing.packet.dsr;
 
+import com.mojang.blaze3d.vertex.PoseStack;
+import de.tyro.mcnetwork.client.RenderUtil;
 import de.tyro.mcnetwork.routing.IP;
 import de.tyro.mcnetwork.routing.packet.IProtocolPaket;
 import de.tyro.mcnetwork.routing.packet.NetworkPacket;
@@ -89,5 +91,27 @@ public class DSRRouteRequest extends NetworkPacket implements IProtocolPaket {
         var list = new ArrayList<>(addresses);
         list.addFirst(getSourceAddress());
         return list;
+    }
+
+
+    @Override
+    protected void renderPacketContent(RenderUtil renderer, PoseStack poseStack, float width) {
+        var pose = renderer.getPoseStack();
+        pose.scale(0.5f,0.5f,0.5f);
+
+        width *= 2;
+
+        int y = 0;
+
+
+        renderer.drawStringWithAlphaColor(RenderUtil.Align.LEFT, "IdentificationValue", width, y);
+        renderer.drawStringWithAlphaColor(RenderUtil.Align.RIGHT, String.valueOf(identificationValue), width, y);
+        y+= 10;
+
+        renderer.drawStringWithAlphaColor(RenderUtil.Align.LEFT, "Target", width, y);
+        renderer.drawStringWithAlphaColor(RenderUtil.Align.RIGHT, targetAddress.toString(), width, y);
+        y+= 10;
+
+        renderer.drawCollectionAsString(RenderUtil.Align.RIGHT, addresses, 100, renderer.getTextColorFromAlpha(), width, y);
     }
 }

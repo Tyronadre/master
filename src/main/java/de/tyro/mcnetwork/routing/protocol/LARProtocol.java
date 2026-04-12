@@ -256,4 +256,14 @@ public class LARProtocol implements IRoutingProtocol {
             this.timestamp = timestamp;
         }
     }
+
+    @Override
+    public Map<String, Object> getSettings() {
+        return Map.of();
+    }
+
+    @Override
+    public void setSetting(String key, Object value) {
+        // No settings to set
+    }
 }

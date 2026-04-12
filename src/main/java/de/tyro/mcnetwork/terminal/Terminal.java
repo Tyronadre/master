@@ -130,5 +130,6 @@ public class Terminal {
     public TerminalScreen getScreen() {
         return screen;
     }
+
 }
 

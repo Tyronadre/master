@@ -5,6 +5,7 @@ import de.tyro.mcnetwork.network.configuration.SimulationConfigurationTask;
 import de.tyro.mcnetwork.network.payload.ConfigAckPayload;
 import de.tyro.mcnetwork.network.payload.NewNetworkFramePayload;
 import de.tyro.mcnetwork.network.payload.NewNetworkPacketPayload;
+import de.tyro.mcnetwork.network.payload.RoutingProtocolSettingsPayload;
 import de.tyro.mcnetwork.network.payload.SetProtocolPayload;
 import de.tyro.mcnetwork.network.payload.SimulationEngineSettingsPayload;
 import de.tyro.mcnetwork.network.payload.TerminalUpdatePayload;
@@ -37,6 +38,12 @@ public class NetworkHandler {
 
 
         // ------ TERMINAL ----- //
+
+        registrar.playBidirectional(
+                RoutingProtocolSettingsPayload.TYPE,
+                RoutingProtocolSettingsPayload.STREAM_CODEC,
+                RoutingProtocolSettingsPayload::handle
+        );
 
         registrar.playToServer(
                 TerminalWatchingPayload.TYPE,

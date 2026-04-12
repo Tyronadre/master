@@ -54,12 +54,12 @@ public class ComputerBlockEntityRenderer implements BlockEntityRenderer<Computer
 
     private void renderHud(ComputerBlockEntity be, PoseStack poseStack, MultiBufferSource buffer, Minecraft mc, int packedLight, float alpha) {
         if (be.getRoutingProtocol() == null) return;
+        var renderer = new RenderUtil(poseStack, buffer, alpha, packedLight);
 
-        var routingProtocolSize = be.getRoutingProtocol().getRenderSize(Minecraft.getInstance().font);
+        var routingProtocolSize = be.getRoutingProtocol().getRenderSize(renderer.getFont());
         if (routingProtocolSize == null) return;
 
-        var renderer = new RenderUtil(poseStack, buffer, alpha, packedLight);
-        var width = routingProtocolSize.x;
+        var width = Math.max(routingProtocolSize.x, renderer.getFont().width(be.getRoutingProtocol().getClass().getSimpleName() + " @ " + be.getIP()));
         var height = routingProtocolSize.y;
 
 

@@ -6,6 +6,7 @@ import de.tyro.mcnetwork.terminal.commands.HelpCommand;
 import de.tyro.mcnetwork.terminal.commands.IpConfigCommand;
 import de.tyro.mcnetwork.terminal.commands.PingCommand;
 import de.tyro.mcnetwork.terminal.commands.RoutingProtocolCommand;
+import de.tyro.mcnetwork.terminal.commands.RoutingProtocolSettingsCommand;
 import de.tyro.mcnetwork.terminal.commands.TraceRouteCommand;
 
 import java.util.HashMap;
@@ -30,6 +31,7 @@ public class CommandRegistry {
         register("help", HelpCommand::new);
         register("setProtocol", RoutingProtocolCommand::new);
         register("ipConfig", IpConfigCommand::new);
+        register("routingProtocolSettings", RoutingProtocolSettingsCommand::new);
     }
 
     public void register(String name, CommandFactory command) {
@@ -74,5 +76,3 @@ public class CommandRegistry {
         Command create(Terminal terminal, String[] args);
     }
 }
-
-

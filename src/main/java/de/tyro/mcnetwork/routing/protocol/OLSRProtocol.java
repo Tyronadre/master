@@ -35,14 +35,13 @@ public class OLSRProtocol implements IRoutingProtocol {
     private static final Logger logger = LogUtils.getLogger();
 
     //CONSTANTS
-    private static final int HELLO_INTERVAL = 2_00;
-    private static final int REFRESH_INTERVAL = 2_000;
-    private static final int TC_INTERVAL = 5_00;
-    private static final int DUP_HOLD_TIME = 30_000;
-    private static final int NEIGHB_HOLD_TIME = 3 * REFRESH_INTERVAL;
-    private static final int TOP_HOLD_TIME = 3 * TC_INTERVAL;
-    private static final int MAX_JITTER = HELLO_INTERVAL / 4;
-    private static final double C = 6.25; //ms
+    private static int HELLO_INTERVAL = 2_000;
+    private static int REFRESH_INTERVAL = 2_000;
+    private static int TC_INTERVAL = 5_000;
+    private static int DUP_HOLD_TIME = 30_000;
+    private static int NEIGHB_HOLD_TIME = 3 * REFRESH_INTERVAL;
+    private static int TOP_HOLD_TIME = 3 * TC_INTERVAL;
+    private static int MAX_JITTER = HELLO_INTERVAL / 4;
 
 
     private final INetworkNode node;
@@ -681,7 +680,6 @@ public class OLSRProtocol implements IRoutingProtocol {
             //          added, with:
             //
             //               R_dest_addr  = main address of the neighbor;
-            //
             //               R_next_addr  = L_neighbor_iface_addr of one of the
             //                              associated link tuple with L_time >=
             //               current time;
@@ -1105,7 +1103,6 @@ public class OLSRProtocol implements IRoutingProtocol {
         //          Type equal to NOT_NEIGH, all 2-hop tuples where:
         //
         //               N_neighbor_main_addr == Originator Address AND
-        //
         //               N_2hop_addr          == main neighborAddress of the
         //                                       2-hop neighbor
         //
@@ -1274,7 +1271,7 @@ public class OLSRProtocol implements IRoutingProtocol {
         //                                       HELLO message
         //
         //               L_SYM_time            = current time - 1 (expired)
-        //
+        //                                       + validity time
         //               L_time                = current time + validity time
         var linkTuple = linkSet.computeIfAbsent(packet.getOriginatorIP(), k -> {
             neighborSet.put(k, new NeighborSet.NeighborSetEntry(k, false, Willingness.WILL_DEFAULT));
@@ -1848,6 +1845,41 @@ public class OLSRProtocol implements IRoutingProtocol {
                 case WILL_DEFAULT -> "Default";
                 case WILL_ALWAYS -> "Always";
             };
+        }
+    }
+
+    @Override
+    public Map<String, Object> getSettings() {
+        return Map.of(
+            "HELLO_INTERVAL", HELLO_INTERVAL,
+            "REFRESH_INTERVAL", REFRESH_INTERVAL,
+            "TC_INTERVAL", TC_INTERVAL,
+            "DUP_HOLD_TIME", DUP_HOLD_TIME,
+            "NEIGHB_HOLD_TIME", NEIGHB_HOLD_TIME,
+            "TOP_HOLD_TIME", TOP_HOLD_TIME,
+            "MAX_JITTER", MAX_JITTER
+        );
+    }
+
+    @Override
+    public void setSetting(String key, Object value) {
+        switch (key) {
+            case "HELLO_INTERVAL" -> {
+                HELLO_INTERVAL = (Integer) value;
+                MAX_JITTER = HELLO_INTERVAL / 4;
+            }
+            case "REFRESH_INTERVAL" -> {
+                REFRESH_INTERVAL = (Integer) value;
+                NEIGHB_HOLD_TIME = 3 * REFRESH_INTERVAL;
+            }
+            case "TC_INTERVAL" -> {
+                TC_INTERVAL = (Integer) value;
+                TOP_HOLD_TIME = 3 * TC_INTERVAL;
+            }
+            case "DUP_HOLD_TIME" -> {
+                DUP_HOLD_TIME = (Integer) value;
+            }
+            default -> throw new IllegalArgumentException("Unknown setting: " + key);
         }
     }
 }
