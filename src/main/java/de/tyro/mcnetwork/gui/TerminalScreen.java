@@ -5,6 +5,7 @@ import de.tyro.mcnetwork.network.payload.TerminalUpdatePayload;
 import de.tyro.mcnetwork.network.payload.TerminalWatchingPayload;
 import de.tyro.mcnetwork.terminal.CommandRegistry;
 import de.tyro.mcnetwork.terminal.Terminal;
+import de.tyro.mcnetwork.terminal.commands.Command;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -30,7 +31,6 @@ public class TerminalScreen extends Screen {
     private final StringBuilder inputBuffer = new StringBuilder();
     private int cursorPosition = 0;
 
-    private final List<String> commandHistory = new ArrayList<>();
     private int historyIndex = -1;
 
     /* -------- Completion --------- */
@@ -140,15 +140,28 @@ public class TerminalScreen extends Screen {
     }
 
     private void handleTabCompletion() {
-
-        /* Nur erstes Token completen */
-        if (inputBuffer.indexOf(" ") != -1) return;
-
-        String current = inputBuffer.toString();
+        String currentInput = inputBuffer.substring(0, cursorPosition);
+        int spaceCount = currentInput.length() - currentInput.replace(" ", "").length();
 
         if (completionBase == null) {
-            completionBase = current;
-            completionMatches = CommandRegistry.INSTANCE.findMatching(current);
+            if (spaceCount == 0) {
+                // Completing command name
+                completionBase = currentInput;
+                completionMatches = CommandRegistry.INSTANCE.findMatching(currentInput);
+            } else {
+                // Completing argument
+                String[] parts = currentInput.split(" ", -1);
+                String commandName = parts[0];
+                int argIndex = spaceCount - 1;
+                String partial = parts[parts.length - 1];
+                completionBase = partial;
+                Command command = CommandRegistry.INSTANCE.get(commandName, terminal, new String[0]);
+                if (command != null) {
+                    completionMatches = command.getCompletions(argIndex, partial);
+                } else {
+                    completionMatches = List.of();
+                }
+            }
             completionIndex = 0;
         }
 
@@ -157,9 +170,15 @@ public class TerminalScreen extends Screen {
         String match = completionMatches.get(completionIndex);
         completionIndex = (completionIndex + 1) % completionMatches.size();
 
-        inputBuffer.setLength(0);
-        inputBuffer.append(match);
-        cursorPosition = match.length();
+        // Replace the current word
+        String fullInput = inputBuffer.toString();
+        int lastSpaceIndex = fullInput.lastIndexOf(' ', cursorPosition - 1);
+        int startReplace = (lastSpaceIndex == -1) ? 0 : lastSpaceIndex + 1;
+        int endReplace = cursorPosition;
+
+        inputBuffer.replace(startReplace, endReplace, match);
+        cursorPosition = startReplace + match.length();
+        onChangeSend();
     }
 
     private void resetCompletion() {
@@ -183,7 +202,7 @@ public class TerminalScreen extends Screen {
     private void submitCommand() {
         String input = inputBuffer.toString().trim();
         if (!input.isEmpty()) {
-            commandHistory.add(input);
+            terminal.addToHistory(input);
             terminal.printLine(terminal.getPrompt() + input);
             terminal.submitInput(input);
         }
@@ -195,10 +214,10 @@ public class TerminalScreen extends Screen {
     /* -------- History -------- */
 
     private void historyUp() {
-        if (commandHistory.isEmpty()) return;
+        if (terminal.getCommandHistory().isEmpty()) return;
 
         if (historyIndex == -1) {
-            historyIndex = commandHistory.size() - 1;
+            historyIndex = terminal.getCommandHistory().size() - 1;
         } else if (historyIndex > 0) {
             historyIndex--;
         }
@@ -210,7 +229,7 @@ public class TerminalScreen extends Screen {
         if (historyIndex == -1) return;
 
         historyIndex++;
-        if (historyIndex >= commandHistory.size()) {
+        if (historyIndex >= terminal.getCommandHistory().size()) {
             historyIndex = -1;
             inputBuffer.setLength(0);
             cursorPosition = 0;
@@ -222,7 +241,7 @@ public class TerminalScreen extends Screen {
 
     private void loadHistoryEntry() {
         inputBuffer.setLength(0);
-        inputBuffer.append(commandHistory.get(historyIndex));
+        inputBuffer.append(terminal.getCommandHistory().get(historyIndex));
         cursorPosition = inputBuffer.length();
     }
 

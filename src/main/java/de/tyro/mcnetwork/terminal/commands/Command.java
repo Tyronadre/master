@@ -2,6 +2,8 @@ package de.tyro.mcnetwork.terminal.commands;
 
 import de.tyro.mcnetwork.terminal.Terminal;
 
+import java.util.List;
+
 
 public abstract class Command {
 
@@ -19,6 +21,11 @@ public abstract class Command {
 
     /** Optionaler Name */
     public abstract String getName();
+
+    /** Returns completion suggestions for the given argument index and partial input */
+    public List<String> getCompletions(int argIndex, String partial) {
+        return List.of();
+    }
 
     /** Ctrl+C */
     public void cancel() {
@@ -57,4 +64,3 @@ public abstract class Command {
         return clazz.cast(arg);
     }
 }
-

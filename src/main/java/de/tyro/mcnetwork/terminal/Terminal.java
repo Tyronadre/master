@@ -24,6 +24,8 @@ public class Terminal {
     private final int maxLines = 200;
     private TerminalScreen screen;
 
+    private final List<String> commandHistory = new ArrayList<>();
+
     public Terminal(INetworkNode node) {
         this.node = node;
     }
@@ -131,5 +133,12 @@ public class Terminal {
         return screen;
     }
 
-}
+    public void addToHistory(String command) {
+        commandHistory.add(command);
+    }
 
+    public List<String> getCommandHistory() {
+        return Collections.unmodifiableList(commandHistory);
+    }
+
+}

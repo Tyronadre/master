@@ -7,6 +7,9 @@ import de.tyro.mcnetwork.routing.protocol.LARProtocol;
 import de.tyro.mcnetwork.routing.protocol.OLSRProtocol;
 import de.tyro.mcnetwork.terminal.Terminal;
 
+import java.util.List;
+import java.util.stream.Stream;
+
 public class RoutingProtocolCommand extends Command{
     public RoutingProtocolCommand(Terminal terminal, String[] args) {
         super(terminal, args);
@@ -38,5 +41,15 @@ public class RoutingProtocolCommand extends Command{
     @Override
     public String getName() {
         return "setProtocol";
+    }
+
+    @Override
+    public List<String> getCompletions(int argIndex, String partial) {
+        if (argIndex == 0) {
+            return Stream.of("aodv", "dsr", "lar", "olsr")
+                    .filter(s -> s.startsWith(partial.toLowerCase()))
+                    .toList();
+        }
+        return List.of();
     }
 }
