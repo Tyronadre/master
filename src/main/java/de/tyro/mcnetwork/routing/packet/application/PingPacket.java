@@ -41,8 +41,9 @@ public class PingPacket extends NetworkPacket implements IApplicationPacket {
 
     @Override
     public Vec2 getRenderSize(Font font) {
+        var superSize =  super.getRenderSize(font);
         var line = "Time " + (getSimulationEngine().getSimTime() - sendStartTime) + "ms";
-        return new Vec2(font.width(line), font.lineHeight);
+        return new Vec2(Math.max(superSize.x, font.width(line)),superSize.y );
     }
 
     @Override
