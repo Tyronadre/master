@@ -42,8 +42,8 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
     private short BROADCAST_JITTER = 10;       //ms
     private final short ROUTE_CACHE_TIMEOUT = 300;   //sec
     private final short SEND_BUFFER_TIMEOUT = 30;    //sec
-    private short REQUEST_TABLE_SIZE = 64;     //nodes
-    private short REQUEST_TABLE_IDS = 16;      //identifiers
+    private final short REQUEST_TABLE_SIZE = 64;     //nodes
+    private final short REQUEST_TABLE_IDS = 16;      //identifiers
     private final short MAX_REQUEST_REXMT = 16;      //retransmissions
     private short MAX_REQUEST_PERIOD = 10;     //sec
     private short REQUEST_PERIOD = 500;        //ms
@@ -64,6 +64,7 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
     private final SimulationEngine sim;
     private final Random random = new Random();
     private final TickActions tickActions = new TickActions();
+    private final ProtocolSettings settings = new ProtocolSettings();
     private Map<IP, List<Pair<INetworkPacket, Integer>>> pendingData = new HashMap<>();
 
 
@@ -72,6 +73,14 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
         this.routeRequestTable = new RouteRequestTable();
         routeCache = new RouteCache();
         sim = SimulationEngine.getInstance(node.getLevel().isClientSide);
+
+        settings.registerSetting("BROADCAST_JITTER", Short.class, () -> BROADCAST_JITTER, v -> BROADCAST_JITTER = v);
+        settings.registerSetting("REQUEST_TABLE_SIZE", Short.class, () -> REQUEST_TABLE_SIZE);
+        settings.registerSetting("REQUEST_TABLE_IDS", Short.class, () -> REQUEST_TABLE_IDS);
+        settings.registerSetting("MAX_REQUEST_REXMT", Short.class, () -> MAX_REQUEST_REXMT);
+        settings.registerSetting("MAX_REQUEST_PERIOD", Short.class, () -> MAX_REQUEST_PERIOD, v -> MAX_REQUEST_PERIOD = v);
+        settings.registerSetting("REQUEST_PERIOD", Short.class, () -> REQUEST_PERIOD, v -> REQUEST_PERIOD = v);
+        settings.registerSetting("RENDER_SCALE", Double.class, () -> RENDER_SCALE, v -> RENDER_SCALE = v);
     }
 
     @Override
@@ -1625,25 +1634,7 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
 
 
     @Override
-    public Map<String, Object> getSettings() {
-        return Map.of(
-                "RENDER_SCALE", RENDER_SCALE,
-                "REQUEST_PERIOD", REQUEST_PERIOD,
-                "MAX_REQUEST_PERIOD", MAX_REQUEST_PERIOD,
-                "BROADCAST_JITTER", BROADCAST_JITTER
-
-        );
-    }
-
-    @Override
-    public void setSetting(String key, Object value) {
-        switch (key) {
-            case "RENDER_SCALE" -> RENDER_SCALE = (double) value;
-            case "REQUEST_PERIOD" -> REQUEST_PERIOD = (short) (int) value;
-            case "MAX_REQUEST_PERIOD" -> MAX_REQUEST_PERIOD = (short) (int) value;
-            case "BROADCAST_JITTER" -> BROADCAST_JITTER = (short) (int) value;
-
-            default -> throw new IllegalArgumentException("Unknown setting: " + key);
-        }
+    public ProtocolSettings getSettings() {
+        return settings;
     }
 }

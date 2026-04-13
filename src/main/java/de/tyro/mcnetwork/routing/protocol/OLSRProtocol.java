@@ -11,6 +11,7 @@ import de.tyro.mcnetwork.routing.packet.IProtocolPaket;
 import de.tyro.mcnetwork.routing.packet.olsr.OLSRHelloMessage;
 import de.tyro.mcnetwork.routing.packet.olsr.OLSRPacket;
 import de.tyro.mcnetwork.routing.packet.olsr.OLSRTCMessage;
+import de.tyro.mcnetwork.terminal.commands.RoutingProtocolCommand;
 import net.minecraft.client.gui.Font;
 import net.minecraft.util.Tuple;
 import net.minecraft.world.phys.Vec2;
@@ -46,6 +47,7 @@ public class OLSRProtocol implements IRoutingProtocol {
 
     private final INetworkNode node;
     private final SimulationEngine sim;
+    private final ProtocolSettings settings;
 
     // --- State ---
 
@@ -63,6 +65,24 @@ public class OLSRProtocol implements IRoutingProtocol {
 
         nextHello = now + HELLO_INTERVAL - rand.nextInt(MAX_JITTER);
         nextTC = now + TC_INTERVAL - rand.nextInt(MAX_JITTER);
+
+        settings = new ProtocolSettings();
+        settings.registerSetting("HELLO_INTERVAL", Integer.class, () -> HELLO_INTERVAL, v -> {
+            HELLO_INTERVAL = v;
+            MAX_JITTER = HELLO_INTERVAL / 4;
+        });
+        settings.registerSetting("REFRESH_INTERVAL", Integer.class, () -> REFRESH_INTERVAL, v -> {
+            REFRESH_INTERVAL = v;
+            NEIGHB_HOLD_TIME = 3 * REFRESH_INTERVAL;
+        });
+        settings.registerSetting("TC_INTERVAL", Integer.class, () -> TC_INTERVAL, v -> {
+            TC_INTERVAL = v;
+            TOP_HOLD_TIME = 3 * TC_INTERVAL;
+        });
+        settings.registerSetting("DUP_HOLD_TIME", Integer.class,() -> DUP_HOLD_TIME, v -> DUP_HOLD_TIME = v);
+        settings.registerSetting("NEIGHB_HOLD_TIME", Integer.class,() -> NEIGHB_HOLD_TIME);
+        settings.registerSetting("TOP_HOLD_TIME", Integer.class,() -> TOP_HOLD_TIME);
+        settings.registerSetting("MAX_JITTER", Integer.class,() -> MAX_JITTER);
     }
 
     @Override
@@ -1849,37 +1869,8 @@ public class OLSRProtocol implements IRoutingProtocol {
     }
 
     @Override
-    public Map<String, Object> getSettings() {
-        return Map.of(
-            "HELLO_INTERVAL", HELLO_INTERVAL,
-            "REFRESH_INTERVAL", REFRESH_INTERVAL,
-            "TC_INTERVAL", TC_INTERVAL,
-            "DUP_HOLD_TIME", DUP_HOLD_TIME,
-            "NEIGHB_HOLD_TIME", NEIGHB_HOLD_TIME,
-            "TOP_HOLD_TIME", TOP_HOLD_TIME,
-            "MAX_JITTER", MAX_JITTER
-        );
+    public ProtocolSettings getSettings() {
+        return settings;
     }
 
-    @Override
-    public void setSetting(String key, Object value) {
-        switch (key) {
-            case "HELLO_INTERVAL" -> {
-                HELLO_INTERVAL = (Integer) value;
-                MAX_JITTER = HELLO_INTERVAL / 4;
-            }
-            case "REFRESH_INTERVAL" -> {
-                REFRESH_INTERVAL = (Integer) value;
-                NEIGHB_HOLD_TIME = 3 * REFRESH_INTERVAL;
-            }
-            case "TC_INTERVAL" -> {
-                TC_INTERVAL = (Integer) value;
-                TOP_HOLD_TIME = 3 * TC_INTERVAL;
-            }
-            case "DUP_HOLD_TIME" -> {
-                DUP_HOLD_TIME = (Integer) value;
-            }
-            default -> throw new IllegalArgumentException("Unknown setting: " + key);
-        }
-    }
 }

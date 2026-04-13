@@ -30,22 +30,22 @@ public class AODVProtocol implements IRoutingProtocol, IHudRenderer {
     static Logger log = LogUtils.getLogger();
 
     //CONSTANTS
-    public static final int ACTIVE_ROUTE_TIMEOUT = 3_000;
-    public static final int MY_ROUTE_TIMEOUT = 2 * ACTIVE_ROUTE_TIMEOUT;
-    public static final int NODE_TRAVERSAL_TIME = 5;
-    public static final int LOCAL_ADD_TTL = 2;
-    public static final int NET_DIAMETER = 35;
-    public static final int MAX_REPAIR_TTL = (int) (0.3 * NET_DIAMETER);
-    public static final int RREQ_RETRIES = 2;
-    public static final int RREQ_RATELIMIT = 10;
-    public static final int TIMEOUT_BUFFER = 2;
-    public static final int TTL_START = 1;
-    public static final int TTL_INCREMENT = 2;
-    public static final int TTL_THRESHOLD = 7;
-    public static final long NET_TRAVERSAL_TIME = 2 * NODE_TRAVERSAL_TIME * NET_DIAMETER;
-    public static final long PATH_DISCOVERY_TIME = 2 * NET_TRAVERSAL_TIME;
-    public static final int DELETE_PERIOD = 5 * ACTIVE_ROUTE_TIMEOUT;
-    public static final int RERR_RATELIMIT = 10;
+    public static int ACTIVE_ROUTE_TIMEOUT = 3_000;
+    public static int MY_ROUTE_TIMEOUT = 2 * ACTIVE_ROUTE_TIMEOUT;
+    public static int NODE_TRAVERSAL_TIME = 5;
+    public static int LOCAL_ADD_TTL = 2;
+    public static int NET_DIAMETER = 35;
+    public static int MAX_REPAIR_TTL = (int) (0.3 * NET_DIAMETER);
+    public static int RREQ_RETRIES = 2;
+    public static int RREQ_RATELIMIT = 10;
+    public static int TIMEOUT_BUFFER = 2;
+    public static int TTL_START = 1;
+    public static int TTL_INCREMENT = 2;
+    public static int TTL_THRESHOLD = 7;
+    public static int NET_TRAVERSAL_TIME = 2 * NODE_TRAVERSAL_TIME * NET_DIAMETER;
+    public static int PATH_DISCOVERY_TIME = 2 * NET_TRAVERSAL_TIME;
+    public static int DELETE_PERIOD = 5 * ACTIVE_ROUTE_TIMEOUT;
+    public static int RERR_RATELIMIT = 10;
 
     //LOCAL STATE
     private int sequenceNumber = 0;
@@ -61,10 +61,40 @@ public class AODVProtocol implements IRoutingProtocol, IHudRenderer {
     private final Map<IP, RouteDiscoveryState> discoveries = new ConcurrentHashMap<>();
     private final TickActions tickActions = new TickActions();
     private final SimulationEngine simulator;
+    private final ProtocolSettings settings;
 
     public AODVProtocol(INetworkNode node) {
         this.node = node;
         this.simulator = SimulationEngine.getInstance(node.getLevel().isClientSide());
+        this.settings = new ProtocolSettings();
+
+        settings.registerSetting("ACTIVE_ROUTE_TIMEOUT", Integer.class, () -> ACTIVE_ROUTE_TIMEOUT, v -> {
+            ACTIVE_ROUTE_TIMEOUT = v;
+            MY_ROUTE_TIMEOUT = 2 * v;
+        });
+        settings.registerSetting("MY_ROUTE_TIMEOUT", Integer.class, () -> MY_ROUTE_TIMEOUT);
+        settings.registerSetting("NODE_TRAVERSAL_TIME", Integer.class, () -> NODE_TRAVERSAL_TIME, v -> {
+            NODE_TRAVERSAL_TIME = v;
+            NET_TRAVERSAL_TIME = 2 * v * NET_DIAMETER;
+        });
+        settings.registerSetting("LOCAL_ADD_TTL", Integer.class, () -> LOCAL_ADD_TTL, v -> LOCAL_ADD_TTL = v);
+        settings.registerSetting("NET_DIAMETER", Integer.class, () -> NET_DIAMETER, v -> {
+            NET_DIAMETER = v;
+            NET_TRAVERSAL_TIME = 2 * NODE_TRAVERSAL_TIME * v;
+            MAX_REPAIR_TTL = (int) (0.3 * v);
+            PATH_DISCOVERY_TIME = 2 * NET_TRAVERSAL_TIME;
+        });
+        settings.registerSetting("MAX_REPAIR_TTL", Integer.class, () -> MAX_REPAIR_TTL);
+        settings.registerSetting("RREQ_RETRIES", Integer.class, () -> RREQ_RETRIES, v -> RREQ_RETRIES = v);
+        settings.registerSetting("RREQ_RATELIMIT", Integer.class, () -> RREQ_RATELIMIT, v -> RREQ_RATELIMIT = v);
+        settings.registerSetting("TIMEOUT_BUFFER", Integer.class, () -> TIMEOUT_BUFFER, v -> TIMEOUT_BUFFER = v);
+        settings.registerSetting("TTL_START", Integer.class, () -> TTL_START, v -> TTL_START = v);
+        settings.registerSetting("TTL_INCREMENT", Integer.class, () -> TTL_INCREMENT, v -> TTL_INCREMENT = v);
+        settings.registerSetting("TTL_THRESHOLD", Integer.class, () -> TTL_THRESHOLD, v -> TTL_THRESHOLD = v);
+        settings.registerSetting("NET_TRAVERSAL_TIME", Integer.class, () -> NET_TRAVERSAL_TIME);
+        settings.registerSetting("PATH_DISCOVERY_TIME", Integer.class, () -> PATH_DISCOVERY_TIME);
+        settings.registerSetting("DELETE_PERIOD", Integer.class, () -> DELETE_PERIOD);
+        settings.registerSetting("RERR_RATELIMIT", Integer.class, () -> RERR_RATELIMIT, v -> RERR_RATELIMIT = v);
     }
 
     @Override
@@ -975,12 +1005,8 @@ public class AODVProtocol implements IRoutingProtocol, IHudRenderer {
 
 
     @Override
-    public Map<String, Object> getSettings() {
-        return Map.of();
+    public ProtocolSettings getSettings() {
+        return settings;
     }
 
-    @Override
-    public void setSetting(String key, Object value) {
-        // No settings to set
-    }
 }

@@ -1,7 +1,11 @@
 package de.tyro.mcnetwork.terminal.commands;
 
 import de.tyro.mcnetwork.routing.protocol.IRoutingProtocol;
+import de.tyro.mcnetwork.routing.protocol.ProtocolSettings;
 import de.tyro.mcnetwork.terminal.Terminal;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class RoutingProtocolSettingsCommand extends Command {
     public RoutingProtocolSettingsCommand(Terminal terminal, String[] args) {
@@ -16,38 +20,64 @@ public class RoutingProtocolSettingsCommand extends Command {
             return;
         }
 
+        var settings = protocol.getSettings();
+
         if (args.length == 0) {
-            // Display all settings
+            println("Settings for " + protocol.getClass().getSimpleName());
+
+            if (protocol.getSettings().size() == 0) {
+                println("No routing protocol settings found.");
+                return;
+            }
+
             println("Routing Protocol Settings:");
-            for (var entry : protocol.getSettings().entrySet()) {
-                println(entry.getKey() + ": " + entry.getValue());
+            for (var setting : protocol.getSettings().getAll()) {
+                println(setting.getKey() + ": " + setting.getValue());
             }
             return;
         }
 
-        if (args.length < 3 || !args[0].equals("set")) {
-            println("Usage: routingProtocolSettings [set <key> <value>]");
+        if (args.length >= 3) {
+            println("Usage: routingProtocolSettings [get <key>]|[set <key> <value>]");
             return;
         }
 
-        String key = args[1];
-        String valueStr = args[2];
+        if (args[0].equals("set")) {
+            String key = args[1];
+            var setting = settings.getSetting(key);
 
-        try {
-            // Try to parse as int first
-            try {
-                int intValue = Integer.parseInt(valueStr);
-                protocol.setSetting(key, intValue);
-                println(key + " set to " + intValue);
-            } catch (NumberFormatException e) {
-                // Try as double
-                double doubleValue = Double.parseDouble(valueStr);
-                protocol.setSetting(key, doubleValue);
-                println(key + " set to " + doubleValue);
+            if (setting == null) {
+                println("Unknown setting: " + key);
+                return;
             }
-        } catch (Exception e) {
-            println("Failed to set " + key + ": " + e.getMessage());
+
+            if (!setting.isSettable()) {
+                println("Setting " + key + " is not settable.");
+                return;
+            }
+
+            setting.setValue(getOrThrow(setting.getValueClass(), 2));
         }
+
+        if (args[0].equals("get")) {
+            String key = args[1];
+            var setting = settings.getSetting(key);
+            if (setting == null) {
+                println("Unknown setting: " + key);
+            } else {
+                println(key + ": " +   setting.getValue());
+            }
+            return;
+        }
+
+        println("Usage: routingProtocolSettings [get <key>]|[set <key> <value>]");
+    }
+
+    @Override
+    public List<String> getCompletions(int argIndex, String partial) {
+        if (argIndex == 0) return List.of("set", "get");
+        else if (argIndex == 1) return new ArrayList<>(terminal.getNode().getRoutingProtocol().getSettings().keys());
+        return List.of();
     }
 
     @Override
@@ -57,6 +87,7 @@ public class RoutingProtocolSettingsCommand extends Command {
 
     @Override
     protected String getHelp() {
-        return "Show and edit routing protocol settings. Usage: routingProtocolSettings [set <key> <value>]";
+        return "Show and edit routing protocol settings. \n Usage: routingProtocolSettings [get <key>]|[set <key> <value>]";
+
     }
 }

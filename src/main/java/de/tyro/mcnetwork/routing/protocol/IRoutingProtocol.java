@@ -23,7 +23,5 @@ public interface IRoutingProtocol extends IHudRenderer {
 
     INetworkNode getNode();
 
-    Map<String, Object> getSettings();
-
-    void setSetting(String key, Object value);
+    ProtocolSettings getSettings();
 }

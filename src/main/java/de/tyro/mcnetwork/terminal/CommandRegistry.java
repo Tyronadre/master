@@ -29,9 +29,9 @@ public class CommandRegistry {
         register("traceroute", TraceRouteCommand::new);
         register("tracert", TraceRouteCommand::new);
         register("help", HelpCommand::new);
-        register("setProtocol", RoutingProtocolCommand::new);
-        register("ipConfig", IpConfigCommand::new);
-        register("routingProtocolSettings", RoutingProtocolSettingsCommand::new);
+        register("setprotocol", RoutingProtocolCommand::new);
+        register("ipconfig", IpConfigCommand::new);
+        register("routingprotocolsettings", RoutingProtocolSettingsCommand::new);
     }
 
     public void register(String name, CommandFactory command) {
@@ -65,7 +65,10 @@ public class CommandRegistry {
 
     public List<String> findMatching(String prefix) {
         String p = prefix.toLowerCase(Locale.ROOT);
-        return commands.keySet().stream().filter(it -> it.startsWith(p)).sorted().collect(Collectors.toList());
+        return commands.entrySet().stream()
+                .filter(it -> it.getKey().startsWith(p))
+                .map(it -> it.getValue().create(null, null).getName())
+                .sorted().collect(Collectors.toList());
     }
 
 

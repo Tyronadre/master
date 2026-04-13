@@ -32,6 +32,7 @@ public class LARProtocol implements IRoutingProtocol {
     private final Map<IP, RouteEntry> routingTable = new ConcurrentHashMap<>();
     private final Map<IP, LocationEntry> locationTable = new ConcurrentHashMap<>(); // last known locations with timestamps
     private final Map<IP, List<Pair<INetworkPacket, Integer>>> pendingData = new ConcurrentHashMap<>();
+    private final ProtocolSettings settings;
 
     // For rendering zones
     public Vec3 currentRequestZoneMin;
@@ -43,6 +44,7 @@ public class LARProtocol implements IRoutingProtocol {
     public LARProtocol(INetworkNode node) {
         this.node = node;
         this.simulator = SimulationEngine.getInstance(node.getLevel().isClientSide());
+        settings = new ProtocolSettings();
     }
 
     @Override
@@ -258,12 +260,8 @@ public class LARProtocol implements IRoutingProtocol {
     }
 
     @Override
-    public Map<String, Object> getSettings() {
-        return Map.of();
+    public ProtocolSettings getSettings() {
+        return settings;
     }
 
-    @Override
-    public void setSetting(String key, Object value) {
-        // No settings to set
-    }
 }

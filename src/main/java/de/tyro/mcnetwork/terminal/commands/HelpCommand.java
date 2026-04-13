@@ -3,16 +3,18 @@ package de.tyro.mcnetwork.terminal.commands;
 import de.tyro.mcnetwork.terminal.CommandRegistry;
 import de.tyro.mcnetwork.terminal.Terminal;
 
-public class HelpCommand extends Command{
+public class HelpCommand extends Command {
     public HelpCommand(Terminal terminal, String[] args) {
         super(terminal, args);
     }
 
     @Override
     public void execute() throws InterruptedException {
-        println("available commands:");
-        CommandRegistry.INSTANCE.getCommands().forEach(it -> println(it.getHelp()));
-
+        if (args.length == 0)
+            CommandRegistry.INSTANCE.getCommands().forEach(it -> println(it.getName()));
+        if (args.length == 1) {
+            println(CommandRegistry.INSTANCE.get(getOrThrow(String.class, 0), terminal, null).getHelp());
+        }
     }
 
     @Override
