@@ -4,6 +4,7 @@ import de.tyro.mcnetwork.entity.NetworkFrameEntity;
 import de.tyro.mcnetwork.network.payload.networkPacket.NetworkPacketCodecRegistry;
 import de.tyro.mcnetwork.routing.packet.IApplicationPacket;
 import de.tyro.mcnetwork.routing.packet.INetworkPacket;
+import de.tyro.mcnetwork.routing.protocol.AODVProtocol;
 import net.minecraft.world.entity.Entity;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
@@ -17,6 +18,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 
 public class SimulationEngine {
 
@@ -26,6 +28,9 @@ public class SimulationEngine {
     private static final Logger log = LogManager.getLogger(SimulationEngine.class);
     private final boolean isClientSide;
     private boolean receiveWindowActive;
+    private int receiveWindowMS = 1;
+    private int receiveWindowSize = 2;
+    private Consumer<INetworkNode> defaultProtocolSetter;
 
     public static SimulationEngine getInstance(Boolean clientSide) {
         return clientSide ? CLIENT_INSTANCE : SERVER_INSTANCE;
@@ -35,6 +40,7 @@ public class SimulationEngine {
     private SimulationEngine(boolean isClientSide) {
         this.commRadius = 20;
         this.isClientSide = isClientSide;
+        defaultProtocolSetter = node -> node.setProtocol(new AODVProtocol(node));
     }
 
 
@@ -46,11 +52,12 @@ public class SimulationEngine {
     private boolean simulationPaused = false;
     public static long SIM_TICK_PER_GAME_TICK = 5;
     public static long MS_PER_SIM_TICK = 1;
-    private double commRadius;
+    private int commRadius;
 
     public void registerNode(INetworkNode node) {
         log.debug("Registering node {}. {} @ {}", node, node.getLevel(), Integer.toHexString(hashCode()));
 
+        defaultProtocolSetter.accept(node);
         nodes.put(node.getIP(), node);
     }
 
@@ -202,7 +209,6 @@ public class SimulationEngine {
 
     public void setSimSpeed(double speed) {
         simulationSpeed = speed;
-        log.info(String.format("Setting simulation speed to: %f", speed));
     }
 
     public boolean nodeExists(IP ip) {
@@ -213,12 +219,11 @@ public class SimulationEngine {
         this.simulationTimeMS = simulationTime;
     }
 
-    public void setCommRadius(double commRadius) {
+    public void setCommRadius(int commRadius) {
         this.commRadius = commRadius;
-        log.info(String.format("Setting comm radius to: %f", commRadius));
     }
 
-    public double getCommRange() {
+    public int getCommRange() {
         return commRadius;
     }
 
@@ -226,11 +231,35 @@ public class SimulationEngine {
         networkFrames.remove(networkFrameEntity);
     }
 
-    public boolean receiveWindowActive() {
+    public boolean getReceiveWindowActive() {
         return receiveWindowActive;
     }
 
     public void setReceiveWindowActive(boolean active) {
         this.receiveWindowActive = active;
+    }
+
+    public List<NetworkFrameEntity> getFrameList() {
+        return networkFrames;
+    }
+
+    public void setReceiveWindowMS(int value){
+        this.receiveWindowMS = value;
+    }
+
+    public int getReceiveWindowMS() {
+        return receiveWindowMS;
+    }
+
+    public void setReceiveWindowSize(int value){
+        this.receiveWindowSize = value;
+    }
+
+    public int getReceiveWindowSize() {
+        return receiveWindowSize;
+    }
+
+    public void setDefaultProtocol(Consumer<INetworkNode> setter) {
+        this.defaultProtocolSetter = setter;
     }
 }

@@ -2,7 +2,6 @@ package de.tyro.mcnetwork.block.entity;
 
 import de.tyro.mcnetwork.entity.NetworkFrameEntity;
 import de.tyro.mcnetwork.network.payload.NewNetworkPacketPayload;
-import de.tyro.mcnetwork.network.payload.SetProtocolPayload;
 import de.tyro.mcnetwork.routing.ApplicationMessageBus;
 import de.tyro.mcnetwork.routing.INetworkNode;
 import de.tyro.mcnetwork.routing.IP;
@@ -52,7 +51,6 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
 
         terminal = new Terminal(this);
         applicationMessageBus = new ApplicationMessageBus(this);
-        routingProtocol = new OLSRProtocol(this);
         SimulationEngine.getInstance(level.isClientSide).registerNode(this);
         receiveWindow = new ReceiveWindow(5, 2);
     }
@@ -211,7 +209,7 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
 
         public boolean tryAccept() {
             var sim = SimulationEngine.getInstance(level.isClientSide);
-            if (!sim.receiveWindowActive()) return true;
+            if (!sim.getReceiveWindowActive()) return true;
 
             var currentTick = sim.getSimTime();
 

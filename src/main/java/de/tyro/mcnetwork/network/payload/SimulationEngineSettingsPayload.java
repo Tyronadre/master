@@ -5,8 +5,6 @@ import de.tyro.mcnetwork.gui.SimulationControllerScreen;
 import de.tyro.mcnetwork.routing.SimulationEngine;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
@@ -14,17 +12,35 @@ import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.jetbrains.annotations.NotNull;
 
-public record SimulationEngineSettingsPayload(long simTime, double simSpeed, boolean paused, double commRadius, boolean receiveWindowActive) implements CustomPacketPayload {
+public record SimulationEngineSettingsPayload(long simTime, double simSpeed, boolean paused, int commRadius, boolean receiveWindowActive, int receiveWindowMS, int receiveWindowSize) implements CustomPacketPayload {
 
-    public static final StreamCodec<ByteBuf, SimulationEngineSettingsPayload> STREAM_CODEC = StreamCodec.composite(
-            ByteBufCodecs.VAR_LONG, SimulationEngineSettingsPayload::simTime,
-            ByteBufCodecs.DOUBLE, SimulationEngineSettingsPayload::simSpeed,
-            ByteBufCodecs.BOOL, SimulationEngineSettingsPayload::paused,
-            ByteBufCodecs.DOUBLE, SimulationEngineSettingsPayload::commRadius,
-            ByteBufCodecs.BOOL, SimulationEngineSettingsPayload::receiveWindowActive,
-            SimulationEngineSettingsPayload::new);
+    public static final StreamCodec<ByteBuf, SimulationEngineSettingsPayload> STREAM_CODEC = new StreamCodec<ByteBuf, SimulationEngineSettingsPayload>() {
+        @Override
+        public @NotNull SimulationEngineSettingsPayload decode(ByteBuf buffer) {
+            return new SimulationEngineSettingsPayload(
+                    buffer.readLong(),
+                    buffer.readDouble(),
+                    buffer.readBoolean(),
+                    buffer.readInt(),
+                    buffer.readBoolean(),
+                    buffer.readInt(),
+                    buffer.readInt()
+            );
+        }
 
-    public static final CustomPacketPayload.Type<SimulationEngineSettingsPayload> TYPE = new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(MCNetwork.MODID, "simulation_engine_speed"));
+        @Override
+        public void encode(ByteBuf buffer, SimulationEngineSettingsPayload value) {
+            buffer.writeLong(value.simTime());
+            buffer.writeDouble(value.simSpeed());
+            buffer.writeBoolean(value.paused());
+            buffer.writeInt(value.commRadius());
+            buffer.writeBoolean(value.receiveWindowActive());
+            buffer.writeInt(value.receiveWindowMS());
+            buffer.writeInt(value.receiveWindowSize());
+        }
+    };
+
+    public static final CustomPacketPayload.Type<SimulationEngineSettingsPayload> TYPE = new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(MCNetwork.MODID, SimulationEngineSettingsPayload.class.getSimpleName().toLowerCase()));
 
     public static SimulationEngineSettingsPayloadBuilder Builder(SimulationEngine sim) {
         return new SimulationEngineSettingsPayloadBuilder(sim);
@@ -42,14 +58,16 @@ public record SimulationEngineSettingsPayload(long simTime, double simSpeed, boo
         sim.setPaused(paused());
         sim.setCommRadius(commRadius());
         sim.setReceiveWindowActive(receiveWindowActive());
+        sim.setReceiveWindowMS(receiveWindowMS());
+        sim.setReceiveWindowSize(receiveWindowSize());
 
         if (context.flow().isClientbound()) {
             sim.setSimTime(simTime());
             if (Minecraft.getInstance().screen instanceof SimulationControllerScreen simScreen) {
                 simScreen.simulationSpeedSlider.setValueExternal(simSpeed);
-                simScreen.commRadiusEditBox.setSuggestion(String.valueOf(commRadius()));
-                simScreen.pauseButton.setMessage(Component.literal(paused ? "Resume" : "Pause"));
-                simScreen.receiveWindowToggleButton.setMessage(simScreen.getReceiveWindowLabel(sim));
+                simScreen.simulationCommunicationRadius.setValue(commRadius);
+                simScreen.simulationEnabledButton.setMessage(simScreen.simulationEnabledButtonLabel(sim));
+                simScreen.receiveWindowEnabledButton.setMessage(simScreen.getReceiveWindowLabel(sim));
             }
         } else {
             PacketDistributor.sendToAllPlayers(this);
@@ -60,16 +78,20 @@ public record SimulationEngineSettingsPayload(long simTime, double simSpeed, boo
         long simTime;
         double simSpeed;
         double frameSpeed;
-        boolean paused;
-        double commRadius;
-        private boolean receiveWindowActive;
+        boolean simulationEnabled;
+        int commRadius;
+        boolean receiveWindowActive;
+        int  receiveWindowMS;
+        int receiveWindowSize;
 
         public SimulationEngineSettingsPayloadBuilder(SimulationEngine simulationEngine) {
             this.simTime = simulationEngine.getSimTime();
             this.simSpeed = simulationEngine.getSimSpeed();
-            this.paused = simulationEngine.isPaused();
+            this.simulationEnabled = simulationEngine.isPaused();
             this.commRadius = simulationEngine.getCommRange();
-            this.receiveWindowActive = simulationEngine.receiveWindowActive();
+            this.receiveWindowActive = simulationEngine.getReceiveWindowActive();
+            this.receiveWindowMS = simulationEngine.getReceiveWindowMS();
+            this.receiveWindowSize = simulationEngine.getReceiveWindowSize();
         }
 
         public SimulationEngineSettingsPayloadBuilder simSpeed(double simSpeed) {
@@ -83,17 +105,17 @@ public record SimulationEngineSettingsPayload(long simTime, double simSpeed, boo
         }
 
         public SimulationEngineSettingsPayloadBuilder paused(boolean paused) {
-            this.paused = paused;
+            this.simulationEnabled = paused;
             return this;
         }
 
-        public SimulationEngineSettingsPayloadBuilder commRadius(double commRadius) {
+        public SimulationEngineSettingsPayloadBuilder commRadius(int commRadius) {
             this.commRadius = commRadius;
             return this;
         }
 
         public SimulationEngineSettingsPayload build() {
-            return new SimulationEngineSettingsPayload(simTime, simSpeed, paused, commRadius, receiveWindowActive);
+            return new SimulationEngineSettingsPayload(simTime, simSpeed, simulationEnabled, commRadius, receiveWindowActive, receiveWindowMS, receiveWindowSize);
         }
 
         public SimulationEngineSettingsPayloadBuilder receiveWindowActive(boolean receiveWindowActive) {

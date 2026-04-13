@@ -1,38 +1,45 @@
 package de.tyro.mcnetwork.gui;
 
+import de.tyro.mcnetwork.client.RenderUtil;
 import de.tyro.mcnetwork.network.payload.SetProtocolPayload;
 import de.tyro.mcnetwork.network.payload.SimulationEngineSettingsPayload;
 import de.tyro.mcnetwork.networkBook.data.TopicManager;
 import de.tyro.mcnetwork.routing.SimulationEngine;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractSliderButton;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.world.entity.player.Player;
+import net.neoforged.neoforge.client.gui.widget.ExtendedSlider;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class SimulationControllerScreen extends AbstractContainerScreen<SimulationControllerMenu> {
     Player player;
-    public Button receiveWindowToggleButton;
-    public Button pauseButton;
+    public Button receiveWindowEnabledButton;
+    public ExtendedSlider receiveWindowSizeMsButton;
+    public Button simulationEnabledButton;
     public LogSlider simulationSpeedSlider;
-    public LogSlider frameSpeedSlider;
-    public EditBox commRadiusEditBox;
+    public ExtendedSlider simulationCommunicationRadius;
     private Button[] protocolButtons;
 
     public SimulationControllerScreen(SimulationControllerMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
         player = inv.player;
-        this.imageWidth = 176;
-        this.imageHeight = 166;
+        this.imageWidth = 280;
+        this.imageHeight = 200;
     }
 
     @Override
@@ -41,72 +48,133 @@ public class SimulationControllerScreen extends AbstractContainerScreen<Simulati
 
         SimulationEngine sim = SimulationEngine.getInstance(true);
 
-        int centerX = this.leftPos + this.imageWidth / 2;
-        int y = this.topPos + 30;
+        int x = this.leftPos;
+        int y = this.topPos;
 
-        receiveWindowToggleButton = this.addRenderableWidget(Button.builder(
-                getReceiveWindowLabel(sim),
-                btn -> PacketDistributor.sendToServer(SimulationEngineSettingsPayload.Builder(sim).receiveWindowActive(!sim.receiveWindowActive()).build()))
-                .bounds(centerX-40, y-25, 80, 20)
+        var receiveWindowTitle = this.addRenderableWidget(new Label(x, y, 120, 20, "Packet Collision"));
+        y += 15;
+
+        receiveWindowEnabledButton = this.addRenderableWidget(Button.builder(
+                        getReceiveWindowLabel(sim),
+                        btn -> PacketDistributor.sendToServer(SimulationEngineSettingsPayload.Builder(sim).receiveWindowActive(!sim.getReceiveWindowActive()).build()))
+                .tooltip(Tooltip.create(Component.literal("If this is enabled, NetworkFrames can collided with each other. Collided Frames will be rendered red")))
+                .bounds(x, y, 120, 15)
                 .build());
+        y += 20;
 
-        pauseButton = this.addRenderableWidget(Button.builder(
-                        getPauseLabel(sim),
-                        btn -> PacketDistributor.sendToServer(SimulationEngineSettingsPayload.Builder(sim).paused(!sim.isPaused()).build()))
-                .bounds(centerX - 40, y, 80, 20)
-                .build());
+        receiveWindowSizeMsButton = this.addRenderableWidget(new ExtendedSlider(
+                x,
+                y,
+                120,
+                15,
+                Component.literal("Coll. Window "),
+                Component.literal(" ms"),
+                1,
+                10,
+                1,
+                true));
+        y += 20;
 
+        var receiveWindowMaxPacketsPerWindow = this.addRenderableWidget(new ExtendedSlider(
+                x,
+                y,
+                120,
+                15,
+                Component.literal("Packets per Window "),
+                Component.literal(""),
+                1,
+                10,
+                2,
+                true));
+        y += 15;
 
-        simulationSpeedSlider = this.addRenderableWidget(new LogSlider(
-                centerX - 70,
-                y + 30,
-                140,
-                20,
-                0.001,
-                5,
-                sim.getSimSpeed(),
-                (value) -> String.format("Simulation Speed: %.3fx", value),
-                (value) -> PacketDistributor.sendToServer(SimulationEngineSettingsPayload.Builder(sim).simSpeed(value).build())
-        ));
+        // ---- OTHER ----- //
 
-        commRadiusEditBox = this.addRenderableWidget(new EditBox(font, centerX - 70, y + 80, 140, 20, Component.literal("Reichweite")));
-        commRadiusEditBox.setResponder((value) -> {
-            try {
-                PacketDistributor.sendToServer(SimulationEngineSettingsPayload.Builder(sim).commRadius(Double.parseDouble(value)).build());
-            } catch (Exception ignored) {
-            }
-        });
+        y += 15;
+        var otherLabel = this.addRenderableWidget(new Label(x, y, 120, 15, "Other"));
+        y += 20;
 
-
-        var reloadQuestButton = this.addRenderableWidget(Button.builder(
-                        Component.literal("Reload Quests"),
-                        btn -> TopicManager.getInstance().reloadTopics())
-                .bounds(centerX - 70,
-                        y + 100, 140, 20)
-                .build()
-        );
+        var protocolLabel = this.addRenderableWidget(new Label(x, y, 120, 20, "Set all protocols"));
+        protocolLabel.setTooltip(Tooltip.create(Component.literal("Sets all protocols of all nodes in the simulation. Future nodes will have this protocol.")));
+        y += 15;
 
         // Protocol buttons
         String[] protocols = {"AODV", "DSR", "LAR", "OLSR"};
-        int protocolButtonY = y + 120;
-        int buttonWidth = 33;
-        int spacing = 2;
+        int spacing = 1;
+        int buttonWidth = (120 - spacing * protocols.length) / 4;
 
         protocolButtons = new Button[protocols.length];
-        int startX = centerX - (protocols.length * (buttonWidth + spacing)) / 2;
 
         for (int i = 0; i < protocols.length; i++) {
             final String protocol = protocols[i];
             protocolButtons[i] = this.addRenderableWidget(Button.builder(
-                    Component.literal(protocols[i]),
-                    btn -> PacketDistributor.sendToServer(new SetProtocolPayload(protocol + "Protocol", null)))
-                    .bounds(startX + i * (buttonWidth + spacing), protocolButtonY, buttonWidth, 20)
+                            Component.literal(protocols[i]),
+                            btn -> PacketDistributor.sendToServer(new SetProtocolPayload(protocol + "Protocol", null)))
+                    .bounds(x + i * (buttonWidth + spacing), y, buttonWidth, 15)
                     .build());
         }
 
+        y += 20;
+
+        var reloadQuestButton = this.addRenderableWidget(Button.builder(
+                        Component.literal("Reload Quests"),
+                        btn -> TopicManager.getInstance().reloadTopics())
+                .bounds(x, y, 120, 15)
+                .build()
+        );
+
+        // ----- SIMULATION INFORMATION ----- //
+        x += imageWidth / 2 + 10;
+        y = topPos;
+
+        var simInfoLabel = this.addRenderableWidget(new Label(x, y, 120, 15, "Simulation Info"));
+        y += 20;
+
+        var simTime = this.addRenderableWidget(new Label(x, y, 120, 15, () -> "Simulation Time " + sim.getSimTime()));
+        y += 20;
+
+        var simNodes = this.addRenderableWidget(new Label(x, y, 120, 15, () -> "Registered Nodes: " + sim.getNodeList().size()));
+        y += 20;
+
+        var simFrames = this.addRenderableWidget(new Label(x, y, 120, 15, () -> "Registered Frames: " + sim.getFrameList().size()));
+        y += 25;
+
+
+        // ----- SIMULATION SETTINGS ----- //
+
+
+        var simSettingsLabel = this.addRenderableWidget(new Label(x, y, 120, 15, "Simulation Settings"));
+        y += 15;
+
+        simulationEnabledButton = this.addRenderableWidget(Button.builder(
+                        simulationEnabledButtonLabel(sim),
+                        btn -> PacketDistributor.sendToServer(SimulationEngineSettingsPayload.Builder(sim).paused(!sim.isPaused()).build()))
+                .bounds(x, y, 120, 15)
+                .build());
+        y += 20;
+
+        simulationSpeedSlider = this.addRenderableWidget(new LogSlider(
+                x,
+                y,
+                120,
+                15,
+                0.001,
+                5,
+                sim.getSimSpeed(),
+                (value) -> String.format("Sim. Speed: %.3fx", value),
+                (value) -> PacketDistributor.sendToServer(SimulationEngineSettingsPayload.Builder(sim).simSpeed(value).build())
+        ));
+        y += 20;
+
+        simulationCommunicationRadius = this.addRenderableWidget(new ExtendedSlider(x, y, 120, 15, Component.literal("Comm. Range"), Component.empty(), 5, 25, sim.getCommRange(), true) {
+            @Override
+            protected void applyValue() {
+                PacketDistributor.sendToServer(SimulationEngineSettingsPayload.Builder(sim).commRadius((int) getValue()).build());
+            }
+        });
+        y += 20;
 
     }
-
 
 
     @Override
@@ -119,13 +187,9 @@ public class SimulationControllerScreen extends AbstractContainerScreen<Simulati
     // --------------------------------------------------
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-//        this.renderBackground(graphics, mouseX, mouseY, partialTick);
-        super.render(graphics, mouseX, mouseY, partialTick);
+        this.renderBackground(graphics, mouseX, mouseY, partialTick);
 
-
-        graphics.drawString(this.font, this.title, this.leftPos + 8, this.topPos + 6, 0x404040, false);
-
-//        graphics.drawString(this.font, "Simulation Speed", this.leftPos + 8, this.topPos + 68, 0x404040, false);
+        for (net.minecraft.client.gui.components.Renderable renderable : this.renderables) renderable.render(graphics, mouseX, mouseY, partialTick);
 
         this.renderTooltip(graphics, mouseX, mouseY);
     }
@@ -135,12 +199,37 @@ public class SimulationControllerScreen extends AbstractContainerScreen<Simulati
         // Optional: draw background texture here
     }
 
-    private Component getPauseLabel(SimulationEngine sim) {
-        return Component.literal(sim.isPaused() ? "Resume" : "Pause");
+    public Component simulationEnabledButtonLabel(SimulationEngine sim) {
+        return Component.literal(sim.isPaused() ? "Simulation: OFF" : "Simulation: ON");
     }
 
     public Component getReceiveWindowLabel(SimulationEngine sim) {
-        return Component.literal(sim.receiveWindowActive() ? "Collision Active": "Ignore Collisions");
+        return Component.literal(sim.getReceiveWindowActive() ? "Frame Collision: ON" : "Frame Collision: OFF");
+    }
+
+    public static class Label extends AbstractWidget {
+        Supplier<String> supplier;
+
+        public Label(int x, int y, int width, int height, String message) {
+            super(x, y, width, height, Component.empty());
+            this.supplier = () -> message;
+        }
+
+        public Label(int x, int y, int width, int height, Supplier<String> supplier) {
+            super(x, y, width, height, Component.empty());
+            this.supplier = supplier;
+        }
+
+
+        @Override
+        protected void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+            guiGraphics.drawString(Minecraft.getInstance().font, supplier.get(), getX(), getY(), RenderUtil.Color.WHITE.value);
+        }
+
+        @Override
+        protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
+
+        }
     }
 
     // --------------------------------------------------

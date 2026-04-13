@@ -25,9 +25,9 @@ import java.util.function.Consumer;
 public record SetProtocolPayload(String routingProtocol, @Nullable BlockPos pos) implements CustomPacketPayload {
 
     public static Type<SetProtocolPayload> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(MCNetwork.MODID, SetProtocolPayload.class.getSimpleName().toLowerCase()));
-    public static StreamCodec<FriendlyByteBuf, SetProtocolPayload> STREAM_CODEC = new StreamCodec<FriendlyByteBuf, SetProtocolPayload>() {
+    public static StreamCodec<FriendlyByteBuf, SetProtocolPayload> STREAM_CODEC = new StreamCodec<>() {
         @Override
-        public SetProtocolPayload decode(FriendlyByteBuf buffer) {
+        public @NotNull SetProtocolPayload decode(@NotNull FriendlyByteBuf buffer) {
             return new SetProtocolPayload(Utf8String.read(buffer, 100), buffer.readNullable(buffer1 -> buffer1.readBlockPos()));
         }
 
@@ -51,11 +51,16 @@ public record SetProtocolPayload(String routingProtocol, @Nullable BlockPos pos)
             default -> throw new IllegalArgumentException("Unknown routing protocol " + routingProtocol);
         });
 
+        var sim = SimulationEngine.getInstance(context.flow().isClientbound());
+
+        sim.setDefaultProtocol(setter);
+
         if (pos == null) {
-            SimulationEngine.getInstance(context.flow().isClientbound()).getNodeList().forEach(setter);
+           sim.getNodeList().forEach(setter);
         } else {
             setter.accept(NetworkUtil.getBlockEntityAt(ComputerBlockEntity.class, level, pos()));
         }
+
     }
 
     @Override
