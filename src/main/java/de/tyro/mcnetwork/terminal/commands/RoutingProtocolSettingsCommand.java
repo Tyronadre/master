@@ -56,6 +56,8 @@ public class RoutingProtocolSettingsCommand extends Command {
                 return;
             }
 
+            //TODO
+            // somehow sync this to the server. probably stop doing syncing in commands, but instead sync the whole terminal more?
             setting.setValue(getOrThrow(setting.getValueClass(), 2));
 
             println("Setting " + key + " set to " + setting.getValue() + ".");
