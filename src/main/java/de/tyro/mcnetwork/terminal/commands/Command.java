@@ -49,18 +49,23 @@ public abstract class Command {
     }
 
     protected <T> T getOrDefault(Class<T> clazz, int argPos, T defaultValue) {
-        if (argPos < 0 || argPos >= args.length) return defaultValue;
-
-        var  arg = args[argPos];
-        if (!clazz.isInstance(arg)) return defaultValue;
-        return clazz.cast(arg);
+        try {
+            return getOrThrow(clazz, argPos);
+        } catch (Exception e) {
+            return defaultValue;
+        }
     }
 
     protected <T> T getOrThrow(Class<T> clazz, int argPos) {
         if  (argPos < 0 || argPos >= args.length) throw new IndexOutOfBoundsException("Argument out of bounds: " + argPos + ", " + args.length);
 
         var arg =  args[argPos];
-        if (!clazz.isInstance(arg)) throw new ClassCastException("Argument at pos " + argPos + " is not an instance of " + clazz.getName());
-        return clazz.cast(arg);
+
+        if (clazz.isAssignableFrom(arg.getClass())) return clazz.cast(arg);
+        if (clazz == Integer.class) return (T) Integer.valueOf(arg);
+        else if (clazz == Double.class) return (T) Double.valueOf(arg);
+        else if (clazz == Short.class) return (T) Short.valueOf(arg);
+        else if (clazz == String.class) return (T) arg;
+        else throw new IllegalArgumentException("Unknown argument type: " + clazz);
     }
 }

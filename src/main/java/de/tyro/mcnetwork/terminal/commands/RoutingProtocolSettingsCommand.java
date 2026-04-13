@@ -37,7 +37,7 @@ public class RoutingProtocolSettingsCommand extends Command {
             return;
         }
 
-        if (args.length >= 3) {
+        if (args.length > 3) {
             println("Usage: routingProtocolSettings [get <key>]|[set <key> <value>]");
             return;
         }
@@ -57,6 +57,9 @@ public class RoutingProtocolSettingsCommand extends Command {
             }
 
             setting.setValue(getOrThrow(setting.getValueClass(), 2));
+
+            println("Setting " + key + " set to " + setting.getValue() + ".");
+            return;
         }
 
         if (args[0].equals("get")) {
