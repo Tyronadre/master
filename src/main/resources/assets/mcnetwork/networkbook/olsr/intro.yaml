@@ -22,18 +22,11 @@ content: |
 
   - Diese sind **reaktiv** → suchen Routen bei Bedarf  
   - OLSR ist **proaktiv** → kennt Routen jederzeit  
-
-  ---
-  
-  ![Ein Netzwerk, bei dem alle Knoten kontinuierlich Verbindungsinformationen austauschen](image:olsr_full_knowledge)
-
-  ---
   
   ## Konsequenz
 
   - Sofortige Kommunikation möglich
   - Kein initialer Suchprozess notwendig
+  - Dauerhafte Kommunikation zwischen Knoten im Netz
 
   ---
-  
-  @task[Ist OLSR reaktiv oder proaktiv?|Proaktiv;Was ist der Vorteil?|Routen sind sofort verfügbar]

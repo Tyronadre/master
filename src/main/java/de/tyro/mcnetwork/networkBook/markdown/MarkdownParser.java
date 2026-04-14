@@ -1,5 +1,6 @@
 package de.tyro.mcnetwork.networkBook.markdown;
 
+import de.tyro.mcnetwork.networkBook.markdown.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -19,13 +20,11 @@ public class MarkdownParser {
     private static final Pattern orderedListItemPattern = Pattern.compile("\\d+\\.\\s+(.*)$");
     private static final Pattern imagePattern = Pattern.compile("!\\[.*?]\\(([\\w.]*)\\s*(\".*\")?.*\\)");
     private static final Pattern animationPatter = Pattern.compile("@animation\\[(.*)]");
-    private static final Pattern taskPattern = Pattern.compile("@task\\[(.*)]");
 
     private static final ResourceManager resourceManager = Minecraft.getInstance().getResourceManager();
 
-    public static MarkdownRenderer parse(String markdown, ResourceLocation resourceLocation) {
-        MarkdownRenderer renderer = new MarkdownRenderer();
-        var doc = renderer.getDocument();
+    public static MarkdownDocument parse(String markdown, ResourceLocation resourceLocation) {
+        var doc = new MarkdownDocument();
 
         String[] lines = markdown.split("\\r?\\n", -1);
         int i = 0;
@@ -58,6 +57,70 @@ public class MarkdownParser {
                 continue;
             }
 
+            //task
+            if (line.trim().startsWith("@task[")) {
+                StringBuilder taskContent = new StringBuilder();
+                String startLine = line.trim();
+                
+                if (startLine.endsWith("]")) {
+                    // Single line task
+                    String content = startLine.substring(6, startLine.length() - 1); // remove @task[ and ]
+                    String[] pairs = content.split(";");
+                    List<List<Block>> questions = new ArrayList<>();
+                    List<String> answers = new ArrayList<>();
+                    for (String pair : pairs) {
+                        String[] qa = pair.split("\\|");
+                        if (qa.length == 2) {
+                            questions.add(parse(qa[0], resourceLocation).blocks);
+                            answers.add(qa[1]);
+                        }
+                    }
+                    doc.addTaskBlock(questions, answers);
+                    i++;
+                    continue;
+                }
+                
+                // Multiline task - use bracket counting
+                int bracketCount = 1; // We start with one open bracket from @task[
+                taskContent.append(startLine.substring(6)); // remove @task[
+                i++;
+
+                // Collect lines until we find the matching closing bracket
+                while (i < lines.length && bracketCount > 0) {
+                    String currentLine = lines[i];
+                    for (char c : currentLine.toCharArray()) {
+                        if (c == '[') bracketCount++;
+                        else if (c == ']') bracketCount--;
+                    }
+
+                    if (bracketCount > 0) {
+                        taskContent.append("\n").append(currentLine);
+                    } else {
+                        // Found the matching closing bracket - add everything before it
+                        int lastBracketIndex = currentLine.lastIndexOf(']');
+                        if (lastBracketIndex > 0) {
+                            taskContent.append("\n").append(currentLine.substring(0, lastBracketIndex));
+                        }
+                    }
+                    i++;
+                }
+
+                // Process the collected content
+                String content = taskContent.toString();
+                String[] pairs = content.split(";");
+                List<List<Block>> questions = new ArrayList<>();
+                List<String> answers = new ArrayList<>();
+                for (String pair : pairs) {
+                    String[] qa = pair.split("\\|");
+                    if (qa.length == 2) {
+                        questions.add(parse(qa[0], resourceLocation).blocks);
+                        answers.add(qa[1]);
+                    }
+                }
+                doc.addTaskBlock(questions, answers);
+                continue;
+            }
+
             //image
             Matcher img = imagePattern.matcher(line);
             if (img.find()) {
@@ -73,23 +136,7 @@ public class MarkdownParser {
                 continue;
             }
 
-            Matcher task = taskPattern.matcher(line);
-            if (task.find()) {
-                String content = task.group(1);
-                String[] pairs = content.split(";");
-                List<String> questions = new ArrayList<>();
-                List<String> answers = new ArrayList<>();
-                for (String pair : pairs) {
-                    String[] qa = pair.split("\\|");
-                    if (qa.length == 2) {
-                        questions.add(qa[0]);
-                        answers.add(qa[1]);
-                    }
-                }
-                doc.addTaskBlock(questions, answers);
-                i++;
-                continue;
-            }
+
 
             Matcher oList = orderedListItemPattern.matcher(line);
             if (oList.matches()) {
@@ -119,7 +166,7 @@ public class MarkdownParser {
                         i++;
                     } else break;
                 }
-                flushListBuffer(listBuffer, doc, true);
+                flushListBuffer(listBuffer, doc, false);
                 continue;
             }
 
@@ -169,10 +216,10 @@ public class MarkdownParser {
 
         flushTableBuffer(tableBuffer, doc);
 
-        return renderer;
+        return doc;
     }
 
-    private static void flushTableBuffer(List<String> tableBuffer, MarkdownRenderer.MarkdownDocument doc) {
+    private static void flushTableBuffer(List<String> tableBuffer, MarkdownDocument doc) {
         if (tableBuffer.isEmpty()) return;
         // parse tableBuffer lines into rows (split by |, trim)
         List<List<String>> rows = new ArrayList<>();
@@ -186,20 +233,20 @@ public class MarkdownParser {
             for (String c : cells) row.add(c.trim());
             rows.add(row);
         }
-        boolean header = rows.size() > 0;
+        boolean header = !rows.isEmpty();
         doc.addTableBlock(rows, header);
         tableBuffer.clear();
     }
 
-    private static void flushListBuffer(List<String> listBuffer, MarkdownRenderer.MarkdownDocument doc, boolean ordered) {
+    private static void flushListBuffer(List<String> listBuffer, MarkdownDocument doc, boolean ordered) {
         if (listBuffer.isEmpty()) return;
         doc.addListBlock(listBuffer.stream().map(MarkdownParser::parseInline).toList(), ordered);
         listBuffer.clear();
     }
 
     // ----- inline parsing: supports **bold**, *italic*, `code` -----
-    public static List<MarkdownRenderer.InlineNode> parseInline(String text) {
-        List<MarkdownRenderer.InlineNode> out = new ArrayList<>();
+    public static List<Block.InlineNode> parseInline(String text) {
+        List<Block.InlineNode> out = new ArrayList<>();
         if (text == null || text.isEmpty()) return out;
 
         int i = 0;
@@ -210,21 +257,21 @@ public class MarkdownParser {
                 int j = text.indexOf('`', i + 1);
                 if (j == -1) j = text.length();
                 String code = text.substring(i + 1, j);
-                out.add(new MarkdownRenderer.InlineCodeNode(code));
+                out.add(new Block.InlineCodeNode(code));
                 i = j + 1;
             } else if (c == '*' && i + 1 < text.length() && text.charAt(i + 1) == '*') {
                 // bold
                 int j = text.indexOf("**", i + 2);
                 if (j == -1) j = text.length();
                 String inner = text.substring(i + 2, j);
-                out.add(new MarkdownRenderer.BoldNode(inner));
+                out.add(new Block.BoldNode(inner));
                 i = j + 2;
             } else if (c == '*') {
                 // italic
                 int j = text.indexOf('*', i + 1);
                 if (j == -1) j = text.length();
                 String inner = text.substring(i + 1, j);
-                out.add(new MarkdownRenderer.ItalicNode(inner));
+                out.add(new Block.ItalicNode(inner));
                 i = j + 1;
             } else {
                 // accumulate plain until next special char
@@ -236,7 +283,7 @@ public class MarkdownParser {
                     sb.append(cc);
                     j++;
                 }
-                out.add(new MarkdownRenderer.TextNode(sb.toString()));
+                out.add(new Block.TextNode(sb.toString()));
                 i = j;
             }
         }

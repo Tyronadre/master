@@ -1,0 +1,14 @@
+title: "Test III"
+posX: 3
+posY: 2
+icon: "minecraft:lectern"
+pre: ["Test II"]
+content: |
+  # OLSR - Test III
+  
+  ![net1](net_1.png)
+  
+  @task[
+    Welche Knoten werden in diesem Netz als Multipoint Relays gewählt?|A, E, G
+    Welcher Knoten wird zusätzlich MPR wenn die Verbindung zwischen C und A abbricht?|D
+  ]

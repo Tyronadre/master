@@ -1,14 +1,14 @@
-title: "OLSR – Analyse"
-posX: 6
-posY: 3
-icon: "minecraft:barrier"
-pre: ["Topology Control (TC)"]
+title: "Zusammenfassung"
+posX: 4
+posY: 0
+icon: "minecraft:lantern"
+pre: ["Topology Control Messages"]
 content: |
-  # OLSR – Analyse
+  # Zusammenfassung
 
   ---
   
-  OLSR verhält sich grundlegend anders als reaktive Protokolle.
+  OLSR verhält sich als proaktives Protokol anders als die vorher besprochenen reaktive Protokolle.
 
   ---
   
@@ -17,16 +17,12 @@ content: |
   | Eigenschaft | Bewertung |
   |------------|----------|
   | Overhead | Hoch (ständige Updates) |
-  | Reaktionszeit | Sehr schnell |
+  | Reaktionszeit | Sehr schnell (nach aufbau der Topologie) |
   | Stabilität | Hoch |
   | Skalierung | Gut durch MPR |
 
   ---
-  
-  ![Vergleich zwischen sofortiger Route und verzögerter Routensuche](image:olsr_analysis_speed)
-
-  ---
-  
+    
   ## Beobachtungen in MCNetwork
 
   - Sofortige Kommunikation möglich
@@ -41,7 +37,3 @@ content: |
 
   - Netzwerke mit konstantem Traffic
   - Szenarien mit stabiler Kommunikation
-
-  ---
-  
-  @task[Warum ist OLSR schnell?|Routen sind bereits bekannt;Was ist ein Nachteil?|Hoher Overhead]

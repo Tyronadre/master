@@ -22,7 +22,7 @@ public class ContentPane implements GuiEventListener {
     private final int x, y, w, h;
     private float scrollY = 0f;
     private static SubTopic subtopic;
-    private static MarkdownRenderer renderer;
+    private static final MarkdownRenderer renderer = new MarkdownRenderer();
     private Consumer<Void> onClose;
     private Consumer<SubTopic> onComplete;
     private int contentHeight;
@@ -46,7 +46,6 @@ public class ContentPane implements GuiEventListener {
 
     public void setSubtopic(SubTopic s) {
         subtopic = s;
-        renderer = s.getMarkdownRenderer();
         this.scrollY = 0f;
         interactiveBlocks.clear();
         focusedElement = null;
@@ -129,6 +128,9 @@ public class ContentPane implements GuiEventListener {
                 }
             }
         }
+
+        // unfocus current element if present
+        if (focusedElement != null) focusedElement.setFocused(false);
 
         // delegate to interactive blocks
         for (GuiEventListener el : interactiveBlocks) {

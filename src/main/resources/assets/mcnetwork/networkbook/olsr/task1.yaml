@@ -1,0 +1,26 @@
+title: "Test I"
+posX: 1
+posY: 2
+icon: "minecraft:lectern"
+pre: []
+content: |
+  Fragen zu HELLO Paketen
+  
+  ![pic1](hello_msg.png)
+  
+  ---
+  
+  @task[
+    Welcher Knoten sendete dieses Paket|0.0.0.3;
+    Die Verbindung zu welchem Knoten ist 0.0.0.3 bekannt?|0.0.0.2;
+    Welchen Typ hat diese Verbindung aktuell für Knoten 0.0.0.3 (asym oder sym)|asym;
+    Nachdem das Paket bei 0.0.0.2 verarbeitet wurde, ist die Verbindung zu welchem Knoten bekannt?|0.0.0.3;
+    Welchen Typ hat diese Verbindung (asym oder sym)|sym
+  ]
+  
+  ---
+  
+  @task[
+    Wie viele Pakete müssen nach einem Netzwerkstart zwischen zwei Nachbarn gesendet werden, bis ein symmetrischer Link etabliert wird? | 3;
+    Welche Art von Nachbarn sind einer Node durch HELLO Pakete bekannt? | 1-Hop-Neighbors, 2-Hop-Neighbors
+  ]

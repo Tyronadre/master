@@ -10,6 +10,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.Optional;
 
@@ -158,6 +159,10 @@ public class NetworkBookScreen extends Screen {
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (currentSubtopic != null && contentPane != null) {
             if (contentPane.keyPressed(keyCode, scanCode, modifiers)) return true;
+            if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+                closeSubtopic();
+                return true;
+            }
         }
         return super.keyPressed(keyCode, scanCode, modifiers);
     }

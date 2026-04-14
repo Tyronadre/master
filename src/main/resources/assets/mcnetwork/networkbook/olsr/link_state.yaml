@@ -1,6 +1,6 @@
 title: "Link State Prinzip"
 posX: 2
-posY: 1
+posY: 0
 icon: "minecraft:map"
 pre: ["OLSR – Einführung"]
 content: |
@@ -23,14 +23,10 @@ content: |
   
   ## Ablauf
 
-  - Knoten senden regelmäßig Statusinformationen
+  - Knoten senden regelmäßig Statusinformationen (Hello, TC)
   - Netzwerkzustand wird verteilt
   - Jeder berechnet eigene Routen
-
-  ---
   
-  ![Ein Netzwerk, in dem jeder Knoten Informationen über alle Verbindungen besitzt](image:olsr_link_state)
-
   ---
   
   ## Ergebnis
@@ -38,5 +34,3 @@ content: |
   Jeder Knoten kann unabhängig den besten Pfad bestimmen.
 
   ---
-  
-  @task[Was kennt ein Knoten?|Das Netzwerk;Wie entstehen Routen?|Durch lokale Berechnung]

@@ -1,5 +1,5 @@
 title: "Hello Messages"
-posX: 4
+posX: 2
 posY: 1
 icon: "minecraft:paper"
 pre: ["Link State Prinzip"]
@@ -10,33 +10,31 @@ content: |
   
   OLSR verwendet **Hello Messages**, um Nachbarn zu erkennen.
 
-  ---
-  
-  ## Funktion
-
-  - Knoten senden regelmäßig kurze Nachrichten
-  - Nachbarn werden identifiziert
-  - Verbindungen werden überprüft
+  ![Hello Message](hello_msg.png)
 
   ---
   
-  ![Knoten senden kleine Nachrichten an ihre direkten Nachbarn](image:olsr_hello_messages)
-
+  Wenn eine Node A initialisiert wird, ist der RoutingTable zunächst leer. Sobald ein HELLO Paket empfangen wird, speichert die Node die Verbindung zu diesem Nachbarn B als asymmetrischen Link ab. 
+  Da HELLO Pakete immer mit einer TTL von 1 gesendet werden, muss ein Empfangenes zwingend von einem direkten Nachbarn kommen.
+  Sendet die Node A nun selber ein HELLO Paket, wird in diesem gespeichert, das eine asymmetrische Verbindung zu Nachbar B bekannt ist.
+  Wird dieses von Node B empfangen, wird in Node B gespeichert das ein symmetrische Verbindung zu Node A besteht. 
+  Mit dem nächsten gesendeten HELLO, ist dies auch Node A bekannt.
+  
   ---
   
-  ## Ergebnis
-
-  Jeder Knoten kennt seine **direkten Verbindungen**.
-
+  Zusätzlich zu der Funktion Verbindungen zu direkten Nachbarn festzustellen, werden von Node B auch Informationen zu allen dessen Nachbarn weitergeben. Somit kennt Node A auch alle Nachbarn von Node B durch die HELLO Pakete.
+  Diese Nachbarn werden als 2-Hop-Neighbors gespeichert.
+  
   ---
   
-  ## Bedeutung
-
-  Diese Information ist die Grundlage für:
-
-  - Netzwerkkarte
-  - Routingberechnung
-
-  ---
+  Um weitere Verbindungen herstellen zu können, werden aus den 2-Hop-Neighbors Multipoint Relay Nodes ausgewählt (MPRs).
+  Die MPRs einer Node werden so gewählt, dass alle bekannten 2-Hop-Neighbors über möglichst wenig bekannte Nachbarn erreicht werden können. Die Liste dieser Nachbarn ist das MPR-Set einer Node.
   
-  @task[Wozu dienen Hello Messages?|Nachbarn erkennen;Was wird aufgebaut?|Nachbarschaftsinformation]
+  ![routing 1](node_1.png)
+  
+  Im HELLO wird angegeben wenn ein Nachbar als MPR ausgewählt wurde. Wenn Node A, Node B als MPR wählt, um eine dahinter liegende Node C zu erreichen, dann ist wird dies in den HELLO Paketen von Node A angegeben. 
+  Somit weiß auch Node B, dass Node A diese als MPR gewählt hat. Diese Informationen werden im MPR-Selector-Set gespeichert, das für die zweite Art von RoutingPaket genutzt wird.
+  
+  ![routing 2](node_2.png)
+  
+  ---

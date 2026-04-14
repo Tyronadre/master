@@ -1,0 +1,32 @@
+title: "Test II"
+posX: 2
+posY: 2
+icon: "minecraft:lectern"
+pre: ["Test I"]
+content: |
+  Fragen zu TC Paketen
+  
+  ![pic2](node_2.png)
+  
+  ---
+  
+  @task[
+    Welche Adressen sind in einem TC Paket diese Node enthalten?|0.0.0.14, 0.0.0.12, 0.0.0.15;
+    An welche Addresse werden empfangene TC Pakete gesendet? 255.255.255;
+    Welche Origin Addresse müssen TC Pakete haben, damit diese Node sie weiterleitet? 0.0.0.15
+  ]
+  
+  ---
+  
+  ![pic1](hello_msg.png)
+  
+  @task[
+    Welche Node hat dieses Paket versendet?|0.0.0.17;
+    Welche Addressen sind mindestens direkte Nachbarn von 0.0.0.17?|0.0.0.16, 0.0.0.18, 0.0.0.19;
+    Welche Route ist nach Empfang des Pakets in Node 0.0.0.19 zu 0.0.0.16 gespeichert (Inklusive Start- und Zieladresse)? 0.0.0.19, 0.0.0.17, 0.0.0.16;
+    Was passiert wenn Node 0.0.0.19 ein TC Paket mit ANSN 0 und einem leeren Set bekommt, nachdem es dieses TC Paket gesehen hat? | Nichts;
+    Was passiert wenn Node 0.0.0.19 ein TC Paket mit ANSN 2 und einem leeren Set bekommt, nachdem es dieses TC Paket gesehen hat? | Die Addressen aus dem Paket werden aus der Topogie gelöscht;
+    Nachdem das Netzwerk komplett aufgebaut wurde, und alle TC Nachrichten empfangen wurden sind wie viele Verbindungen im Netzwerk bekannt? | Nachbarn der Node und mindestens so viele Verbindungen, dass alle möglichen Nodes erreicht werden können
+  ]
+  
+  ---

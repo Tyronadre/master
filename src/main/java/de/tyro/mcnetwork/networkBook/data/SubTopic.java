@@ -1,16 +1,14 @@
 package de.tyro.mcnetwork.networkBook.data;
 
+import de.tyro.mcnetwork.networkBook.markdown.MarkdownDocument;
 import de.tyro.mcnetwork.networkBook.markdown.MarkdownParser;
 import de.tyro.mcnetwork.networkBook.markdown.MarkdownRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.phys.Vec2;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 /**
  * Subtopic represents a single lesson
@@ -21,7 +19,7 @@ public class SubTopic {
     private final String title;
     private final Vec2 position;
     private final Set<SubTopic> prerequisites = new HashSet<>();
-    private final MarkdownRenderer markdown;
+    private final MarkdownDocument markdown;
     private final ResourceLocation icon;
 
     public SubTopic(Topic topic, String title, ResourceLocation icon, String content, int posX, int posY) {
@@ -50,11 +48,7 @@ public class SubTopic {
         return position;
     }
 
-    public MarkdownRenderer.MarkdownDocument getMarkdownDocument() {
-        return markdown.getDocument();
-    }
-
-    public MarkdownRenderer getMarkdownRenderer() {
+    public MarkdownDocument getMarkdownDocument() {
         return markdown;
     }
 

@@ -1279,7 +1279,7 @@ Table of Contents
       |                  Neighbor Interface Address                   |
       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
       :                                                               :
-      :                                       :
+      :                                                               :
    (etc.)
 
    This is sent as the data-portion of the general packet format
