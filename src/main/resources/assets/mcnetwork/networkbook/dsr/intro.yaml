@@ -8,19 +8,15 @@ content: |
 
   ---
   
-  **DSR (Dynamic Source Routing)** ist ein **reaktives Routing-Protokoll**.
-
-  Wie bei AODV gilt:
-  
-  **Routen werden nur bei Bedarf aufgebaut.**
-
-  ---
+  DSR (Dynamic Source Routing) ist ein **reaktives** Routing-Protokoll.
+  Das heißt: Routen werden nur bei Bedarf aufgebaut.
   
   ## Zentrale Besonderheit
-
-  Im Gegensatz zu AODV speichert DSR den **kompletten Pfad im Paket selbst**.
+  
+  DSR speichert den **kompletten Pfad** im Paket selbst.
 
   → Dieses Verfahren nennt man **Source Routing**
+  Jedes Datenpaket wird in einem `DSR SourceRoute` Paket 'eingepackt' in dem die Route vorgegeben wird.
  
   ```
    0                   1                   2                   3
@@ -37,23 +33,10 @@ content: |
    |                           Address[n]                          |
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
   ```
-
-  ---
   
   ## Konsequenz
 
   - Kein Bedarf für klassische Routingtabellen
-  - Jeder Knoten folgt einfach dem vorgegebenen Pfad
-
-  ---
-  
-  ## Einordnung
-
-  | Typ | Beispiel |
-  |-----|----------|
-  | Reaktiv | AODV, DSR |
-  | Proaktiv | OLSR |
-
-  ---
-  
-  @task[Ist DSR reaktiv oder proaktiv?|Reaktiv;Was ist die Besonderheit von DSR?|Der komplette Pfad steht im Paket]
+  - Jedes Paket kann im Netzwerk weitergeleitet werden, indem die im Paket gespeicherte Route abgelaufen wird.
+  - Wenn eine Node ein Paket versenden will, muss zunächst eine Route bekannt sein, oder gefunden werden.
+  - Wenn der Pfad den ein Paket laufen will unterbrochen ist, muss ein Fehlermechanismus eingreifen, der die Origin Node über diesen Fehler aufklärt.

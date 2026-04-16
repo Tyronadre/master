@@ -5,6 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.AbstractQueue;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.Objects;
 
 public class FixedFiFoQueue<V> extends AbstractQueue<V> {
     final V[] items;
@@ -17,7 +18,7 @@ public class FixedFiFoQueue<V> extends AbstractQueue<V> {
 
     @Override
     public @NotNull Iterator<V> iterator() {
-        return Arrays.stream(items).iterator();
+        return Arrays.stream(items).filter(Objects::nonNull).iterator();
     }
 
     @Override

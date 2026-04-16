@@ -38,3 +38,8 @@ content: |
   ![routing 2](node_2.png)
   
   ---
+  
+  # Aufgabe
+  
+  Setze das genutze Protokol mit dem NetzwerkSimulator auf OLSR.
+  Baue zum testen zunächst ein einfaches Netzwerk mit nur 2 Nodes auf. Du solltest nun sehen, das beide Nodes ab und zu HELLO Pakete versenden. 

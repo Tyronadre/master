@@ -11,6 +11,7 @@ public class ItemRegistry {
 
     public static final DeferredItem<NetworkBook> NETWORK_BOOK = ITEMS.registerItem("network_book", NetworkBook::new);
     public static final DeferredItem<SimulationContollerItem> SIM_CONTROLLER = ITEMS.registerItem("sim_controller", SimulationContollerItem::new);
+    public static final DeferredItem<NetworkSnifferItem> NETWORK_SNIFFER = ITEMS.registerItem("network_sniffer", NetworkSnifferItem::new);
 
     public static void register(IEventBus eventBus) {
         ITEMS.register(eventBus);

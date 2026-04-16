@@ -9,16 +9,12 @@ content: |
   ---
   
   Wenn ein Knoten keine Route kennt, startet er eine **Route Request (RREQ)**.
-
-  ---
   
   ## Ablauf
 
   1. Sender erstellt ein RREQ  
   2. RREQ wird als **Broadcast** verschickt  
   3. Jeder Knoten fügt sich selbst zur Route hinzu  
-
-  ---
   
   ![Ein Broadcast, bei dem jeder Knoten seine Adresse zur Route hinzufügt](image:dsr_rreq_path_building)
 

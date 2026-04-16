@@ -2,7 +2,7 @@ package de.tyro.mcnetwork.network.configuration;
 
 import de.tyro.mcnetwork.MCNetwork;
 import de.tyro.mcnetwork.network.payload.SimulationEngineSettingsPayload;
-import de.tyro.mcnetwork.routing.SimulationEngine;
+import de.tyro.mcnetwork.simulation.SimulationEngine;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.network.protocol.configuration.ServerConfigurationPacketListener;
 import net.minecraft.resources.ResourceLocation;

@@ -1,8 +1,8 @@
 package de.tyro.mcnetwork.network;
 
 import de.tyro.mcnetwork.network.payload.networkPacket.NetworkPacketPayload;
-import de.tyro.mcnetwork.routing.IP;
-import de.tyro.mcnetwork.routing.packet.INetworkPacket;
+import de.tyro.mcnetwork.simulation.IP;
+import de.tyro.mcnetwork.simulation.packet.INetworkPacket;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;

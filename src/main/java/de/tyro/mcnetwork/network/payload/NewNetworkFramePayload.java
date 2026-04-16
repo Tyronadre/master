@@ -6,7 +6,7 @@ import de.tyro.mcnetwork.block.entity.ComputerBlockEntity;
 import de.tyro.mcnetwork.entity.NetworkFrameEntity;
 import de.tyro.mcnetwork.network.NetworkUtil;
 import de.tyro.mcnetwork.network.payload.networkPacket.NetworkPacketPayload;
-import de.tyro.mcnetwork.routing.packet.INetworkPacket;
+import de.tyro.mcnetwork.simulation.packet.INetworkPacket;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;

@@ -2,7 +2,7 @@ package de.tyro.mcnetwork.network.payload;
 
 import de.tyro.mcnetwork.MCNetwork;
 import de.tyro.mcnetwork.gui.SimulationControllerScreen;
-import de.tyro.mcnetwork.routing.SimulationEngine;
+import de.tyro.mcnetwork.simulation.SimulationEngine;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.codec.StreamCodec;

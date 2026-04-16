@@ -1,10 +1,10 @@
 package de.tyro.mcnetwork.terminal.commands;
 
-import de.tyro.mcnetwork.routing.IP;
-import de.tyro.mcnetwork.routing.SimulationEngine;
-import de.tyro.mcnetwork.routing.exceptions.DestinationUnreachableException;
-import de.tyro.mcnetwork.routing.packet.application.PingPacket;
-import de.tyro.mcnetwork.routing.packet.application.PingRepPacket;
+import de.tyro.mcnetwork.simulation.IP;
+import de.tyro.mcnetwork.simulation.SimulationEngine;
+import de.tyro.mcnetwork.simulation.exceptions.DestinationUnreachableException;
+import de.tyro.mcnetwork.simulation.packet.application.PingPacket;
+import de.tyro.mcnetwork.simulation.packet.application.PingRepPacket;
 import de.tyro.mcnetwork.terminal.Terminal;
 
 public class PingCommand extends Command {

@@ -8,9 +8,9 @@ import de.tyro.mcnetwork.client.RenderUtil;
 import de.tyro.mcnetwork.network.NetworkUtil;
 import de.tyro.mcnetwork.network.payload.NewNetworkFramePayload;
 import de.tyro.mcnetwork.network.payload.networkPacket.NetworkPacketCodecRegistry;
-import de.tyro.mcnetwork.routing.INetworkNode;
-import de.tyro.mcnetwork.routing.SimulationEngine;
-import de.tyro.mcnetwork.routing.packet.INetworkPacket;
+import de.tyro.mcnetwork.simulation.INetworkNode;
+import de.tyro.mcnetwork.simulation.SimulationEngine;
+import de.tyro.mcnetwork.simulation.packet.INetworkPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.nbt.CompoundTag;
@@ -20,11 +20,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.bus.api.Event;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.entity.IEntityWithComplexSpawn;
-import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 import org.slf4j.Logger;
 
 public class NetworkFrameEntity extends Entity implements IEntityWithComplexSpawn {

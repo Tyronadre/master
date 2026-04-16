@@ -1,7 +1,6 @@
 package de.tyro.mcnetwork.terminal.commands;
 
-import de.tyro.mcnetwork.routing.protocol.IRoutingProtocol;
-import de.tyro.mcnetwork.routing.protocol.ProtocolSettings;
+import de.tyro.mcnetwork.simulation.protocol.IRoutingProtocol;
 import de.tyro.mcnetwork.terminal.Terminal;
 
 import java.util.ArrayList;

@@ -1,6 +1,6 @@
 package de.tyro.mcnetwork.network.payload.networkPacket;
 
-import de.tyro.mcnetwork.routing.packet.INetworkPacket;
+import de.tyro.mcnetwork.simulation.packet.INetworkPacket;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import org.jetbrains.annotations.NotNull;

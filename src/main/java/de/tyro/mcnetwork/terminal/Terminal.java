@@ -1,21 +1,25 @@
 package de.tyro.mcnetwork.terminal;
 
 import de.tyro.mcnetwork.gui.TerminalScreen;
-import de.tyro.mcnetwork.routing.INetworkNode;
-import de.tyro.mcnetwork.terminal.commands.*;
+import de.tyro.mcnetwork.simulation.INetworkNode;
+import de.tyro.mcnetwork.terminal.commands.Command;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.player.Player;
 import net.neoforged.neoforge.network.PacketDistributor;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class Terminal {
 
     private final List<String> outputBuffer = new ArrayList<>();
     private final Queue<String> inputQueue = new ConcurrentLinkedQueue<>();
-    private List<ServerPlayer> registeredPlayers = new ArrayList<>();
+    private final List<ServerPlayer> registeredPlayers = new ArrayList<>();
     private final INetworkNode node;
 
     private Thread runningCommandThread;

@@ -18,7 +18,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
@@ -33,11 +32,6 @@ import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 
 import java.util.Collection;
-import java.util.OptionalDouble;
-import java.util.function.Function;
-import java.util.function.Supplier;
-
-import static net.minecraft.client.renderer.RenderStateShard.*;
 
 public class RenderUtil {
 
@@ -133,6 +127,10 @@ public class RenderUtil {
 
     private boolean clipEnabled;
 
+
+    public RenderUtil(GuiGraphics gg) {
+        this(gg.pose(), gg.bufferSource(), 1f, 1);
+    }
 
     public RenderUtil(PoseStack poseStack, MultiBufferSource buffer, float alpha, int packedLight) {
         this.mc = Minecraft.getInstance();

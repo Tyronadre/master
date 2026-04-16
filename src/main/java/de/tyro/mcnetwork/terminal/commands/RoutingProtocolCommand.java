@@ -1,10 +1,10 @@
 package de.tyro.mcnetwork.terminal.commands;
 
-import de.tyro.mcnetwork.routing.protocol.AODVProtocol;
-import de.tyro.mcnetwork.routing.protocol.DSRProtocol;
-import de.tyro.mcnetwork.routing.protocol.IRoutingProtocol;
-import de.tyro.mcnetwork.routing.protocol.LARProtocol;
-import de.tyro.mcnetwork.routing.protocol.OLSRProtocol;
+import de.tyro.mcnetwork.simulation.protocol.AODVProtocol;
+import de.tyro.mcnetwork.simulation.protocol.DSRProtocol;
+import de.tyro.mcnetwork.simulation.protocol.IRoutingProtocol;
+import de.tyro.mcnetwork.simulation.protocol.LARProtocol;
+import de.tyro.mcnetwork.simulation.protocol.OLSRProtocol;
 import de.tyro.mcnetwork.terminal.Terminal;
 
 import java.util.List;

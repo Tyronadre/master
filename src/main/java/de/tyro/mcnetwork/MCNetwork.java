@@ -1,22 +1,20 @@
 package de.tyro.mcnetwork;
 
+import com.mojang.logging.LogUtils;
 import de.tyro.mcnetwork.block.BlockRegistry;
 import de.tyro.mcnetwork.block.entity.BlockEntityRegistry;
 import de.tyro.mcnetwork.entity.EntityRegistry;
 import de.tyro.mcnetwork.gui.MenuRegistry;
 import de.tyro.mcnetwork.item.ItemRegistry;
 import de.tyro.mcnetwork.network.payload.networkPacket.NetworkPacketCodecGenerator;
-import de.tyro.mcnetwork.routing.SimulationEngine;
+import de.tyro.mcnetwork.simulation.SimulationEngine;
 import de.tyro.mcnetwork.tabs.TabRegistry;
-import org.slf4j.Logger;
-
-import com.mojang.logging.LogUtils;
-
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
-import net.neoforged.fml.ModContainer;
 import net.neoforged.neoforge.common.NeoForge;
+import org.slf4j.Logger;
 
 // The value here should match an entry in the META-INF/neoforge.mods.toml file
 @Mod(MCNetwork.MODID)

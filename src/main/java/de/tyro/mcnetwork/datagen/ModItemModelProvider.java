@@ -15,5 +15,6 @@ public class ModItemModelProvider extends ItemModelProvider {
     protected void registerModels() {
         basicItem(ItemRegistry.NETWORK_BOOK.get());
         basicItem(ItemRegistry.SIM_CONTROLLER.get());
+        basicItem(ItemRegistry.NETWORK_SNIFFER.get());
     }
 }

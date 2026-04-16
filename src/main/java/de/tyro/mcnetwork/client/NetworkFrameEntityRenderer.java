@@ -2,9 +2,6 @@ package de.tyro.mcnetwork.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.tyro.mcnetwork.entity.NetworkFrameEntity;
-import de.tyro.mcnetwork.routing.packet.IApplicationPacket;
-import de.tyro.mcnetwork.routing.packet.IProtocolPaket;
-import de.tyro.mcnetwork.routing.packet.application.TraceRoutePacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
