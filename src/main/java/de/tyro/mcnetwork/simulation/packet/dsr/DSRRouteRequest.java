@@ -5,6 +5,8 @@ import de.tyro.mcnetwork.client.RenderUtil;
 import de.tyro.mcnetwork.simulation.IP;
 import de.tyro.mcnetwork.simulation.packet.IProtocolPaket;
 import de.tyro.mcnetwork.simulation.packet.NetworkPacket;
+import net.minecraft.client.gui.Font;
+import net.minecraft.world.phys.Vec2;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -97,6 +99,7 @@ public class DSRRouteRequest extends NetworkPacket implements IProtocolPaket {
     @Override
     protected void renderPacketContent(RenderUtil renderer, PoseStack poseStack, float width) {
         var pose = renderer.getPoseStack();
+        var font = renderer.getFont();
         pose.scale(0.5f,0.5f,0.5f);
 
         width *= 2;
@@ -112,6 +115,13 @@ public class DSRRouteRequest extends NetworkPacket implements IProtocolPaket {
         renderer.drawStringWithAlphaColor(RenderUtil.Align.RIGHT, targetAddress.toString(), width, y);
         y+= 10;
 
-        renderer.drawCollectionAsString(RenderUtil.Align.RIGHT, addresses, 100, renderer.getTextColorFromAlpha(), width, y);
+        renderer.drawCollectionAsString(RenderUtil.Align.RIGHT, addresses, (int) width - font.width("Target") + 5, renderer.getTextColorFromAlpha(), width, y);
+    }
+
+    @Override
+    public Vec2 getRenderSize(Font font) {
+        var superSize = super.getRenderSize(font);
+        var thisWidth = Math.min(100, font.width(addresses.toString())) / 2;
+        return new Vec2(Math.max(superSize.x, thisWidth), superSize.y + 5);
     }
 }

@@ -68,4 +68,9 @@ public class ProtocolSettings {
             onChange.accept((T) value);
         }
     }
+
+    @Override
+    public String toString() {
+        return ProtocolSettings.class.getSimpleName() + "[registeredSettings: " + entries.size() + "]";
+    }
 }

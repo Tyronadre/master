@@ -6,13 +6,12 @@ import de.tyro.mcnetwork.networkBook.data.Topic;
 import de.tyro.mcnetwork.networkBook.data.TopicManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import org.lwjgl.glfw.GLFW;
-
-import java.util.Optional;
 
 public class NetworkBookScreen extends Screen {
 
@@ -58,6 +57,12 @@ public class NetworkBookScreen extends Screen {
         if (currentSubtopic != null) contentPane.setSubtopic(currentSubtopic);
         contentPane.setCloseListener(c -> closeSubtopic());
         contentPane.setCompletionListener(this::onMarkComplete);
+
+        // Add edit button (only in dev environments)
+        this.addRenderableWidget(Button.builder(Component.literal("Edit"), button -> this.onEditClicked())
+                .pos(this.width - 60, 8)
+                .size(50, 16)
+                .build());
 
         this.initialized = true;
     }
@@ -170,5 +175,10 @@ public class NetworkBookScreen extends Screen {
     @Override
     public boolean isPauseScreen() {
         return true;
+    }
+
+    void onEditClicked() {
+        Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0f));
+        Minecraft.getInstance().setScreen(new MarkdownEditorSelectorScreen(this));
     }
 }

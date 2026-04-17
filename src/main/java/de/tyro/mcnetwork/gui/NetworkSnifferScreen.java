@@ -13,6 +13,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -120,7 +121,8 @@ public class NetworkSnifferScreen extends Screen {
 
     private boolean matchesFilter(CapturedFrame frame) {
         try {
-            if (!timestampFilterAfter.getValue().isEmpty() && frame.getTimestamp() < Long.parseLong(timestampFilterAfter.getValue())) return false;
+            if (!timestampFilterBefore.getValue().isEmpty() && frame.getTimestamp() >= Long.parseLong(timestampFilterBefore.getValue())) return false;
+            if (!timestampFilterAfter.getValue().isEmpty() && frame.getTimestamp() <= Long.parseLong(timestampFilterAfter.getValue())) return false;
             if (!frameSrcFilter.getValue().isEmpty() && !matchesIP(frame.getFrameFrom(), frameSrcFilter.getValue())) return false;
             if (!frameDstFilter.getValue().isEmpty() && !matchesIP(frame.getFrameTo(), frameDstFilter.getValue())) return false;
             if (!packetSrcFilter.getValue().isEmpty() && !matchesIP(frame.getPacketOriginator(), packetSrcFilter.getValue())) return false;
@@ -137,7 +139,7 @@ public class NetworkSnifferScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics gg, int mouseX, int mouseY, float partialTicks) {
+    public void render(@NotNull GuiGraphics gg, int mouseX, int mouseY, float partialTicks) {
         renderBackground(gg, mouseX, mouseY, partialTicks);
         super.render(gg, mouseX, mouseY, partialTicks);
 

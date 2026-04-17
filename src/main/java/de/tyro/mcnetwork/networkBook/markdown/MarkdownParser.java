@@ -18,7 +18,7 @@ public class MarkdownParser {
     private static final Pattern tableLinePattern = Pattern.compile("^\\s*\\|.*\\|\\s*$");
     private static final Pattern fencedCodePattern = Pattern.compile("^```(?:\\s*(\\w+))?\\s*$");
     private static final Pattern orderedListItemPattern = Pattern.compile("\\d+\\.\\s+(.*)$");
-    private static final Pattern imagePattern = Pattern.compile("!\\[.*?]\\(([\\w.]*)\\s*(\".*\")?.*\\)");
+    private static final Pattern imagePattern = Pattern.compile("!\\[(.*?)]\\(([\\w.]*)");
     private static final Pattern animationPatter = Pattern.compile("@animation\\[(.*)]");
 
     private static final ResourceManager resourceManager = Minecraft.getInstance().getResourceManager();
@@ -99,7 +99,7 @@ public class MarkdownParser {
                         // Found the matching closing bracket - add everything before it
                         int lastBracketIndex = currentLine.lastIndexOf(']');
                         if (lastBracketIndex > 0) {
-                            taskContent.append("\n").append(currentLine.substring(0, lastBracketIndex));
+                            taskContent.append("\n").append(currentLine, 0, lastBracketIndex);
                         }
                     }
                     i++;
@@ -124,7 +124,7 @@ public class MarkdownParser {
             //image
             Matcher img = imagePattern.matcher(line);
             if (img.find()) {
-                doc.addImageBlock(resourceLocation.withSuffix("/" + img.group(1)), img.group(2));
+                doc.addImageBlock(resourceLocation.withSuffix("/" + img.group(2)), img.group(1));
                 i++;
                 continue;
             }

@@ -146,4 +146,8 @@ content: |
     ![routing 3](node_2.png)
   
   --- 
+  
+  # Aufgaben
+  
+  Baue ein Netzwerk mit mindestens 4 Nodes die nur jeweils eine Verbindung haben, und untersuche welche Arten von TC Paketen gesendet werden, und wie sich die Routing Tabellen verhalten.
 

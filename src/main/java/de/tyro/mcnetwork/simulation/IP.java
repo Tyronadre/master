@@ -18,6 +18,10 @@ public class IP implements INBTSerializable<CompoundTag> {
     public static final IP BROADCAST = new IP(new int[]{255, 255, 255, 255});
     int[] address;
 
+    public IP() {
+        this.address = new int[]{0, 0, 0, 0};
+    }
+
     public IP(int[] address) {
         if (address == null || address.length != 4) throw new IllegalArgumentException("Invalid IP address: " + Arrays.toString(address));
         this.address = address;
@@ -93,6 +97,7 @@ public class IP implements INBTSerializable<CompoundTag> {
     @Override
     public void deserializeNBT(HolderLookup.@NotNull Provider provider, @NotNull CompoundTag nbt) {
         for (int i = 0; i < 4; i++) address[i] = nbt.getInt(String.valueOf(i));
+        ips.add(this);
     }
 
     public int compareTo(IP neighborAddress) {

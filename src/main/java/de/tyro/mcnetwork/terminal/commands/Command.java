@@ -19,7 +19,6 @@ public abstract class Command {
     /** Wird beim Start genau einmal aufgerufen */
     public abstract void execute() throws InterruptedException;
 
-    /** Optionaler Name */
     public abstract String getName();
 
     /** Returns completion suggestions for the given argument index and partial input */
@@ -44,10 +43,21 @@ public abstract class Command {
         terminal.printLine(text);
     }
 
-    protected String getHelp() {
-        return getName();
+    /**
+     * @return A list of Strings that will be printed when help is called on this command.
+     */
+    protected List<String> getHelp() {
+        return List.of(getName());
     }
 
+    /**
+     * Get a variable from the arguments. If this argument is not of the correct type or does not exist, returns the defaultValue parameter
+     * @param clazz the class that the variable should have.
+     * @param argPos index in the argument array
+     * @param defaultValue default return value
+     * @return the value or the default value
+     * @param <T> Class of the variable
+     */
     protected <T> T getOrDefault(Class<T> clazz, int argPos, T defaultValue) {
         try {
             return getOrThrow(clazz, argPos);

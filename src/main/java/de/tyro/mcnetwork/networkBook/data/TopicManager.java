@@ -5,10 +5,8 @@ import de.tyro.mcnetwork.MCNetwork;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.storage.DimensionDataStorage;
 import org.slf4j.Logger;
 import org.yaml.snakeyaml.Yaml;
 
@@ -72,7 +70,7 @@ public class TopicManager {
                 String content = map.get("content") == null ? "" : map.get("content").toString();
                 int posx = map.get("posX") == null ? 0 : (int) map.get("posX") * 100;
                 int posy = map.get("posY") == null ? 0 : (int) map.get("posY") * 100;
-                var sub = new SubTopic(topic, title, icon, content, posx, posy);
+                var sub = new SubTopic(topic, title, icon, content, posx, posy, entry.getKey());
                 if (map.get("pre") != null) {
                     pres.put(sub, (List<String>) map.get("pre"));
                 }

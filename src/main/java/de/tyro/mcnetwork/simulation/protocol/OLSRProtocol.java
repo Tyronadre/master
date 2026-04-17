@@ -33,9 +33,9 @@ public class OLSRProtocol implements IRoutingProtocol {
     private static final Logger logger = LogUtils.getLogger();
 
     //CONSTANTS
-    private static int HELLO_INTERVAL = 2_000;
-    private static int REFRESH_INTERVAL = 2_000;
-    private static int TC_INTERVAL = 5_000;
+    private static int HELLO_INTERVAL = 500;
+    private static int REFRESH_INTERVAL = 1_000;
+    private static int TC_INTERVAL = 2500;
     private static int DUP_HOLD_TIME = 30_000;
     private static int NEIGHB_HOLD_TIME = 3 * REFRESH_INTERVAL;
     private static int TOP_HOLD_TIME = 3 * TC_INTERVAL;
@@ -158,7 +158,7 @@ public class OLSRProtocol implements IRoutingProtocol {
         if (link == null || link.symTime < now) return;
 
         // Only forward if sender selected me as MPR
-        if (!mprSelectorSet.contains(sender)) return;
+        if (!mprSelectorSet.containsKey(sender)) return;
 
         sim.broadcast(node, packet, ttl - 1);
     }
@@ -356,7 +356,7 @@ public class OLSRProtocol implements IRoutingProtocol {
 
         detectNeighborhoodChanges(now);
         topologySet.removeIf(e -> e.time < now);
-        mprSelectorSet.entries.entrySet().removeIf(e -> e.getValue().time < now);
+        mprSelectorSet.entrySet().removeIf(e -> e.getValue().time < now);
 
         for (Iterator<Tuple<INetworkPacket, Integer>> iterator = pending.iterator(); iterator.hasNext(); ) {
             Tuple<INetworkPacket, Integer> pend = iterator.next();
@@ -427,7 +427,7 @@ public class OLSRProtocol implements IRoutingProtocol {
             // Delete 2-hop tuples
             twoHopNeighborSet.removeIf(e -> e.neighborAddress.equals(neighbor));
             // Delete MPR selector tuples
-            mprSelectorSet.entries.remove(neighbor);
+            mprSelectorSet.remove(neighbor);
             neighborhoodChanged = true;
         }
 
@@ -489,7 +489,7 @@ public class OLSRProtocol implements IRoutingProtocol {
         y += 10;
 
         renderUtil.drawStringWithAlphaColor(RenderUtil.Align.LEFT, "MPRSelectorSet", width, y);
-        renderUtil.drawCollectionAsString(RenderUtil.Align.RIGHT, mprSelectorSet.entries.keySet(), (int) (width - font.width("MPRSelectorSet ")), renderUtil.getTextColorFromAlpha(), width, y);
+        renderUtil.drawCollectionAsString(RenderUtil.Align.RIGHT, mprSelectorSet.keySet(), (int) (width - font.width("MPRSelectorSet ")), renderUtil.getTextColorFromAlpha(), width, y);
         y += 10;
 
 
@@ -917,7 +917,7 @@ public class OLSRProtocol implements IRoutingProtocol {
         //   TC-message SHOULD be transmitted after an interval shorter than
         //   TC_INTERVAL.
 
-        var newAdvertisedNeighborMainAddresses = mprSelectorSet.entries.keySet();
+        var newAdvertisedNeighborMainAddresses = mprSelectorSet.keySet();
         if (!newAdvertisedNeighborMainAddresses.equals(advertisedNeighborMainAddresses)) {
             advertisedNeighborSequenceNumber++;
             advertisedNeighborMainAddresses = newAdvertisedNeighborMainAddresses;
@@ -1044,7 +1044,7 @@ public class OLSRProtocol implements IRoutingProtocol {
         //
         //                    MS_main_addr   =  Originator Address
 
-        MPRSelectorSet.MPRSelectorSetEntry entry = mprSelectorSet.entries.computeIfAbsent(packet.getOriginatorIP(), k -> new MPRSelectorSet.MPRSelectorSetEntry(packet.getOriginatorIP(), 0L));
+        MPRSelectorSet.MPRSelectorSetEntry entry = mprSelectorSet.computeIfAbsent(packet.getOriginatorIP(), k -> new MPRSelectorSet.MPRSelectorSetEntry(packet.getOriginatorIP(), 0L));
 
         //     2    The tuple (new or otherwise) with
         //
@@ -1471,6 +1471,192 @@ public class OLSRProtocol implements IRoutingProtocol {
     }
 
     /**
+     * A node records a set of "neighbor tuples" (N_neighbor_main_addr,
+     * N_status, N_willingness), describing neighbors.  N_neighbor_main_addr
+     * is the main neighborAddress of a neighbor, N_status specifies if the node is
+     * NOT_SYM or SYM.  N_willingness in an integer between 0 and 7, and
+     * specifies the node's willingness to carry traffic on behalf of other
+     * nodes.
+     */
+    private static class NeighborSet {
+        private final Map<IP, NeighborSetEntry> entries = new HashMap<>();
+
+        public Set<NeighborSetEntry> getAll() {
+            return new HashSet<>(entries.values());
+        }
+
+        public NeighborSetEntry get(IP address) {
+            return entries.get(address);
+        }
+
+        public void put(IP address, NeighborSetEntry entry) {
+            entries.put(address, entry);
+        }
+
+        public boolean containsKey(IP otherNode) {
+            return entries.containsKey(otherNode);
+        }
+
+        @Override
+        public String toString() {
+            return entries.toString();
+        }
+
+        private static final class NeighborSetEntry {
+            private final IP address;
+            private Boolean isSym;
+            private Willingness willingness;
+
+            private NeighborSetEntry(IP address, Boolean isSym, Willingness willingness) {
+                this.address = address;
+                this.isSym = isSym;
+                this.willingness = willingness;
+            }
+
+
+            @Override
+            public boolean equals(Object obj) {
+                if (obj == this) return true;
+                if (obj == null || obj.getClass() != this.getClass()) return false;
+                var that = (NeighborSetEntry) obj;
+                return Objects.equals(this.address, that.address) && Objects.equals(this.isSym, that.isSym) && Objects.equals(this.willingness, that.willingness);
+            }
+
+            @Override
+            public int hashCode() {
+                return Objects.hash(address, isSym, willingness);
+            }
+
+            @Override
+            public String toString() {
+                return "NeighborSetEntry[" + "neighborAddress=" + address + ", " + "isSym=" + isSym + ", " + "willingness=" + willingness + ']';
+            }
+
+        }
+    }
+
+    private final LinkSet linkSet = new LinkSet();
+
+    /**
+     * A node records a set of MPR-selector tuples (MS_main_addr, MS_time),
+     * describing the neighbors which have selected this node as a MPR.
+     * MS_main_addr is the main neighborAddress of a node, which has selected this
+     * node as MPR.  MS_time specifies the time at which the tuple expires
+     * and *MUST* be removed.
+     * <br><br>
+     * In a node, the set of MPR-selector tuples are denoted the "MPR
+     * Selector Set".
+     */
+    private static class MPRSelectorSet extends HashMap<IP, MPRSelectorSet.MPRSelectorSetEntry> {
+
+        private static final class MPRSelectorSetEntry {
+            private final IP address;
+            private Long time;
+
+            private MPRSelectorSetEntry(IP address, Long time) {
+                this.address = address;
+                this.time = time;
+            }
+
+            @Override
+            public boolean equals(Object obj) {
+                if (obj == this) return true;
+                if (obj == null || obj.getClass() != this.getClass()) return false;
+                var that = (MPRSelectorSetEntry) obj;
+                return Objects.equals(this.address, that.address) && Objects.equals(this.time, that.time);
+            }
+
+            @Override
+            public int hashCode() {
+                return Objects.hash(address, time);
+            }
+
+            @Override
+            public String toString() {
+                return "MPRSelectorSetEntry[" + "address=" + address + ", " + "time=" + time + ']';
+            }
+
+        }
+    }
+
+    private final NeighborSet neighborSet = new NeighborSet();
+
+    private static class TopologySet {
+        private final Set<TopologySetEntry> entries = new HashSet<>();
+
+        public void add(TopologySetEntry topologySetEntry) {
+            entries.add(topologySetEntry);
+        }
+
+        public List<TopologySetEntry> getSetForLastAddress(IP lastAddress) {
+            return entries.stream().filter(it -> it.lastAddress.equals(lastAddress)).toList();
+        }
+
+        public List<TopologySetEntry> getSetForAddress(IP address) {
+            return entries.stream().filter(it -> it.lastAddress.equals(address)).toList();
+        }
+
+        public void removeIf(Function<TopologySetEntry, Boolean> filter) {
+            entries.removeIf(filter::apply);
+        }
+
+        public List<TopologySetEntry> filteredList(Function<TopologySetEntry, Boolean> filter) {
+            return entries.stream().filter(filter::apply).toList();
+        }
+
+        @Override
+        public String toString() {
+            return entries.toString();
+        }
+
+        private static final class TopologySetEntry {
+            private final IP address;
+            private final IP lastAddress;
+            private final Integer seqNumber;
+            private Long time;
+
+            private TopologySetEntry(IP address, IP lastAddress, Integer seqNumber, Long time) {
+                this.address = address;
+                this.lastAddress = lastAddress;
+                this.seqNumber = seqNumber;
+                this.time = time;
+            }
+
+            @Override
+            public boolean equals(Object obj) {
+                if (obj == this) return true;
+                if (obj == null || obj.getClass() != this.getClass()) return false;
+                var that = (TopologySetEntry) obj;
+                return Objects.equals(this.address, that.address) && Objects.equals(this.lastAddress, that.lastAddress) && Objects.equals(this.seqNumber, that.seqNumber) && Objects.equals(this.time, that.time);
+            }
+
+            @Override
+            public int hashCode() {
+                return Objects.hash(address, lastAddress, seqNumber, time);
+            }
+
+            @Override
+            public String toString() {
+                return "TopologySetEntry[" + "address=" + address + ", " + "lastAddress=" + lastAddress + ", " + "seqNumber=" + seqNumber + ", " + "time=" + time + ']';
+            }
+
+        }
+    }
+
+    private final TwoHopNeighborSet twoHopNeighborSet = new TwoHopNeighborSet();
+
+    /**
+     * A node maintains a set of neighbors which are selected as MPR.  Their main addresses are listed in the MPR Set.
+     */
+    private static class MPRSet extends HashSet<IP> {
+        public Set<IP> getAll() {
+            return new HashSet<>(this);
+        }
+    }
+
+    private final MPRSet mprSet = new MPRSet();
+
+    /**
      * A node records a set of "Link Tuples" (L_local_iface_addr,
      * L_neighbor_iface_addr, L_SYM_time, L_ASYM_time, L_time).
      * L_local_iface_addr is the interface neighborAddress of the local node (i.e.,
@@ -1511,6 +1697,11 @@ public class OLSRProtocol implements IRoutingProtocol {
         }
 
 
+        @Override
+        public String toString() {
+            return entries.toString();
+        }
+
         private static final class LinkSetEntry {
             private final IP otherNode;
             private long symTime;
@@ -1548,70 +1739,7 @@ public class OLSRProtocol implements IRoutingProtocol {
         }
     }
 
-    private final LinkSet linkSet = new LinkSet();
-
-
-    /**
-     * A node records a set of "neighbor tuples" (N_neighbor_main_addr,
-     * N_status, N_willingness), describing neighbors.  N_neighbor_main_addr
-     * is the main neighborAddress of a neighbor, N_status specifies if the node is
-     * NOT_SYM or SYM.  N_willingness in an integer between 0 and 7, and
-     * specifies the node's willingness to carry traffic on behalf of other
-     * nodes.
-     */
-    private static class NeighborSet {
-        private final Map<IP, NeighborSetEntry> entries = new HashMap<>();
-
-        public Set<NeighborSetEntry> getAll() {
-            return new HashSet<>(entries.values());
-        }
-
-        public NeighborSetEntry get(IP address) {
-            return entries.get(address);
-        }
-
-        public void put(IP address, NeighborSetEntry entry) {
-            entries.put(address, entry);
-        }
-
-        public boolean containsKey(IP otherNode) {
-            return entries.containsKey(otherNode);
-        }
-
-        private static final class NeighborSetEntry {
-            private final IP address;
-            private Boolean isSym;
-            private Willingness willingness;
-
-            private NeighborSetEntry(IP address, Boolean isSym, Willingness willingness) {
-                this.address = address;
-                this.isSym = isSym;
-                this.willingness = willingness;
-            }
-
-
-            @Override
-            public boolean equals(Object obj) {
-                if (obj == this) return true;
-                if (obj == null || obj.getClass() != this.getClass()) return false;
-                var that = (NeighborSetEntry) obj;
-                return Objects.equals(this.address, that.address) && Objects.equals(this.isSym, that.isSym) && Objects.equals(this.willingness, that.willingness);
-            }
-
-            @Override
-            public int hashCode() {
-                return Objects.hash(address, isSym, willingness);
-            }
-
-            @Override
-            public String toString() {
-                return "NeighborSetEntry[" + "neighborAddress=" + address + ", " + "isSym=" + isSym + ", " + "willingness=" + willingness + ']';
-            }
-
-        }
-    }
-
-    private final NeighborSet neighborSet = new NeighborSet();
+    private final MPRSelectorSet mprSelectorSet = new MPRSelectorSet();
 
     /**
      * A node records a set of "2-hop tuples" (N_neighbor_main_addr,
@@ -1702,124 +1830,10 @@ public class OLSRProtocol implements IRoutingProtocol {
                 return this.neighborAddress.compareTo(o.neighborAddress);
             }
         }
-    }
 
-    private final TwoHopNeighborSet twoHopNeighborSet = new TwoHopNeighborSet();
-
-    /**
-     * A node maintains a set of neighbors which are selected as MPR.  Their main addresses are listed in the MPR Set.
-     */
-    private static class MPRSet extends HashSet<IP> {
-        public Set<IP> getAll() {
-            return new HashSet<>(this);
-        }
-    }
-
-    private final MPRSet mprSet = new MPRSet();
-
-    /**
-     * A node records a set of MPR-selector tuples (MS_main_addr, MS_time),
-     * describing the neighbors which have selected this node as a MPR.
-     * MS_main_addr is the main neighborAddress of a node, which has selected this
-     * node as MPR.  MS_time specifies the time at which the tuple expires
-     * and *MUST* be removed.
-     * <br><br>
-     * In a node, the set of MPR-selector tuples are denoted the "MPR
-     * Selector Set".
-     */
-    private static class MPRSelectorSet {
-        private final Map<IP, MPRSelectorSetEntry> entries = new HashMap<>();
-
-        public boolean contains(IP address) {
-            return entries.containsKey(address);
-        }
-
-        private static final class MPRSelectorSetEntry {
-            private final IP address;
-            private Long time;
-
-            private MPRSelectorSetEntry(IP address, Long time) {
-                this.address = address;
-                this.time = time;
-            }
-
-            @Override
-            public boolean equals(Object obj) {
-                if (obj == this) return true;
-                if (obj == null || obj.getClass() != this.getClass()) return false;
-                var that = (MPRSelectorSetEntry) obj;
-                return Objects.equals(this.address, that.address) && Objects.equals(this.time, that.time);
-            }
-
-            @Override
-            public int hashCode() {
-                return Objects.hash(address, time);
-            }
-
-            @Override
-            public String toString() {
-                return "MPRSelectorSetEntry[" + "address=" + address + ", " + "time=" + time + ']';
-            }
-
-        }
-    }
-
-    private final MPRSelectorSet mprSelectorSet = new MPRSelectorSet();
-
-    private static class TopologySet {
-        private final Set<TopologySetEntry> entries = new HashSet<>();
-
-        public void add(TopologySetEntry topologySetEntry) {
-            entries.add(topologySetEntry);
-        }
-
-        public List<TopologySetEntry> getSetForLastAddress(IP lastAddress) {
-            return entries.stream().filter(it -> it.lastAddress.equals(lastAddress)).toList();
-        }
-
-        public List<TopologySetEntry> getSetForAddress(IP address) {
-            return entries.stream().filter(it -> it.lastAddress.equals(address)).toList();
-        }
-
-        public void removeIf(Function<TopologySetEntry, Boolean> filter) {
-            entries.removeIf(filter::apply);
-        }
-
-        public List<TopologySetEntry> filteredList(Function<TopologySetEntry, Boolean> filter) {
-            return entries.stream().filter(filter::apply).toList();
-        }
-
-        private static final class TopologySetEntry {
-            private final IP address;
-            private final IP lastAddress;
-            private final Integer seqNumber;
-            private Long time;
-
-            private TopologySetEntry(IP address, IP lastAddress, Integer seqNumber, Long time) {
-                this.address = address;
-                this.lastAddress = lastAddress;
-                this.seqNumber = seqNumber;
-                this.time = time;
-            }
-
-            @Override
-            public boolean equals(Object obj) {
-                if (obj == this) return true;
-                if (obj == null || obj.getClass() != this.getClass()) return false;
-                var that = (TopologySetEntry) obj;
-                return Objects.equals(this.address, that.address) && Objects.equals(this.lastAddress, that.lastAddress) && Objects.equals(this.seqNumber, that.seqNumber) && Objects.equals(this.time, that.time);
-            }
-
-            @Override
-            public int hashCode() {
-                return Objects.hash(address, lastAddress, seqNumber, time);
-            }
-
-            @Override
-            public String toString() {
-                return "TopologySetEntry[" + "address=" + address + ", " + "lastAddress=" + lastAddress + ", " + "seqNumber=" + seqNumber + ", " + "time=" + time + ']';
-            }
-
+        @Override
+        public String toString() {
+            return entries.toString();
         }
     }
 

@@ -1,18 +1,18 @@
 #- title: Debug
 #  path: debug
 #  icon: minecraft:book
-#- title: Intro
-#  path: intro
-#  icon: minecraft:book
-#- title: AODV
-#  path: aodv
-#  icon: minecraft:book
-#- title: DSR
-#  path: dsr
-#  icon: minecraft:book
-#- title: LAR
-#  path: lar
-#  icon: minecraft:book
+- title: Intro
+  path: intro
+  icon: minecraft:book
+- title: AODV
+  path: aodv
+  icon: minecraft:book
+- title: DSR
+  path: dsr
+  icon: minecraft:book
+- title: LAR
+  path: lar
+  icon: minecraft:book
 - title: OLSR
   path: olsr
   icon: minecraft:book

@@ -13,7 +13,7 @@ public class HelpCommand extends Command {
         if (args.length == 0)
             CommandRegistry.INSTANCE.getCommands().forEach(it -> println(it.getName()));
         if (args.length == 1) {
-            println(CommandRegistry.INSTANCE.get(getOrThrow(String.class, 0), terminal, null).getHelp());
+            CommandRegistry.INSTANCE.get(getOrThrow(String.class, 0), terminal, null).getHelp().forEach(this::println);
         }
     }
 

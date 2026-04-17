@@ -1,47 +1,24 @@
-title: "DSR – Analyse"
+title: DSR – Analyse
 posX: 6
 posY: 3
-icon: "minecraft:comparator"
-pre: ["Route Maintenance und Cache"]
+icon: minecraft:comparator
+pre: [ Route Maintenance und Cache ]
 content: |
   # DSR – Analyse
 
-  ---
-  
-  DSR zeigt ein anderes Verhalten als AODV.
+  DSR ermöglicht es zusätzlich zu den aufgezeigen Features im Mod, Kontrollpakete und Datenpakete zusammen zu senden. Beispielsweise kann ein einzelnes UDP Paket einfach direkt mit dem RREQ versendet werden. Somit kann der Overhead weiter minimiert werden.
+  Auch verschiedene Kontrollmessages können in einem Paket gesendet werden.
+  Es gibt außerdem verschiedene Modi und Erweiterungen die nicht umgesetzt wurden, die verschiedene Probleme des Protokolls zu umgehen versuchen.
 
   ---
-  
+
   ## Eigenschaften
 
-  | Eigenschaft | Bewertung |
-  |------------|----------|
-  | Overhead | Hoch (große Pakete) |
-  | Reaktionszeit | Schnell bei Cache |
-  | Speicherbedarf | Höher |
-  | Flexibilität | Eingeschränkt bei Änderungen |
+  - Arbeitet ausschließlich On-Demand.
+  - Einfache Lösung um immer loop freie Netzwerkpfade zu erhalten
+  - Erlaubt uni- und bidirektionale Verbindungen zwischen Nodes.
+
+  - On-Demand Routing hat eine hohe Verzögerung, bis Daten gesendet werden können.
+  - Pakete mit langen Routen haben einen größeren Overhead.
 
   ---
-  
-  ![Vergleich von mehreren gespeicherten Routen und deren Nutzung](image:dsr_analysis_routes)
-
-  ---
-  
-  ## Beobachtungen in MCNetwork
-
-  - Schnelle Kommunikation bei bekannten Routen
-  - Probleme bei stark dynamischen Netzwerken
-  - Zunehmender Overhead bei langen Pfaden
-
-  ---
-  
-  ## Einordnung
-
-  DSR eignet sich besonders für:
-
-  - kleinere Netzwerke
-  - Szenarien mit wiederholter Kommunikation
-
-  ---
-  
-  @task[Warum kann DSR schnell sein?|Durch den Cache;Was ist ein Nachteil?|Große Pakete]

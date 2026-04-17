@@ -257,15 +257,25 @@ public class TerminalScreen extends Screen {
         Font font = Minecraft.getInstance().font;
 
 
-        int maxLines = (height - PADDING * 2) / LINE_HEIGHT - 1;
-        List<String> lines = terminal.getVisibleLines();
+        int availableWidth = width - 2 * PADDING;
+        List<String> wrappedLines = new ArrayList<>();
+        for (String line : terminal.getVisibleLines()) {
+            String remaining = line;
+            while (!remaining.isEmpty()) {
+                String fit = font.plainSubstrByWidth(remaining, availableWidth);
+                wrappedLines.add(fit);
+                remaining = remaining.substring(fit.length());
+            }
+        }
 
-        int start = Math.max(0, lines.size() - maxLines);
+        int maxLines = (height - PADDING * 2) / LINE_HEIGHT - 1;
+
+        int start = Math.max(0, wrappedLines.size() - maxLines);
         int y = PADDING;
 
         /* Output */
-        for (int i = start; i < lines.size(); i++) {
-            guiGraphics.drawString(font, lines.get(i), PADDING, y, 0x00FF00);
+        for (int i = start; i < wrappedLines.size(); i++) {
+            guiGraphics.drawString(font, wrappedLines.get(i), PADDING, y, 0x00FF00);
             y += LINE_HEIGHT;
         }
 

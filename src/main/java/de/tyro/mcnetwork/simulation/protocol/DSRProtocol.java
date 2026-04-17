@@ -33,28 +33,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Random;
+import java.util.StringJoiner;
 
 public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
     private static final Logger log = LoggerFactory.getLogger(DSRProtocol.class);
 
     // CONSTANTS
-    private final short DISCOVERY_HOP_LIMIT = 255;   //hops
     private short BROADCAST_JITTER = 10;       //ms
-    private final short ROUTE_CACHE_TIMEOUT = 300;   //sec
-    private final short SEND_BUFFER_TIMEOUT = 30;    //sec
     private final short REQUEST_TABLE_SIZE = 64;     //nodes
     private final short REQUEST_TABLE_IDS = 16;      //identifiers
     private final short MAX_REQUEST_REXMT = 16;      //retransmissions
-    private short MAX_REQUEST_PERIOD = 10;     //sec
-    private short REQUEST_PERIOD = 500;        //ms
-    private final short NON_PROP_REQUEST_TIMEOUT = 30; //ms
-    private final short REXMT_BUFFER_SIZE = 50;      //packets
-    private final short MAINT_HOLDOFF_TIME = 250;    //ms
-    private final short MAX_MAINT_REXMT = 2;         //retransmissions
-    private final short TRY_PASSIV_ACKS = 1;         //attempts
-    private final short PASSIVE_ACK_TIMEOUT = 100;   //ms
-    private final short GRAT_REPLY_HOLDOFF = 1;      //sec
-    private final short MAX_SALVAGE_COUNT = 15;      //salvages
+    private short MAX_REQUEST_PERIOD = 1;     //sec
+    private short REQUEST_PERIOD = 100;        //ms
     private double RENDER_SCALE = 1;
 
     private final RouteRequestTable routeRequestTable;
@@ -81,6 +71,11 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
         settings.registerSetting("MAX_REQUEST_PERIOD", Short.class, () -> MAX_REQUEST_PERIOD, v -> MAX_REQUEST_PERIOD = v);
         settings.registerSetting("REQUEST_PERIOD", Short.class, () -> REQUEST_PERIOD, v -> REQUEST_PERIOD = v);
         settings.registerSetting("RENDER_SCALE", Double.class, () -> RENDER_SCALE, v -> RENDER_SCALE = v);
+        settings.registerSetting("RC_ININT_STABILITY", Double.class, () -> routeCache.INIT_STABILITY, v -> routeCache.INIT_STABILITY = v);
+        settings.registerSetting("RC_STABILITY_INCR_FACTOR", Double.class, () -> routeCache.STABILITY_INCR_FACTOR, v -> routeCache.STABILITY_INCR_FACTOR = v);
+        settings.registerSetting("RC_STABILITY_DECR_FACTOR", Double.class, () -> routeCache.STABILITY_DECR_FACTOR, v -> routeCache.STABILITY_DECR_FACTOR = v);
+        settings.registerSetting("MIN_LIFETIME", Double.class, () -> routeCache.MIN_LIFETIME, v -> routeCache.MIN_LIFETIME = v);
+        settings.registerSetting("USE_EXTENDS", Double.class, () -> routeCache.USE_EXTENDS, v -> routeCache.USE_EXTENDS = v);
     }
 
     @Override
@@ -157,7 +152,8 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
         //   not yet traversed in this route SHOULD NOT be cached.
 
         //we have the final case always.
-        routeCache.addLink(getNode().getIP(), packet.getNetworkFrame().getFrom().getIP(), sim.getSimTime());
+        if (packet.getNetworkFrame() != null)
+            routeCache.addLink(getNode().getIP(), packet.getNetworkFrame().getFrom().getIP(), sim.getSimTime());
 
         switch (packet) {
             case DSRSourceRoute route -> {
@@ -228,7 +224,7 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
         //      the next-hop node from the original source route.  Set the Error
         //      Source Address field to this node's IP address, and the Error
         //      Destination field to the new packet's IP Destination Address.
-        rerr.unreachableNodeAddress = erroringRoute.getNextAddress();
+        rerr.unreachableNodeAddress = nextAddress;
         rerr.errorSourceAddress = node.getIP();
         rerr.errorDestinationAddress = erroringRoute.getAddresses().getFirst();
         //
@@ -297,6 +293,7 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
         //   which it initiates new Route Discoveries for any single destination
         //   address, and any new Route Discovery initiated in this way as part of
         //   processing this Route Error MUST conform as a part of this limit.
+
     }
 
     private void handleRREQ(DSRRouteRequest rreq) {
@@ -777,7 +774,10 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
 
     @Override
     public void discoverRoute(IP destinationIp) {
-        if (hasRoute(destinationIp)) return;
+        if (hasRoute(destinationIp)) {
+            routeRequestTable.removeForDestination(destinationIp);
+            return;
+        }
 
         //   Route Discovery is the mechanism by which a node S wishing to send a
         //   packet to a destination node D obtains a source route to D.  Route
@@ -955,7 +955,7 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
         renderer.drawStringWithAlphaColor(RenderUtil.Align.LEFT, "RREQ Cache (Out|In)", width, y);
         renderer.drawString(sendEntries, RenderUtil.Color.MAGENTA.value, width / 2 - 5 - font.width(receivedEntries) - font.width(sendEntries), y, false);
         renderer.drawString(receivedEntries, RenderUtil.Color.YELLOW.value, width / 2 - font.width(receivedEntries), y, false);
-        y+=5;
+        y += 5;
 
         pose.popPose();
 
@@ -994,6 +994,11 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
             sendEntries.remove(destinationIp);
         }
 
+        @Override
+        public String toString() {
+            return "Send: " + sendEntries + "\nReceived: " + receivedEntries;
+        }
+
         private static class RouteRequestTableSendEntry {
             public long nextTry;
             private int ttl;
@@ -1010,6 +1015,11 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
             public void setNumberOfRREQ(int numberOfRREQ) {
                 this.numberOfRREQ = numberOfRREQ;
             }
+
+            @Override
+            public String toString() {
+                return "nextTry: " + nextTry + ", ttl: " + ttl + ", numberOfRREQ: " + numberOfRREQ;
+            }
         }
 
         private class RouteRequestTableReceivedEntry {
@@ -1017,6 +1027,11 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
 
             public boolean isDuplicate(IP target, int id) {
                 return seen.stream().anyMatch(it -> it != null && it.getFirst().equals(target) && it.getSecond().equals(id));
+            }
+
+            @Override
+            public String toString() {
+                return seen.toString();
             }
         }
     }
@@ -1265,12 +1280,12 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
        Configuration parameters
        ========================= */
 
-        private static final double INIT_STABILITY = 25.0;          // seconds
-        private static final double STABILITY_INCR_FACTOR = 4.0;
-        private static final double STABILITY_DECR_FACTOR = 0.5;
+        private double INIT_STABILITY = 25.0;          // seconds
+        private double STABILITY_INCR_FACTOR = 4.0;
+        private double STABILITY_DECR_FACTOR = 0.5;
 
-        private static final double MIN_LIFETIME = 1.0;             // seconds
-        private static final double USE_EXTENDS = 120.0;            // seconds
+        private double MIN_LIFETIME = 1.0;             // seconds
+        private double USE_EXTENDS = 120.0;            // seconds
 
 
         // Undirected graph: node -> neighbor -> link
@@ -1305,7 +1320,7 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
 
             var nodesToRender = new ArrayList<INetworkNode>();
             for (Link link : graph.values().stream().flatMap(it -> it.values().stream()).distinct().toList()) {
-                long remaining = link.remainingLifetime(now);
+
 
                 float lifetimeRatio = computeLifetimeRatio(link, now);
 
@@ -1497,18 +1512,8 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
         }
 
         private void purgeExpiredLinks(long now) {
-            List<Link> toRemove = new ArrayList<>();
-
             for (Map<IP, Link> neighbors : graph.values()) {
-                for (Link link : neighbors.values()) {
-                    if (link.isExpired(now)) {
-                        toRemove.add(link);
-                    }
-                }
-            }
-
-            for (Link link : toRemove) {
-                removeLink(link);
+                neighbors.values().removeIf(link -> link.isExpired(now));
             }
         }
 
@@ -1630,6 +1635,13 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
         }
 
 
+        @Override
+        public String toString() {
+            return new StringJoiner(", ", RouteCache.class.getSimpleName() + "[", "]")
+                    .add("graph=" + graph)
+                    .add("stabilityTable=" + stabilityTable)
+                    .toString();
+        }
     }
 
 

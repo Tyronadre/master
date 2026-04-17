@@ -58,19 +58,25 @@ public class ImageBlock extends Block {
         int drawX = x + (width - drawW) / 2;
 
         if (gg != null) {
-            gg.blit(location, drawX, y, 0, 0, drawW, drawH, this.width, this.height);
+            float scaleX = (float) drawW / this.width;
+            float scaleY = (float) drawH / this.height;
+            gg.pose().pushPose();
+            gg.pose().translate(drawX, y, 0);
+            gg.pose().scale(scaleX, scaleY, 1);
+            gg.blit(location, 0, 0, 0, 0, this.width, this.height, this.width, this.height);
+            gg.pose().popPose();
         }
 
         int totalHeight = drawH;
 
         if (title != null && !title.isEmpty()) {
-            int textWidth = mc.font.width(title);
+            int textWidth = Minecraft.getInstance().font.width(title);
             int textX = x + (width - textWidth) / 2;
             int textY = y + drawH + 4;
             if (gg != null) {
-                gg.drawString(mc.font, title, textX, textY, 0xFFFFFF);
+                gg.drawString(Minecraft.getInstance().font, title, textX, textY, 0xFFFFFF);
             }
-            totalHeight += mc.font.lineHeight + 6;
+            totalHeight += Minecraft.getInstance().font.lineHeight + 6;
         }
 
         return totalHeight + 8;

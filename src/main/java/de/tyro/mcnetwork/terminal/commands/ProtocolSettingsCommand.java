@@ -6,8 +6,8 @@ import de.tyro.mcnetwork.terminal.Terminal;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RoutingProtocolSettingsCommand extends Command {
-    public RoutingProtocolSettingsCommand(Terminal terminal, String[] args) {
+public class ProtocolSettingsCommand extends Command {
+    public ProtocolSettingsCommand(Terminal terminal, String[] args) {
         super(terminal, args);
     }
 
@@ -31,13 +31,16 @@ public class RoutingProtocolSettingsCommand extends Command {
 
             println("Routing Protocol Settings:");
             for (var setting : protocol.getSettings().getAll()) {
+                var s = "";
+                if (setting.isSettable()) s += "+ ";
+                else s += "- ";
                 println(setting.getKey() + ": " + setting.getValue());
             }
             return;
         }
 
         if (args.length > 3) {
-            println("Usage: routingProtocolSettings [get <key>]|[set <key> <value>]");
+            getHelp().forEach(this::println);
             return;
         }
 
@@ -69,12 +72,12 @@ public class RoutingProtocolSettingsCommand extends Command {
             if (setting == null) {
                 println("Unknown setting: " + key);
             } else {
-                println(key + ": " +   setting.getValue());
+                println(key + ": " + setting.getValue());
             }
             return;
         }
 
-        println("Usage: routingProtocolSettings [get <key>]|[set <key> <value>]");
+        getHelp().forEach(this::println);
     }
 
     @Override
@@ -86,12 +89,16 @@ public class RoutingProtocolSettingsCommand extends Command {
 
     @Override
     public String getName() {
-        return "routingProtocolSettings";
+        return "protocolSettings";
     }
 
     @Override
-    protected String getHelp() {
-        return "Show and edit routing protocol settings. \n Usage: routingProtocolSettings [get <key>]|[set <key> <value>]";
-
+    protected List<String> getHelp() {
+        return List.of(
+                "Show and edit routing protocol settings",
+                "Usage: protocolSettings [get <key>]|[set <key> <value>]",
+                "protocolSettings shows all settings with their respective value. '+'marks settable variables",
+                "protocolSettings get <key> shows the value for the given key, if exists",
+                "protocolSettings set <key> value sets the value for the given key, if settable and exists");
     }
 }

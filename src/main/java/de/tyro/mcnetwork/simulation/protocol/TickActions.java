@@ -64,4 +64,9 @@ public class TickActions {
             task.run();
         }
     }
+
+    @Override
+    public String toString() {
+        return TickActions.class.getSimpleName() + "[actions=" + size() + "]";
+    }
 }

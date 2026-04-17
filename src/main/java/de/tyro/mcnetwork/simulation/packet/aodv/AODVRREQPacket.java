@@ -86,8 +86,9 @@ public class AODVRREQPacket extends NetworkPacket implements IProtocolPaket {
 
     @Override
     public Vec2 getRenderSize(Font font) {
+        var superSize = super.getRenderSize(font);
         var width = MathUtil.max(font.width("SQ @ " + getDestinationIP() + ": " + (unknownSeqFlag ? "?" : destinationSequenceNumber)), font.width("SQ @ " + getOriginatorIP() + ": " + originatorSequenceNumber)) / 2;
-        return new Vec2(width, 28);
+        return new Vec2(Math.max(superSize.x, width), superSize.y + 28);
     }
 
     @Override

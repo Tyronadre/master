@@ -1,44 +1,39 @@
-title: "Route Discovery (RREQ)"
+title: Route Discovery (RREQ)
 posX: 2
 posY: 1
-icon: "minecraft:paper"
-pre: ["AODV – Einführung"]
-content: |
-  # Route Discovery (RREQ)
-
-  ---
-  
-  Wenn ein Knoten keine Route kennt, startet er eine **Route Request (RREQ)**.
-
-  ---
-  
-  ## Ablauf
-
-  1. Knoten erstellt ein RREQ-Paket  
-  2. Paket wird an alle Nachbarn gesendet (**Broadcast**)  
-  3. Jeder Knoten leitet es weiter  
-
-  ---
-  
-  ![Ein Paket breitet sich von einem Startknoten in alle Richtungen aus](image:aodv_rreq_broadcast)
-
-  ---
-  
-  ## Inhalte eines RREQ
-
-  | Feld | Bedeutung |
-  |------|----------|
-  | Source | Ursprung |
-  | Destination | Ziel |
-  | Sequence Number | Aktualität |
-  | Hop Count | Anzahl der Hops |
-
-  ---
-  
-  ## Ziel
-
-  Das Paket sucht einen Pfad zum Zielknoten.
-
-  ---
-  
-  @task[Was ist ein RREQ?|Route Request;Wie wird es verbreitet?|Broadcast]
+icon: minecraft:paper
+pre: [ AODV – Einführung ]
+content: "# Route Discovery (RREQ)\n\n---\n\nWenn ein Knoten keine Route kennt, startet\
+  \ er einen **Route Request (RREQ)**.\n\n![AODV RREQ](rreq1.png)\n\n## Ablauf\n\n\
+  1. Zunächst erstellt die Node ein RREQ Paket. Die Zieladdress des Pakets wird dabei\
+  \ auf das Ziel des RREQ gesetzt. \n2. Dieses Paket wird per Broadcast an alle Nachbarn\
+  \ gesendet. Um übermäßiges Flooding zu vermeiden werden dabei zwei Mechanismen angewandt:\
+  \ \n- Die TTL wird schrittweise verdoppelt.\n- Pakete mit der selben Zieladdress\
+  \ und Sequence Number werden nicht erneut gebroadcasted.\n3. Knoten die das Paket\
+  \ empfangen speichern Informationen dazu ab. Dies wird gleich genauer erklärt.\n\
+  4. Sobald das Paket den Zielknoten erreicht, sendet dieser eine Route Reply.\n\n\
+  Knoten die einen Pfad zum Zielknoten des RREQ kennen, können diesen direkt zurü\
+  ckgeben, um unnötiges Flooding zu verhindern\n\n---\n\n## Verarbeiten von RREQ Paketen\n\
+  \nNehmen wir folgendes Netzwerk an: A-B-C-D.\n\nWill Knoten A nun Daten an Knoten\
+  \ D senden, so erstellt es ein RREQ Paket. Knoten die diese Paket empfangen können\
+  \ daraus immer folgende Informationen ziehen und in ihrem Routing Table speichern.\
+  \ Empfängt C den RREQ kann es folgende Informationen speichern:\n- Die Verbindung\
+  \ zum vorangehenden Hop, also ihrem direkten Nachbarn, in diesem Fall B.\n- Das\
+  \ der Nachbar über den sie das Paket erhalten haben, einen Pfad zum Startknoten\
+  \ hat, in diesem Fall kann A über B erreicht werden.\n\nSomit können schrittweise\
+  \ Routingtabellen aufgebaut werden, durch die dann auch zukünftige Anfragen schneller\
+  \ beantwortet werden können.\n\n---\n\n## Sequence Number\n\nDie Sequence Number\
+  \ ist ein wichtiger Teil des Protocols und dient zur Verhinderung von Loops. Eine\
+  \ Sequence Number gibt an, wie 'aktuell' ein Pakete ist, da sie bei jedem Request\
+  \ erhöht werden muss. \n\nEmpfängt ein Knoten ein RREQ mit einer Sequence Number\
+  \ die kleiner ist, als er bereits gespeichert hat, so weißt diese Knoten, dass er\
+  \ ein altes RREQ Paket erhalten hat, und dieses u.u. veraltet Informationen enthä\
+  lt. Somit werden die Daten aus diesem Paket nicht verarbeitet.\n\nNehmen wir folgendes\
+  \ Netzwerk an:\n```\n        B\n      /  \\\nS - A    C - D\n      \\  /\n     \
+  \   E\n```\n\nNehmen wir an die Verbindung `C - D` bricht ab. \n- Wir nehmen an\
+  \ das A noch nicht weiß, das der unterbrochen ist.\n- C sented nun ein RREQ Paket.\
+  \ Node A empfängt dieses nun z.B über `C-E-A`\n- A antwortet nun mit einem RREP\
+  \ Paket über B, da vorher über diesen Knoten D erreichbar war.\n- Es entsteht nun\
+  \ ein Loop `A-B-C-D`\n\nDurch Sequence Numbers hat der RREQ von C eine aktuellere,\
+  \ als der Eintrag in der Routing Tabelle von A. Somit wird A nicht auf diesen RREQ\
+  \ Anworten, und es kommt nicht mehr zu Loops.\n\n---\n"

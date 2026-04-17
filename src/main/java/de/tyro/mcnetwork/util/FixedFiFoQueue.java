@@ -6,11 +6,13 @@ import java.util.AbstractQueue;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class FixedFiFoQueue<V> extends AbstractQueue<V> {
     final V[] items;
     int count;
 
+    @SuppressWarnings("unchecked")
     public FixedFiFoQueue(int capacity) {
         items = (V[]) new Object[capacity];
         count = 0;
@@ -55,5 +57,10 @@ public class FixedFiFoQueue<V> extends AbstractQueue<V> {
     public V peek() {
         if (count <= 0) return null;
         return items[0];
+    }
+
+    @Override
+    public String toString() {
+        return "[" + Arrays.stream(items).filter(Objects::nonNull).map(Object::toString).collect(Collectors.joining(",")) + "]";
     }
 }

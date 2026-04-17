@@ -9,33 +9,19 @@ content: |
   ---
   
   Sobald das Ziel erreicht ist, wird eine **Route Reply (RREP)** erzeugt.
-
-  ---
+  
+  ![rreq](rreq_3.png)
+  ![rrep](rrep_3.png)
   
   ## Ablauf
 
-  - Ziel erhält vollständige Route
-  - Route wird im RREP zurückgesendet
-  - Sender speichert diese Route
-
+  - Die Route die im RREQ enthalten ist, wird invertiert und im RREQ Paket gespeichert.
+  - Dieses RREQ Paket wird per Unicast zurück an den Sender geschickt.
+  - Wird auf dem Rückweg durch einen Unidirektionalen Link der Weg unterbrochen, wird von dieser Stelle ein neuer RREQ gestartet. Die Route im RREP wird allerdings nicht geändert.
+  
   ---
   
-  ![Ein Paket bewegt sich entlang des gefundenen Pfades zurück](image:dsr_rrep_return)
-
-  ---
+  ## Aufgabe
   
-  ## Ergebnis
-
-  Der Sender kennt nun den gesamten Pfad:
-
-  **z. B.: A → B → C → D**
-
-  ---
+  Baue eine Netzwerk mit drei Knoten, und untersuche RREQ und RREP verhalten
   
-  ## Nutzung
-
-  Alle zukünftigen Pakete enthalten diese Route direkt.
-
-  ---
-  
-  @task[Was enthält das RREP?|Die komplette Route;Was macht der Sender damit?|Er nutzt sie für zukünftige Pakete]

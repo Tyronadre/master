@@ -8,29 +8,18 @@ content: |
 
   ---
   
-  Wenn ein Knoten keine Route kennt, startet er eine **Route Request (RREQ)**.
+  Wenn ein Knoten keine Route kennt, startet er einen **Route Request (RREQ)**.
+  
+  ![rreq](rreq_3.png)
   
   ## Ablauf
 
   1. Sender erstellt ein RREQ  
   2. RREQ wird als **Broadcast** verschickt  
   3. Jeder Knoten fügt sich selbst zur Route hinzu  
+
+  Der RREQ enthält am Ende den vollständigen Weg zum Ziel.
   
-  ![Ein Broadcast, bei dem jeder Knoten seine Adresse zur Route hinzufügt](image:dsr_rreq_path_building)
-
-  ---
+  Um übermäßiges Flooden zu vermeiden, beinhalten RREQ eine Identification Value. Pakete die die selbe Zieladdress und ID haben werden nur einmal pro Node verarbeitet.
+  Außerdem wird die TTL schrittweise erhöht, um nicht direkt das ganze Netzwerk zu flooden.
   
-  ## Unterschied zu AODV
-
-  - AODV: speichert nur nächste Hops  
-  - DSR: speichert **kompletten Pfad**
-
-  ---
-  
-  ## Ergebnis
-
-  Das RREQ enthält am Ende den vollständigen Weg zum Ziel.
-
-  ---
-  
-  @task[Was passiert bei jedem Hop?|Der Knoten wird zur Route hinzugefügt;Wie verbreitet sich das RREQ?|Broadcast]

@@ -11,6 +11,7 @@ import de.tyro.mcnetwork.simulation.packet.application.PingPacket;
 import de.tyro.mcnetwork.simulation.packet.application.PingRepPacket;
 import de.tyro.mcnetwork.simulation.packet.application.TraceRoutePacket;
 import de.tyro.mcnetwork.simulation.packet.application.TraceRouteReplyPacket;
+import de.tyro.mcnetwork.simulation.packet.dsr.DSRRouteError;
 import de.tyro.mcnetwork.simulation.packet.dsr.DSRRouteReply;
 import de.tyro.mcnetwork.simulation.packet.dsr.DSRRouteRequest;
 import de.tyro.mcnetwork.simulation.packet.dsr.DSRSourceRoute;
@@ -191,6 +192,21 @@ public class NetworkPacketCodecGenerator {
                         }
                     }
                 });
+
+        register(DSRRouteError.class,
+                ((buf, uuid, originatorIP, destinationIP) -> new DSRRouteError(
+                        uuid,
+                        originatorIP,
+                        destinationIP,
+                        buf.readIP(),
+                        buf.readIP(),
+                        buf.readIP()
+                )),
+                (buf, packet) -> buf
+                        .writeIP(packet.errorSourceAddress)
+                        .writeIP(packet.errorDestinationAddress)
+                        .writeIP(packet.unreachableNodeAddress)
+        );
 
         register(LARRouteError.class,
                 (buf, uuid, originatorIP, destinationIP) -> new LARRouteError(

@@ -10,8 +10,8 @@ import de.tyro.mcnetwork.terminal.Terminal;
 import java.util.List;
 import java.util.stream.Stream;
 
-public class RoutingProtocolCommand extends Command{
-    public RoutingProtocolCommand(Terminal terminal, String[] args) {
+public class SetProtocolCommand extends Command {
+    public SetProtocolCommand(Terminal terminal, String[] args) {
         super(terminal, args);
     }
 

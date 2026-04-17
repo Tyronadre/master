@@ -2,5 +2,6 @@
   "creativetab.mcnetwork.creative_tab": "MCNetwork",
   "block.mcnetwork.computer": "Computer",
   "item.mcnetwork.network_book": "Questbuch",
-  "item.mcnetwork.sim_controller": "Simulation Controller"
+  "item.mcnetwork.sim_controller": "Simulation Controller",
+  "item.mcnetwork.network_sniffer": "Paket Sniffer"
 }

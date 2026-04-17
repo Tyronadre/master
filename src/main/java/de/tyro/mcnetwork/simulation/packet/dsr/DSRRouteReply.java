@@ -106,13 +106,18 @@ public class DSRRouteReply extends NetworkPacket implements IProtocolPaket {
 
     @Override
     protected void renderPacketContent(RenderUtil renderer, PoseStack poseStack, float width) {
-        var y = 0;
-
-        renderer.drawCollectionAsString(RenderUtil.Align.RIGHT, addresses, 100, renderer.getTextColorFromAlpha(), width, 0);
+        var pose = renderer.getPoseStack();
+        pose.pushPose();
+        pose.scale(0.5f, 0.5f, 0.5f);
+        width *= 2;
+        renderer.drawCollectionAsString(RenderUtil.Align.RIGHT, addresses, ((int) width), renderer.getTextColorFromAlpha(), width, 0);
+        pose.popPose();
     }
 
     @Override
     public Vec2 getRenderSize(Font font) {
-        return super.getRenderSize(font);
+        var superSize = super.getRenderSize(font);
+        var thisWidth = Math.max(200, font.width(addresses.toString())) / 2;
+        return new Vec2(Math.max(superSize.x, thisWidth), superSize.y);
     }
 }

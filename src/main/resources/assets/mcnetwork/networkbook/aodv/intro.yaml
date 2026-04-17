@@ -1,43 +1,40 @@
-title: "AODV – Einführung"
+title: AODV – Einführung
 posX: 0
 posY: 0
-icon: "minecraft:book"
-pre: ["Routing und mobile Netzwerke"]
+icon: minecraft:book
+pre: [ Routing und mobile Netzwerke ]
 content: |
   # AODV – Einführung
 
   ---
-  
-  **AODV (Ad hoc On-Demand Distance Vector)** ist ein **reaktives Routing-Protokoll**.
+
+  AODV (Ad hoc On-Demand Distance Vector) ist ein **reaktives** Routing-Protokoll.
 
   Das bedeutet:
-  
+
   **Routen werden nur dann erstellt, wenn sie benötigt werden.**
 
   ---
-  
+
   ## Grundidee
 
   - Kein vollständiges Routing-Wissen im Voraus
   - Netzwerk wird nur bei Bedarf durchsucht
   - Fokus auf Effizienz bei dynamischen Netzwerken
+  - Alle Nodes verhalten sich gleich
 
   ---
-  
-  ![Ein Netzwerk ohne feste Routen, bei dem nur bei Bedarf Verbindungen aufgebaut werden](image:aodv_basic_concept)
 
-  ---
-  
   ## Vorteile
 
   | Vorteil | Beschreibung |
-  |--------|-------------|
+  |-|-|
   | Geringer Overhead | Keine dauerhaften Updates |
   | Skalierbarkeit | Gut für große Netzwerke |
   | Anpassungsfähigkeit | Reagiert auf Änderungen |
 
   ---
-  
+
   ## Einordnung
 
   | Typ | Beispiel |
@@ -46,5 +43,3 @@ content: |
   | Proaktiv | OLSR |
 
   ---
-  
-  @task[Ist AODV reaktiv oder proaktiv?|Reaktiv;Wann werden Routen erstellt?|Bei Bedarf]

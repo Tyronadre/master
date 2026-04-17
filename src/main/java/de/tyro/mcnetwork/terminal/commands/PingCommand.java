@@ -21,7 +21,7 @@ public class PingCommand extends Command {
     @Override
     public void execute() throws InterruptedException {
         if (args.length == 0) {
-            println("usage: ping <host>");
+            println("usage: ping <host> [<timeout>]");
             return;
         }
 
@@ -47,7 +47,7 @@ public class PingCommand extends Command {
             // Warten auf Echo
             PingRepPacket rep;
             try {
-                 rep = terminal.getNode().getApplicationBus().waitFor(PingRepPacket.class, it -> it.replyUUID.equals(ping.id), 1000);
+                rep = terminal.getNode().getApplicationBus().waitFor(PingRepPacket.class, it -> it.replyUUID.equals(ping.id), timeout);
             } catch (DestinationUnreachableException due) {
                 println("Destination unreachable");
                 break;

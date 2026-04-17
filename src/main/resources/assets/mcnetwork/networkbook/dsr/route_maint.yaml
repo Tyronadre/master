@@ -10,34 +10,21 @@ content: |
   
   DSR nutzt einen **Route Cache**, um bekannte Routen zu speichern.
 
-  ---
+  ![node_1.png](node_1.png)
   
   ## Route Cache
 
-  - Knoten speichern mehrere bekannte Routen
-  - Neue Kommunikation kann sofort starten
-
-  ---
+  - Knoten hört allen Paketen zu, die er weiterleitet.
+  - Pfade aus diesen Paketen werden je nach Pakettyp übernommen.
+  - Neue Kommunikation kann sofort starten.
   
-  ![Darstellung eines Knotens mit mehreren gespeicherten Routen](image:dsr_route_cache)
-
-  ---
   
-  ## Fehlerfall
-
-  Wenn eine Verbindung bricht:
-
-  - Fehler wird erkannt
-  - Route wird verworfen
-  - Alternative Route aus Cache wird genutzt
-
-  ---
+  ## Link Stability
   
-  ## Unterschied zu AODV
-
-  - AODV: neue Route wird gesucht  
-  - DSR: oft bereits alternative Route vorhanden  
-
-  ---
+  Der Route Cache den DSR verwendet ist komplexer als eine einfache Topologie. Für jeden Link wird eine Stabilität berechnet und gespeichert. Diese wird bei Nutzung größer, der Link somit als 'Stabiler' gekennzeichnt.
+  Intern wird ein Graph gespeichert. Graphtheorie kann dann verwendet werden, um neue Routen direkt aus dem RouteCache zu berechnen.
+  Links die lange nicht benutzt werden, werden außerdem auch wieder aus dem Graph gelöscht. Jede Nutzung eines Links erhöht diese Dauer um 120 Sekunden.
   
-  @task[Was speichert der Cache?|Routen;Was passiert bei Fehlern?|Alternative Route oder neue Suche]
+  ## Link Breaks
+  
+  Wenn ein Link unterbrochen wird, dann wird an den Sender des Pakets ein RRERR geschickt, der daraufhin einen neuen Pfad berechnen kann, oder einen neuen RREQ sendet.

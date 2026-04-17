@@ -23,6 +23,7 @@ public class TabRegistry {
                                 output.accept(BlockRegistry.COMPUTER);
                                 output.accept(ItemRegistry.NETWORK_BOOK);
                                 output.accept(ItemRegistry.SIM_CONTROLLER);
+                        output.accept(ItemRegistry.NETWORK_SNIFFER);
                             }
                     ).build()
     );

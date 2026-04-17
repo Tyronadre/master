@@ -2,7 +2,6 @@ package de.tyro.mcnetwork.networkBook.data;
 
 import de.tyro.mcnetwork.networkBook.markdown.MarkdownDocument;
 import de.tyro.mcnetwork.networkBook.markdown.MarkdownParser;
-import de.tyro.mcnetwork.networkBook.markdown.MarkdownRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.phys.Vec2;
@@ -21,13 +20,15 @@ public class SubTopic {
     private final Set<SubTopic> prerequisites = new HashSet<>();
     private final MarkdownDocument markdown;
     private final ResourceLocation icon;
+    private final ResourceLocation location;
 
-    public SubTopic(Topic topic, String title, ResourceLocation icon, String content, int posX, int posY) {
+    public SubTopic(Topic topic, String title, ResourceLocation icon, String content, int posX, int posY, ResourceLocation location) {
         this.id = topic.getTitle() + ":" + title;
         this.topic = topic;
         this.title = title;
         this.position = new Vec2(posX, posY);
         this.icon = icon;
+        this.location = location;
         markdown = MarkdownParser.parse(content, topic.getContentLocation());
         topic.addSubtopic(this);
     }
@@ -58,6 +59,10 @@ public class SubTopic {
 
     public ResourceLocation getIcon() {
         return icon;
+    }
+
+    public ResourceLocation getLocation() {
+        return location;
     }
 
     public Set<SubTopic> getPrerequisite() {

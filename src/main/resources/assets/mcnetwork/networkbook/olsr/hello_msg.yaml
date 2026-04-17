@@ -39,7 +39,12 @@ content: |
   
   ---
   
-  # Aufgabe
+  # Aufgaben
   
-  Setze das genutze Protokol mit dem NetzwerkSimulator auf OLSR.
-  Baue zum testen zunächst ein einfaches Netzwerk mit nur 2 Nodes auf. Du solltest nun sehen, das beide Nodes ab und zu HELLO Pakete versenden. 
+  1. Setze das genutze Protokol mit dem Simulation Controller auf OLSR. Baue zum testen zunächst ein einfaches Netzwerk mit nur 2 Nodes auf. Du solltest nun sehen, das beide Nodes ab und zu HELLO Pakete versenden. 
+  2. Füge nun eine Node so hinzu das sie in Kommunikationsreichweite von beiden Nodes ist, und beobachte was passiert. 
+  3. Baue diese Node ab, und beobachte wie das Protokol mit dem Verlust dieses Links umgeht.
+  4. Beobachte, wie sich das Netzwerk verhält wenn du diese Node außerhalb der Reichweite von einer der beiden Nodes setzt.
+  
+  
+  

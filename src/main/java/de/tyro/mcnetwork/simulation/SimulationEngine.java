@@ -10,6 +10,7 @@ import de.tyro.mcnetwork.util.FixedFiFoQueue;
 import net.minecraft.world.entity.Entity;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import org.apache.logging.log4j.LogManager;
@@ -89,6 +90,16 @@ public class SimulationEngine {
     public void onServerStop(ServerStoppingEvent event) {
         new ArrayList<>(networkFrames).forEach(Entity::discard);
         new ArrayList<>(nodes.values()).forEach(INetworkNode::onServerStop);
+        networkFrames.clear();
+        nodes.clear();
+    }
+
+    @SubscribeEvent
+    public void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
+        new ArrayList<>(networkFrames).forEach(Entity::discard);
+        new ArrayList<>(nodes.values()).forEach(INetworkNode::onServerStop);
+        networkFrames.clear();
+        nodes.clear();
     }
 
     private void tick() {
@@ -175,8 +186,7 @@ public class SimulationEngine {
             log.warn("Cannot send unregistered packet {}", packet);
             return;
         }
-//        PacketDistributor.sendToSelf(new NewNetworkFramePayload(from.getBlockPos(), to.getBlockPos(), packet, ttl));
-        from.getLevel().addFreshEntity(new NetworkFrameEntity(from.getLevel(), from, to, ttl, packet.copy()));
+        from.getLevel().addFreshEntity(new NetworkFrameEntity(from.getLevel(), from, to, Math.min(ttl, 255), packet.copy()));
 
         // Capture the frame
         capturedFrames.offer(new CapturedFrame(simulationTimeMS, from.getIP(), to.getIP(), packet));
@@ -198,7 +208,6 @@ public class SimulationEngine {
 
     public void unregisterNode(INetworkNode node) {
         nodes.remove(node.getIP());
-        IP.freeAddress(node.getIP());
     }
 
     public double getSimSpeed() {
@@ -272,5 +281,10 @@ public class SimulationEngine {
 
     public FixedFiFoQueue<CapturedFrame> getCapturedFrames() {
         return capturedFrames;
+    }
+
+    @Override
+    public String toString() {
+        return "Sim [" + (isClientSide ? "client" : "server") + "]";
     }
 }
