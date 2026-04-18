@@ -87,6 +87,11 @@ public class MarkdownEditorSelectorScreen extends Screen {
                 .size(110, 20)
                 .build());
 
+        this.addRenderableWidget(Button.builder(Component.literal("Add Subtopic"), button -> onAddSubtopic())
+                .pos(PADDING + 210, this.height - PADDING - 20)
+                .size(100, 20)
+                .build());
+
         // Right panel settings inputs
         int inputStartY = PADDING + 24;
         int inputX = centerX + PADDING + 80;
@@ -134,8 +139,6 @@ public class MarkdownEditorSelectorScreen extends Screen {
         gg.drawString(this.font, "Markdown Editor - Select Chapter", PADDING, PADDING, 0xFFFFFF);
 
         int centerX = this.width / 2;
-        int miniPlaneX = width / 2;
-        int miniPlaneY = height / 2;
 
         // LEFT PANEL - LIST
         int listX = PADDING;
@@ -192,7 +195,7 @@ public class MarkdownEditorSelectorScreen extends Screen {
         }
 
         // MINI TOPIC VISUALIZATION - BOTTOM RIGHT
-        renderMiniTopicVisualization(gg, miniPlaneX, settingsHeight + listY, width / 2 - PADDING, height - settingsHeight - listY - PADDING - 32, mouseX, mouseY, partialTicks);
+        renderMiniTopicVisualization(gg, centerX + PADDING, settingsHeight + listY + PADDING, width / 2 - PADDING * 2, height - settingsHeight - listY - PADDING * 2 - 32, mouseX, mouseY);
 
         // Draw unsaved indicator
         if (hasSettingsChanged) {
@@ -229,7 +232,7 @@ public class MarkdownEditorSelectorScreen extends Screen {
         gg.drawString(this.font, "(comma-sep.)", panelX, startY + 12, 0xFF888888);
     }
 
-    private void renderMiniTopicVisualization(GuiGraphics gg, int x, int y, int width, int height, int mouseX, int mouseY, float partialTicks) {
+    private void renderMiniTopicVisualization(GuiGraphics gg, int x, int y, int width, int height, int mouseX, int mouseY) {
         // Background
         gg.fill(x - 1, y - 1, x + width + 1, y + height + 1, 0xFF666666);
         gg.fill(x, y, x + width, y + height, 0xFF111216);
@@ -258,9 +261,6 @@ public class MarkdownEditorSelectorScreen extends Screen {
             double scaleY = drawHeight / contentHeight / 1.5;
 
             double scale = Math.min(scaleX, scaleY);
-
-            double offsetX = (width - contentWidth * scale) / 2.0;
-            double offsetY = (drawHeight - contentHeight * scale) / 2.0;
 
             gg.pose().pushPose();
 
@@ -434,6 +434,17 @@ public class MarkdownEditorSelectorScreen extends Screen {
                 Minecraft.getInstance().setScreen(new MarkdownEditorScreen(this, item.subtopic, item.topic));
             }
         }
+    }
+
+    private void onAddSubtopic() {
+        if (currentMiniTopic == null) {
+            // Show message that a topic must be selected
+            Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_LOOM_TAKE_RESULT, 1.0f));
+            return;
+        }
+
+        Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0f));
+        Minecraft.getInstance().setScreen(new AddSubtopicScreen(this, currentMiniTopic));
     }
 
     private void onSaveSettings() {

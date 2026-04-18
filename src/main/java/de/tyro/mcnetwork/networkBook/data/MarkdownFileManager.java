@@ -57,6 +57,9 @@ public class MarkdownFileManager {
                     new File("../build/resources/main/assets/" + location.getNamespace() + "/" + location.getPath()),
                     new File("../src/main/resources/assets/" + location.getNamespace() + "/" + location.getPath())
             )) {
+                if (!it.exists()) {
+                    it.createNewFile();
+                }
                 try (BufferedWriter writer = Files.newBufferedWriter(it.toPath())) {
                     YAML.dump(data, writer);
                     LOGGER.info("Successfully saved YAML data to {}", it.getAbsoluteFile());
