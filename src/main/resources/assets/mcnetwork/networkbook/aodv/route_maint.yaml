@@ -1,9 +1,9 @@
 "title": "Route Maintenance"
 "posX": 4
-"posY": 3
+"posY": 2
 "icon": "minecraft:barrier"
 "pre":
-  - "Routingtabellen Sequenznummern"
+  - "Route Reply (RREP)"
 "content": "# Route Maintenance\n\n---\n\nIn mobilen Netzwerken brechen Verbindungen\
   \ häufig ab.\n\nAODV reagiert darauf mit **Fehlermeldungen (RERR)**.\n\n---\n\n\
   ## Ablauf\n\n- Verbindung bricht\n- Knoten erkennt Fehler, wenn sie versucht Daten\

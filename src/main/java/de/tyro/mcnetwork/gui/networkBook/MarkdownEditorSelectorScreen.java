@@ -1,7 +1,5 @@
 package de.tyro.mcnetwork.gui.networkBook;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import de.tyro.mcnetwork.client.RenderUtil;
 import de.tyro.mcnetwork.networkBook.data.MarkdownFileManager;
 import de.tyro.mcnetwork.networkBook.data.SubTopic;
 import de.tyro.mcnetwork.networkBook.data.Topic;
@@ -136,9 +134,8 @@ public class MarkdownEditorSelectorScreen extends Screen {
         gg.drawString(this.font, "Markdown Editor - Select Chapter", PADDING, PADDING, 0xFFFFFF);
 
         int centerX = this.width / 2;
-        int miniPlaneSize = 200;
-        int miniPlaneX = this.width - PADDING - miniPlaneSize;
-        int miniPlaneY = this.height - PADDING - 150;
+        int miniPlaneX = width / 2;
+        int miniPlaneY = height / 2;
 
         // LEFT PANEL - LIST
         int listX = PADDING;
@@ -178,7 +175,7 @@ public class MarkdownEditorSelectorScreen extends Screen {
         gg.fill(centerX - DIVIDER_WIDTH / 2, listY, centerX + DIVIDER_WIDTH / 2, listY + listHeight, 0xFF666666);
 
         // RIGHT PANEL - SETTINGS (adjusted for mini plane)
-        int settingsHeight = miniPlaneY - listY - PADDING;
+        int settingsHeight = 120;
         if (selectedIndex >= 0 && selectedIndex < editableItems.size()) {
             EditableItem selectedItem = editableItems.get(selectedIndex);
             if (selectedItem.isSubtopic) {
@@ -195,7 +192,7 @@ public class MarkdownEditorSelectorScreen extends Screen {
         }
 
         // MINI TOPIC VISUALIZATION - BOTTOM RIGHT
-        renderMiniTopicVisualization(gg, miniPlaneX, miniPlaneY, miniPlaneSize, 150, mouseX, mouseY, partialTicks);
+        renderMiniTopicVisualization(gg, miniPlaneX, settingsHeight + listY, width / 2 - PADDING, height - settingsHeight - listY - PADDING - 32, mouseX, mouseY, partialTicks);
 
         // Draw unsaved indicator
         if (hasSettingsChanged) {
@@ -211,7 +208,7 @@ public class MarkdownEditorSelectorScreen extends Screen {
         int panelX = panelStartX + PADDING;
 
         // Background
-        gg.fill(panelX - PADDING, panelStartY, this.width, panelStartY + panelHeight, 0xFF1a1a1e);
+        gg.fill(panelX - PADDING, panelStartY, width - PADDING, panelStartY + panelHeight, 0xFF1a1a1e);
 
         int startY = panelStartY + 8;
 
@@ -245,15 +242,34 @@ public class MarkdownEditorSelectorScreen extends Screen {
         if (currentMiniTopic != null && miniPlane != null) {
             gg.enableScissor(x, y + 20, x + width, y + height);
 
+            //find highest x and y
+            var minX = currentMiniTopic.getSubtopics().stream().mapToDouble(it -> it.getPosition().x).min().orElse(0.0);
+            var maxX = currentMiniTopic.getSubtopics().stream().mapToDouble(it -> it.getPosition().x).max().orElse(1.0);
+            var minY = currentMiniTopic.getSubtopics().stream().mapToDouble(it -> it.getPosition().y).min().orElse(0.0);
+            var maxY = currentMiniTopic.getSubtopics().stream().mapToDouble(it -> it.getPosition().y).max().orElse(1.0);
+
+            int drawY = y + 20;
+            int drawHeight = height - 20;
+
+            double contentWidth = Math.max(1e-5, maxX - minX);
+            double contentHeight = Math.max(1e-5, maxY - minY);
+
+            double scaleX = width / contentWidth / 1.5;
+            double scaleY = drawHeight / contentHeight / 1.5;
+
+            double scale = Math.min(scaleX, scaleY);
+
+            double offsetX = (width - contentWidth * scale) / 2.0;
+            double offsetY = (drawHeight - contentHeight * scale) / 2.0;
+
             gg.pose().pushPose();
-            gg.pose().translate(x, y + 20, 0);
 
-            // Create a temporary RenderUtil for the mini plane
-            RenderUtil renderer = new RenderUtil(new PoseStack(), Minecraft.getInstance().renderBuffers().bufferSource(), 1, 0);
-            renderer.setPose(gg.pose());
+            gg.pose().translate(x, drawY, 0);
+            gg.pose().scale((float) scale, (float) scale, 1f);
+//            gg.pose().translate(-minX, -minY, 0);
 
-            // Update mini plane position and render
-            miniPlane.render(gg, mouseX - x, mouseY - (y + 20), partialTicks);
+            // Render in normalized space
+            miniPlane.render(gg, (int) ((mouseX - x) / scale + minX), (int) ((mouseY - drawY) / scale + minY), true);
 
             gg.pose().popPose();
             gg.disableScissor();
@@ -479,6 +495,7 @@ public class MarkdownEditorSelectorScreen extends Screen {
 
             selectedIndex = -1;
             setSettingsVisible(false);
+            currentMiniTopic = null;
         } else {
             Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_LOOM_TAKE_RESULT, 1.0f));
         }

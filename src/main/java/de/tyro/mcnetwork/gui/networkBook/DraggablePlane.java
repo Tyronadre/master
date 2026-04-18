@@ -5,11 +5,12 @@ import de.tyro.mcnetwork.client.RenderUtil;
 import de.tyro.mcnetwork.networkBook.data.SubTopic;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.sounds.SoundEvents;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 
 public class DraggablePlane {
 
@@ -39,14 +40,19 @@ public class DraggablePlane {
         }
     }
 
-    public void render(GuiGraphics gg, int mouseX, int mouseY, float partialTicks) {
+    public void render(GuiGraphics gg, int mouseX, int mouseY, boolean drawAllTiles) {
         gg.fill(x, y, x + width, y + height, 0xFF111216);
 
         gg.pose().pushPose();
         gg.pose().translate(x + offsetX, y + offsetY, 0);
         renderer.setPose(gg.pose());
 
-        List<SubtopicTile> shownTiles = tiles.values().stream().filter(t -> t.getSubtopic().isShown()).toList();
+        List<SubtopicTile> shownTiles;
+        if (!drawAllTiles) {
+            shownTiles = tiles.values().stream().filter(t -> t.getSubtopic().isShown()).toList();
+        } else {
+            shownTiles = tiles.values().stream().toList();
+        }
 
         SubtopicTile hoveredTile = null;
         for (SubtopicTile t : shownTiles) {
@@ -86,8 +92,11 @@ public class DraggablePlane {
         float localX = (float) (mx - x - offsetX);
         float localY = (float) (my - y - offsetY);
         for (SubtopicTile t : tiles.values()) {
-            if (t.isMouseOver(localX, localY) && isClickable(t.getSubtopic())) {
-                screen.onSubtopicClicked(t.getSubtopic());
+            if (t.isMouseOver(localX, localY)) {
+                if (isClickable(t.getSubtopic()))
+                    screen.onSubtopicClicked(t.getSubtopic());
+                else
+                    Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_LOOM_TAKE_RESULT, 1.0f));
                 return true;
             }
         }

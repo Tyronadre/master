@@ -113,7 +113,7 @@ public class NetworkBookScreen extends Screen {
         gg.enableScissor(64, 24, this.width - 18, this.height - 24);
 
         if (currentSubtopic == null) {
-            draggablePlane.render(gg, mouseX, mouseY, partialTicks);
+            draggablePlane.render(gg, mouseX, mouseY, false);
         } else {
             contentPane.render(gg, mouseX, mouseY, partialTicks);
         }

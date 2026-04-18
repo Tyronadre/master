@@ -1,17 +1,12 @@
 package de.tyro.mcnetwork.gui.networkBook;
 
 import de.tyro.mcnetwork.client.RenderUtil;
-import de.tyro.mcnetwork.item.ItemRegistry;
 import de.tyro.mcnetwork.networkBook.data.SubTopic;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Style;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.Vec2;
-import net.neoforged.neoforge.common.Tags;
 
 /**
  * Visual tile for a Subtopic.
@@ -37,8 +32,6 @@ public class SubtopicTile {
     }
 
     public void render(RenderUtil renderer, double mouseX, double mouseY, boolean highlight) {
-        if (!subtopic.isShown()) return;
-
         renderer.getPoseStack().pushPose();
 
         //background

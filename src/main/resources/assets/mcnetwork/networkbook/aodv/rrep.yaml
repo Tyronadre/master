@@ -1,6 +1,6 @@
 "title": "Route Reply (RREP)"
 "posX": 4
-"posY": 1
+"posY": 0
 "icon": "minecraft:arrow"
 "pre":
   - "Route Discovery (RREQ)"
