@@ -244,7 +244,7 @@ public class MarkdownEditorScreen extends Screen {
         int visibleVisualLines = height / LINE_HEIGHT;
 
         int startVisualLine = scrollY;
-        int endVisualLine = startVisualLine + visibleVisualLines + 2;
+        int endVisualLine = Math.min(startVisualLine + visibleVisualLines + 2, lines.length);
 
         for (int visualLine = startVisualLine; visualLine < endVisualLine; visualLine++) {
             if (visualLine < 0) continue;
