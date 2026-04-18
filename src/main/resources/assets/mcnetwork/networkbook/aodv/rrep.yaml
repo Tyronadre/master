@@ -1,42 +1,14 @@
-title: "Route Reply (RREP)"
-posX: 4
-posY: 1
-icon: "minecraft:arrow"
-pre: ["Route Discovery (RREQ)"]
-content: |
-  # Route Reply (RREP)
-
-  ---
-  
-  Sobald das Ziel erreicht wird, wird eine **Route Reply (RREP)** erzeugt.
-
-  ---
-  
-  ## Ablauf
-
-  - Zielknoten empfängt RREQ
-  - Antwort wird erstellt
-  - Antwort läuft den Weg **zurück zum Ursprung**
-
-  ---
-  
-  ![Ein Paket bewegt sich entlang eines Pfades zurück zum Sender](image:aodv_rrep_path)
-
-  ---
-  
-  ## Wichtig
-
-  Beim Rückweg entsteht eine **gültige Route**:
-
-  - Jeder Knoten speichert den nächsten Hop
-  - Eine durchgehende Verbindung entsteht
-
-  ---
-  
-  ## Ergebnis
-
-  Der Sender kennt nun eine Route zum Ziel.
-
-  ---
-  
-  @task[Wer erzeugt das RREP?|Der Zielknoten;In welche Richtung läuft es?|Zurück zum Sender]
+"title": "Route Reply (RREP)"
+"posX": 4
+"posY": 1
+"icon": "minecraft:arrow"
+"pre":
+  - "Route Discovery (RREQ)"
+"content": "# Route Reply (RREP)\n\n![Route Reply](rrep1.png)\n\nSobald das Ziel erreicht\
+  \ wird, wird eine **Route Reply (RREP)** erzeugt.\n\nDurch die Weiterleitung des\
+  \ **RREQ** ist ein Pfad zum Senderer dessen bekannt. Dieser wird nun Rückwärts entlang\
+  \ gegangen. Dabei wird die tatsächliche *Sequence Number* für den Zielknoten, der\
+  \ im **RREP** enthalten ist, in jedem Knoten auf dem Weg gespeichert.\n\n---\n\n\
+  ## Wichtig\n\nBeim Rückweg entsteht eine **gültige Route**:\n\n- Jeder Knoten speichert\
+  \ den nächsten Hop\n- Eine durchgehende Verbindung entsteht\n- Falls Links unidirektional\
+  \ sind, wird ein **RERR** gesendet, und ein neuer Rückweg gefunden.\n\n---\n"

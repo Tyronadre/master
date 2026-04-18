@@ -1,42 +1,16 @@
-title: "Route Maintenance"
-posX: 4
-posY: 3
-icon: "minecraft:barrier"
-pre: ["Routingtabellen Sequenznummern"]
-content: |
-  # Route Maintenance
-
-  ---
-  
-  In mobilen Netzwerken brechen Verbindungen häufig ab.
-
-  AODV reagiert darauf mit **Fehlermeldungen (RERR)**.
-
-  ---
-  
-  ## Ablauf
-
-  - Verbindung bricht
-  - Knoten erkennt Fehler
-  - **Route Error (RERR)** wird gesendet
-
-  ---
-  
-  ![Ein unterbrochener Pfad im Netzwerk](image:aodv_route_break)
-
-  ---
-  
-  ## Konsequenz
-
-  - Betroffene Routen werden gelöscht
-  - Neue Route Discovery kann gestartet werden
-
-  ---
-  
-  ## Ziel
-
-  Netzwerk bleibt konsistent trotz Änderungen.
-
-  ---
-  
-  @task[Was passiert bei einem Verbindungsabbruch?|RERR wird gesendet;Was folgt danach?|Neue Routensuche]
+"title": "Route Maintenance"
+"posX": 4
+"posY": 3
+"icon": "minecraft:barrier"
+"pre":
+  - "Routingtabellen Sequenznummern"
+"content": "# Route Maintenance\n\n---\n\nIn mobilen Netzwerken brechen Verbindungen\
+  \ häufig ab.\n\nAODV reagiert darauf mit **Fehlermeldungen (RERR)**.\n\n---\n\n\
+  ## Ablauf\n\n- Verbindung bricht\n- Knoten erkennt Fehler, wenn sie versucht Daten\
+  \ über diesen Link zu senden.\n- **Route Error (RERR)** wird an den Sender des Datenpakets\
+  \ zurückgeschickt.\n\n---\n\n## Konsequenz\n\n- Betroffene Routen werden gelöscht\n\
+  - Neue Route Discovery kann gestartet werden\n\n---\n\n## Weiters\n\nGespeicherte\
+  \ Verbindungen im Routing Table haben eine begrenzte Lebensdauer, nach deren Ablauf\
+  \ sie gelöscht werden. Somit wird dafür gesorgt, dass in Netzwerken in denen sich\
+  \ Verbindungen oft ändern, nicht durchgehend RERR Pakete gesendet werden müssen.\n\
+  \n---\n\n"

@@ -15,11 +15,11 @@ import java.util.Set;
 public class SubTopic {
     private final Topic topic;
     private final String id;
-    private final String title;
-    private final Vec2 position;
+    private String title;
+    private Vec2 position;
     private final Set<SubTopic> prerequisites = new HashSet<>();
-    private final MarkdownDocument markdown;
-    private final ResourceLocation icon;
+    private MarkdownDocument markdown;
+    private ResourceLocation icon;
     private final ResourceLocation location;
 
     public SubTopic(Topic topic, String title, ResourceLocation icon, String content, int posX, int posY, ResourceLocation location) {
@@ -79,5 +79,22 @@ public class SubTopic {
         if (prerequisites.isEmpty()) return true;
 
         return (prerequisites.stream().allMatch(SubTopic::isCompleted));
+    }
+
+    // Setter methods for editing YAML properties
+    public void setTitle(String newTitle) {
+        this.title = newTitle;
+    }
+
+    public void setPosition(int posX, int posY) {
+        this.position = new Vec2(posX, posY);
+    }
+
+    public void setIcon(ResourceLocation newIcon) {
+        this.icon = newIcon;
+    }
+
+    public void updateMarkdown(String content) {
+        this.markdown = MarkdownParser.parse(content, topic.getContentLocation());
     }
 }

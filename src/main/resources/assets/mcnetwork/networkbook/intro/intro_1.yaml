@@ -1,52 +1,24 @@
-title: Willkommen zu MCNetwork
-posX: 0
-posY: 0
-icon: minecraft:book
-pre: []
-content: |
-  # Willkommen zu MCNetwork
-
-  ---
-
-  **MCNetwork** ist ein Mod zur Simulation und Analyse von Mobile Ad Hoc Netzwerkprotokollen (MANNETs).
-
-  Du untersuchst, wie sich Daten in einem Netzwerk bewegen und wie unterschiedliche Routing-Algorithmen Entscheidungen treffen.
-
-  ![Diagramm eines Netzwerks mit mehreren Knoten und Verbindungen](intro1_1.png)
-
-  ---
-
-  ## Ziel des Mods
-
-  - Verständnis von **Netzwerkstrukturen**
-  - Analyse von **Routing-Entscheidungen**
-  - Vergleich verschiedener Protokolle:
-    - **AODV**
-    - **DSR**
-    - **LAR**
-    - **OLSR**
-
-  ---
-
-  ## Grundidee
-
-  Ein Netzwerk besteht aus **Knoten (Nodes)**, die Datenpakete austauschen.
-
-  Die zentrale Frage ist: Wie findet ein Paket seinen Weg zum Ziel?
-
-  ## Übersicht
-
-  In diesem Kaptitel findest du grundlegenden Informationen zu den Möglichkeiten des Mods.
-
-  In den folgenden vier Kapiteln werden die Protokolle genauer untersucht.
-
-
-  ## Questbuch
-
-  Dieses Questbuch soll dir helfen die Funktionsweise der Protokoll zu verstehen und dich Schritt für Schritt an diese heranführen.
-
-  Links siehst du die einzelnen Kapitel. In jedem Kapitel gibt es eine gewisse Menge and Quests die du abschließen kannst. Dabei sind Abschnitte die du noch nicht ansehen kannst mit einem roten Rahmen markiert. Die Abschnitte die vorher abgeschlossen werden müssen, werden durch einen blauen Rahmen gekennzeichnet.
-
-  !['Willkommen zu MCNetwork' muss abgeschlossen werden bevor du 'Simulation Controller' lesen kannst](intro1_2.png)
-
-  Außerdem gibt es Abschnitten in denen du Aufgaben abschließen kannst, um dein Wissen zu testen.
+"title": "Willkommen zu MCNetwork"
+"posX": 0
+"posY": 0
+"icon": "minecraft:book"
+"content": "# Willkommen zu MCNetwork\n\n---\n\n**MCNetwork** ist ein Mod zur Simulation\
+  \ und Analyse von Mobile Ad Hoc Netzwerkprotokollen (MANNETs).\n\nDu untersuchst,\
+  \ wie sich Daten in einem Netzwerk bewegen und wie unterschiedliche Routing-Algorithmen\
+  \ Entscheidungen treffen.\n\n![Diagramm eines Netzwerks mit mehreren Knoten und\
+  \ Verbindungen](intro1_1.png)\n\n---\n\n## Ziel des Mods\n\n- Verständnis von **Netzwerkstrukturen**\n\
+  - Analyse von **Routing-Entscheidungen**\n- Vergleich verschiedener Protokolle:\n\
+  \  - **AODV**\n  - **DSR**\n  - **LAR**\n  - **OLSR**\n\n---\n\n## Grundidee\n\n\
+  Ein Netzwerk besteht aus **Knoten (Nodes)**, die Datenpakete austauschen.\n\nDie\
+  \ zentrale Frage ist: Wie findet ein Paket seinen Weg zum Ziel?\n\n## Übersicht\n\
+  \nIn diesem Kaptitel findest du grundlegenden Informationen zu den Möglichkeiten\
+  \ des Mods.\n\nIn den folgenden vier Kapiteln werden die Protokolle genauer untersucht.\n\
+  \n\n## Questbuch\n\nDieses Questbuch soll dir helfen die Funktionsweise der Protokoll\
+  \ zu verstehen und dich Schritt für Schritt an diese heranführen.\n\nLinks siehst\
+  \ du die einzelnen Kapitel. In jedem Kapitel gibt es eine gewisse Menge and Quests\
+  \ die du abschließen kannst. Dabei sind Abschnitte die du noch nicht ansehen kannst\
+  \ mit einem roten Rahmen markiert. Die Abschnitte die vorher abgeschlossen werden\
+  \ müssen, werden durch einen blauen Rahmen gekennzeichnet.\n\n!['Willkommen zu MCNetwork'\
+  \ muss abgeschlossen werden bevor du 'Simulation Controller' lesen kannst](intro1_2.png)\n\
+  \nAußerdem gibt es Abschnitten in denen du Aufgaben abschließen kannst, um dein\
+  \ Wissen zu testen.\n"

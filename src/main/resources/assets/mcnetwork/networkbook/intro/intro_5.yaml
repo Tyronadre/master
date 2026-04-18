@@ -1,34 +1,18 @@
-title: "Zusammenspiel der Komponenten"
-posX: 4
-posY: 3
-icon: "minecraft:comparator"
-pre: ["Simulation Controller", "Computerblock als Netzwerkknoten", "Datenpakete im Netzwerk"]
-content: |
-  # Zusammenspiel der Komponenten
-
-  ---
-  
-  In MCNetwork arbeiten alle Komponenten zusammen, um ein Netzwerk zu simulieren.
-
-  ---
-  
-  ## Ablauf einer Simulation
-  
-  1. Das Proktoll wird mit dem Controller Item gewählt.
-  2. Mit einem Computer wird z.B. ein Ping ausgeführt.
-  3. Das Routingprotkoll entscheidet, welchen Weg Pakete nehmen, oder ob z.B. ein Kontrollpaket geschickt werden muss, um eine Route Discovery durchzuführen.
-  4. Pakete bewegen sich durch das Netzwerk, jeweils von dem entsprechenden Routingprotokoll kontrolliert.
-
-  ---
-  
-  ![Ein Netzwerk](network.png)
-
-  ---
-  
-  ## Zentrale Fragestellung
-
-  Wie unterscheiden sich die Protokolle in ihrem Verhalten?
-
-  - Finden sie immer den kürzesten Weg?
-  - Wie reagieren sie auf Änderungen?
-  - Wie viel Kommunikation ist notwendig?
+"title": "Zusammenspiel der Komponenten"
+"posX": 4
+"posY": 3
+"icon": "minecraft:comparator"
+"pre":
+  - "Simulation Controller"
+  - "Computer"
+  - "Datenpakete im Netzwerk"
+"content": "# Zusammenspiel der Komponenten\n\n---\n\nIn MCNetwork arbeiten alle Komponenten\
+  \ zusammen, um ein Netzwerk zu simulieren.\n\n---\n\n## Ablauf einer Simulation\n\
+  \n1. Das Proktoll wird mit dem Controller Item gewählt.\n2. Mit einem Computer wird\
+  \ z.B. ein Ping ausgeführt.\n3. Das Routingprotkoll entscheidet, welchen Weg Pakete\
+  \ nehmen, oder ob z.B. ein Kontrollpaket geschickt werden muss, um eine Route Discovery\
+  \ durchzuführen.\n4. Pakete bewegen sich durch das Netzwerk, jeweils von dem entsprechenden\
+  \ Routingprotokoll kontrolliert.\n\n---\n\n![Ein Netzwerk](network.png)\n\n---\n\
+  \n## Zentrale Fragestellung\n\nWie unterscheiden sich die Protokolle in ihrem Verhalten?\n\
+  \n- Finden sie immer den kürzesten Weg?\n- Wie reagieren sie auf Änderungen?\n-\
+  \ Wie viel Kommunikation ist notwendig?\n"

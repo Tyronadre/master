@@ -1,47 +1,16 @@
-title: "AODV – Analyse"
-posX: 6
-posY: 3
-icon: "minecraft:comparator"
-pre: ["Route Maintenance"]
-content: |
-  # AODV – Analyse
-
-  ---
-  
-  AODV zeigt spezifisches Verhalten in Netzwerken.
-
-  ---
-  
-  ## Eigenschaften
-
-  | Eigenschaft | Bewertung |
-  |------------|----------|
-  | Overhead | Niedrig bei wenig Verkehr |
-  | Reaktionszeit | Höher bei neuer Route |
-  | Skalierung | Gut |
-  | Stabilität | Abhängig von Mobilität |
-
-  ---
-  
-  ![Vergleich verschiedener Routingpfade und deren Effizienz](image:aodv_analysis_paths)
-
-  ---
-  
-  ## Beobachtungen in MCNetwork
-
-  - Initiale Verzögerung durch Route Discovery
-  - Effiziente Nutzung bestehender Routen
-  - Häufige Neuberechnung bei Bewegung
-
-  ---
-  
-  ## Einordnung
-
-  AODV eignet sich besonders für:
-
-  - dynamische Netzwerke
-  - sporadische Kommunikation
-
-  ---
-  
-  @task[Wann ist AODV effizient?|Bei wenig dauerhaftem Verkehr;Warum gibt es Verzögerung?|Route muss erst gefunden werden]
+"title": "Zusammenfassung"
+"posX": 5
+"posY": 5
+"icon": "minecraft:lantern"
+"pre":
+  - "Route Maintenance"
+"content": "# Zusammenfassung\n\n---\n\nAODV zeigt spezifisches Verhalten in Netzwerken.\n\
+  \n---\n\n## Eigenschaften\n\n| Eigenschaft | Bewertung |\n|------------|----------|\n\
+  | Overhead | Niedrig bei wenig Verkehr |\n| Reaktionszeit | Höher bei neuer Route\
+  \ |\n| Skalierung | Gut |\n| Stabilität | Abhängig von Mobilität |\n\n---\n\n![Vergleich\
+  \ verschiedener Routingpfade und deren Effizienz](image:aodv_analysis_paths)\n\n\
+  ---\n\n## Beobachtungen in MCNetwork\n\n- Initiale Verzögerung durch Route Discovery\n\
+  - Effiziente Nutzung bestehender Routen\n- Häufige Neuberechnung bei Bewegung\n\n\
+  ---\n\n## Einordnung\n\nAODV eignet sich besonders für:\n\n- dynamische Netzwerke\n\
+  - sporadische Kommunikation\n\n---\n\n@task[Wann ist AODV effizient?|Bei wenig dauerhaftem\
+  \ Verkehr;Warum gibt es Verzögerung?|Route muss erst gefunden werden]"

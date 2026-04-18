@@ -496,13 +496,21 @@ public class MarkdownEditorScreen extends Screen {
                     hasUnsavedChanges = true;
                     cursorColumn -= cursorColumn - prevWhitespace;
                     updatePreview();
-                } else if (cursorLine < lines.length - 1) {
-                    lines[cursorLine] = lines[cursorLine] + lines[cursorLine + 1];
-                    lines = removeIndex(lines, cursorLine + 1);
+                } else if (cursorLine > 0) {
+                    lines[cursorLine] = lines[cursorLine - 1] + lines[cursorLine];
+                    lines = removeIndex(lines, cursorLine);
+                    cursorLine -= 1;
+                    cursorColumn = lines[cursorLine].length();
                     hasUnsavedChanges = true;
                     updatePreview();
                 }
                 return true;
+            }
+            if (keyCode == GLFW.GLFW_KEY_V) {
+                var line = lines[cursorLine];
+                var insert = Minecraft.getInstance().keyboardHandler.getClipboard();
+                lines[cursorLine] = line.substring(0, cursorColumn) + insert + line.substring(cursorColumn);
+                cursorColumn += insert.length();
             }
         }
 
@@ -768,7 +776,7 @@ public class MarkdownEditorScreen extends Screen {
             hasUnsavedChanges = false;
 
             // Reload the topics to reflect changes
-            TopicManager.getInstance().reloadTopics();
+            TopicManager.getInstance().reloadTopic(editingTopic);
         } else {
             Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_LOOM_TAKE_RESULT, 1.0f));
         }

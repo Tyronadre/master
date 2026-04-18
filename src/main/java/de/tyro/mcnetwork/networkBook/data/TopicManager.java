@@ -120,4 +120,10 @@ public class TopicManager {
     public void setLastTopic(Topic lastTopic) {
         this.lastTopic = lastTopic;
     }
+
+    public void reloadTopic(Topic topic) {
+        topic.getSubtopics().clear();
+        topics.remove(topic);
+        loadTopic(topic);
+    }
 }

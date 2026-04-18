@@ -18,14 +18,7 @@ public abstract class Block {
 
     protected String trimToWidth(String s, int w) {
         if (font.width(s) <= w) return s;
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < s.length(); i++) {
-            sb.append(s.charAt(i));
-            if (font.width(sb + "...") > w) {
-                return sb.substring(0, Math.max(0, sb.length() - 1)) + "...";
-            }
-        }
-        return s;
+        return font.plainSubstrByWidth(s, w - font.width("...")) + "...";
     }
 
     protected static class StyledLine {
