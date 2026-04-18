@@ -6,8 +6,11 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.phys.Vec2;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 
 /**
  * Subtopic represents a single lesson
@@ -21,6 +24,8 @@ public class SubTopic {
     private MarkdownDocument markdown;
     private ResourceLocation icon;
     private final ResourceLocation location;
+    private final List<Consumer<Vec2>> positionListener = new ArrayList<>();
+
 
     public SubTopic(Topic topic, String title, ResourceLocation icon, String content, int posX, int posY, ResourceLocation location) {
         this.id = topic.getTitle() + ":" + title;
@@ -88,6 +93,7 @@ public class SubTopic {
 
     public void setPosition(int posX, int posY) {
         this.position = new Vec2(posX, posY);
+        positionListener.forEach(it -> it.accept(position));
     }
 
     public void setIcon(ResourceLocation newIcon) {
@@ -96,5 +102,13 @@ public class SubTopic {
 
     public void updateMarkdown(String content) {
         this.markdown = MarkdownParser.parse(content, topic.getContentLocation());
+    }
+
+    public void addPositionListener(Consumer<Vec2> positionListener) {
+        this.positionListener.add(positionListener);
+    }
+
+    public void clearPositionListeners() {
+        this.positionListener.clear();
     }
 }

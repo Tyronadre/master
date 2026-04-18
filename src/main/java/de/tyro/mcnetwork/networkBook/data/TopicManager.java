@@ -122,8 +122,66 @@ public class TopicManager {
     }
 
     public void reloadTopic(Topic topic) {
-        topic.getSubtopics().clear();
-        topics.remove(topic);
-        loadTopic(topic);
+        // Reload dependencies between subtopics
+        reloadTopicDependencies(topic);
+    }
+
+    /**
+     * Reloads the dependencies between subtopics of a topic.
+     * This reads the YAML files again to get the prerequisite information.
+     */
+    public void reloadTopicDependencies(Topic topic) {
+        // Clear existing prerequisites
+        for (SubTopic sub : topic.getSubtopics()) {
+            sub.getPrerequisite().clear();
+        }
+
+        // Reload prerequisites from YAML files
+        var pres = new HashMap<SubTopic, List<String>>();
+        for (SubTopic sub : topic.getSubtopics()) {
+            var resourceO = rm.getResource(sub.getLocation());
+            if (resourceO.isEmpty()) continue;
+
+            try (var r = resourceO.get().openAsReader()) {
+                Map<String, Object> map = new Yaml().load(r);
+                if (map != null && map.get("pre") != null) {
+                    @SuppressWarnings("unchecked")
+                    List<String> preList = (List<String>) map.get("pre");
+                    pres.put(sub, preList);
+                }
+            } catch (Exception e) {
+                logger.error("Failed to reload prerequisites for subtopic at {}", sub.getLocation().getPath(), e);
+            }
+        }
+
+        // Apply prerequisites
+        for (var entry : pres.entrySet()) {
+            var sub = entry.getKey();
+            for (var pre : entry.getValue()) {
+                var subtopic = topic.getSubTopicByTitle(pre);
+                if (subtopic == null) continue;
+                sub.addPrerequisite(subtopic);
+            }
+        }
+    }
+
+    /**
+     * Adds a new subtopic to a topic in memory.
+     * The YAML file should already be created before calling this method.
+     */
+    public SubTopic addSubtopicToTopic(Topic topic, String title, ResourceLocation icon, String content,
+                                       int posX, int posY, ResourceLocation location) {
+        return new SubTopic(topic, title, icon, content, posX, posY, location);
+        // Note: topic.addSubtopic() is called in SubTopic constructor
+    }
+
+    /**
+     * Updates a subtopic's properties in memory.
+     * The YAML file should already be updated on disk.
+     */
+    public void updateSubtopic(SubTopic subtopic, String title, int posX, int posY, ResourceLocation icon) {
+        subtopic.setTitle(title);
+        subtopic.setPosition(posX, posY);
+        subtopic.setIcon(icon);
     }
 }

@@ -18,7 +18,10 @@ public class SubtopicTile {
     public static final int BACKGROUND_COLOR = 0xFF222228;
     public static final int COMPLETED_COLOR = 0xFF224428;
 
-    private final int x, y, w, h;
+    private int x;
+    private int y;
+    private final int w;
+    private final int h;
     private final SubTopic subtopic;
     private final Font font;
 
@@ -28,6 +31,10 @@ public class SubtopicTile {
         this.w = w;
         this.h = h;
         this.subtopic = subtopic;
+        subtopic.addPositionListener((position) -> {
+            this.x = (int) position.x;
+            this.y = (int) position.y;
+        });
         this.font = Minecraft.getInstance().font;
     }
 

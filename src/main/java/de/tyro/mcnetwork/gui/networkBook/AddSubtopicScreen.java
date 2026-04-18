@@ -186,8 +186,16 @@ public class AddSubtopicScreen extends Screen {
         if (success) {
             Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0f));
 
-            // Reload the topic to include the new subtopic
-            TopicManager.getInstance().reloadTopic(topic);
+            // Add the subtopic to the topic in memory
+            TopicManager.getInstance().addSubtopicToTopic(
+                    topic,
+                    subtopicName,
+                    ResourceLocation.tryParse(iconStr),
+                    "# " + subtopicName + "\n\nAdd your content here.",
+                    posX,
+                    posY,
+                    subtopicLocation
+            );
 
             // Return to previous screen
             Minecraft.getInstance().setScreen(previousScreen);
@@ -201,11 +209,6 @@ public class AddSubtopicScreen extends Screen {
         Minecraft.getInstance().setScreen(previousScreen);
     }
 
-    @SuppressWarnings("override")
-    @Override
-    public boolean isPauseScreen() {
-        return true;
-    }
 }
 
 

@@ -12,6 +12,7 @@ import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import org.lwjgl.glfw.GLFW;
 
@@ -266,7 +267,6 @@ public class MarkdownEditorSelectorScreen extends Screen {
 
             gg.pose().translate(x, drawY, 0);
             gg.pose().scale((float) scale, (float) scale, 1f);
-//            gg.pose().translate(-minX, -minY, 0);
 
             // Render in normalized space
             miniPlane.render(gg, (int) ((mouseX - x) / scale + minX), (int) ((mouseY - drawY) / scale + minY), true);
@@ -494,19 +494,22 @@ public class MarkdownEditorSelectorScreen extends Screen {
         // Save to file
         boolean success = MarkdownFileManager.writeYamlData(item.subtopic.getLocation(), data);
         if (success) {
-            Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_LOOM_TAKE_RESULT, 1.0f));
+            Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0f));
             hasSettingsChanged = false;
 
-            // Update the subtopic title and reload
+            // Update the subtopic properties in memory
             item.subtopic.setTitle(titleInput.getValue());
-            TopicManager.getInstance().reloadTopic(item.topic);
+            item.subtopic.setPosition(
+                    Integer.parseInt(posXInput.getValue()) * 100,
+                    Integer.parseInt(posYInput.getValue()) * 100
+            );
+            item.subtopic.setIcon(ResourceLocation.tryParse(iconInput.getValue()));
+
+            // Reload the dependencies between subtopics
+            TopicManager.getInstance().reloadTopicDependencies(item.topic);
 
             // Rebuild the list to show updated titles
             buildEditableList();
-
-            selectedIndex = -1;
-            setSettingsVisible(false);
-            currentMiniTopic = null;
         } else {
             Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_LOOM_TAKE_RESULT, 1.0f));
         }
