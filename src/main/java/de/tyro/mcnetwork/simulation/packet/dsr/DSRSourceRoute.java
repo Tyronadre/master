@@ -81,7 +81,7 @@ public class DSRSourceRoute extends NetworkPacket implements IProtocolPaket {
         var superSize = super.getRenderSize(font);
         var innerSize = packet.getRenderSize(font);
 
-        return new Vec2(Math.max(superSize.x, innerSize.x), 23 + innerSize.y + superSize.y);
+        return new Vec2(Math.max(superSize.x, innerSize.x), superSize.y + addresses.size() * 5 + innerSize.y + 5);
     }
 
     public List<IP> getAddresses() {

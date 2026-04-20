@@ -14,10 +14,11 @@ content: |
 
   ---
   
-  Wenn eine Node A initialisiert wird, ist der RoutingTable zunächst leer. Sobald ein HELLO Paket empfangen wird, speichert die Node die Verbindung zu diesem Nachbarn B als asymmetrischen Link ab. 
+  In regelmäßigen Abständen senden Nodes **HELLO** Pakete an alle Nachbarn. Diese haben immer eine TTL von 1.
+  Wenn eine Node A initialisiert wird, ist der RoutingTable zunächst leer. Sobald ein HELLO Paket empfangen wird, speichert die Node die Verbindung zu diesem Nachbarn B als unidirektionalen Link ab. 
   Da HELLO Pakete immer mit einer TTL von 1 gesendet werden, muss ein Empfangenes zwingend von einem direkten Nachbarn kommen.
-  Sendet die Node A nun selber ein HELLO Paket, wird in diesem gespeichert, das eine asymmetrische Verbindung zu Nachbar B bekannt ist.
-  Wird dieses von Node B empfangen, wird in Node B gespeichert das ein symmetrische Verbindung zu Node A besteht. 
+  Sendet die Node A nun selber ein HELLO Paket, wird in diesem gespeichert, das eine unidirektionale Verbindung zu Nachbar B bekannt ist.
+  Wird dieses von Node B empfangen, wird in Node B gespeichert das ein bidirektionale Verbindung zu Node A besteht. 
   Mit dem nächsten gesendeten HELLO, ist dies auch Node A bekannt.
   
   ---
@@ -41,10 +42,10 @@ content: |
   
   # Aufgaben
   
-  1. Setze das genutze Protokol mit dem Simulation Controller auf OLSR. Baue zum testen zunächst ein einfaches Netzwerk mit nur 2 Nodes auf. Du solltest nun sehen, das beide Nodes ab und zu HELLO Pakete versenden. 
+  1. Setze das genutze Protokol mit dem Simulation Controller auf OLSR. Baue zum Testen zunächst ein einfaches Netzwerk mit nur 2 Nodes auf. Du solltest nun sehen, das beide Nodes ab und zu HELLO Pakete versenden. 
   2. Füge nun eine Node so hinzu das sie in Kommunikationsreichweite von beiden Nodes ist, und beobachte was passiert. 
   3. Baue diese Node ab, und beobachte wie das Protokol mit dem Verlust dieses Links umgeht.
   4. Beobachte, wie sich das Netzwerk verhält wenn du diese Node außerhalb der Reichweite von einer der beiden Nodes setzt.
   
-  
+  ---
   

@@ -96,7 +96,7 @@ public abstract class NetworkPacket implements INetworkPacket {
 
         var width = MathUtil.max(font.width(line), font.width(originatorIP.toString())* 2 + font.width(" -> "), font.width(destinationIP.toString()) * 2 + font.width(" -> ")) * 0.5f;
 
-        return new Vec2(width, font.lineHeight * 2);
+        return new Vec2(width, 8);
     }
 
     protected void renderHeader(RenderUtil renderer, PoseStack poseStack, float width) {

@@ -1,0 +1,20 @@
+"title": "Task III - Erklärung"
+"posX": 5
+"posY": 4
+"icon": "minecraft:torch"
+"pre":
+  - "Task III"
+"content": "# Task III - Erklärung\n```\nA--B--C--D\n\
+  \      \\     /\n       E--F\n```\n- Was passiert wenn F ein Paket nach D schicken\
+  \ will?\n-> Wir wissen das A nach B etabliert ist, d.h. es wurden RREQ Pakete durch\
+  \ das Netzwerk gesendete. Betrachten wir die Topologie, so kennt F zwar einen Pfad\
+  \ nach C, aber nicht D. Es wird also ein RREQ von F gesendet\n- Was passiert wenn\
+  \ B ein Paket nach D schicken will?\n-> Hier ist im Cache die Route bekannt. Die\
+  \ Daten können direkt gesendet werden.\n- Was passiert wenn der Link B-C abbricht\
+  \ und A Daten nach D sendet?\n-> B sendet einen RERR an A zurück. Daraufhin wird\
+  \ ein neuer RREQ gesendet und die Route A-B-E-F-D etabliert.\n- Was passiert wenn\
+  \ D nun auf die Daten von A antworten will?\n-> D weiß noch nicht das der Link B-C\
+  \ unterbrochen ist. Somit versucht es zunächst über diese Route eine Antwort zu\
+  \ senden. C antwortet mit einem RERR. Dann wird dieser Link aus dem Route Cache\
+  \ von D gelöscht, und dann die alternative Route D-F-E-B-A benutzt, die D bereits\
+  \ aus dem RREQ von A kennt.\n\n---"

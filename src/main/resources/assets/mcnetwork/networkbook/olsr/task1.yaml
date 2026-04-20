@@ -6,16 +6,16 @@ pre: []
 content: |
   Fragen zu HELLO Paketen
   
-  ![pic1](hello_msg.png)
+  ![Hello Message](hello_msg.png)
   
   ---
   
   @task[
-    Welcher Knoten sendete dieses Paket|0.0.0.3;
+    Welcher Knoten sendete dieses Paket?|0.0.0.3;
     Die Verbindung zu welchem Knoten ist 0.0.0.3 bekannt?|0.0.0.2;
-    Welchen Typ hat diese Verbindung aktuell für Knoten 0.0.0.3 (asym oder sym)|asym;
+    Welchen Typ hat diese Verbindung aktuell für Knoten 0.0.0.3 (asym oder sym)?|asym;
     Nachdem das Paket bei 0.0.0.2 verarbeitet wurde, ist die Verbindung zu welchem Knoten bekannt?|0.0.0.3;
-    Welchen Typ hat diese Verbindung (asym oder sym)|sym
+    Welchen Typ hat diese Verbindung (asym oder sym)?|sym
   ]
   
   ---

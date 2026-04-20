@@ -1,0 +1,16 @@
+"title": "Task III - Erklärung"
+"posX": 5
+"posY": 4
+"icon": "minecraft:torch"
+"pre":
+  - "Task III"
+"content": "# Task III - Erklärung\n\nDie TTL ist zunächst 1, dann 3 und dann 5, somit\
+  \ braucht es drei Schritte.\n\nIm ersten Schritt wird von A an B gesendet, es gibt\
+  \ keine weiteren Pakete, da die TTL 1 ist. Somit kennt nur B die Reverse Route zu\
+  \ A.\n\nIm zweiten Schritt sendet A -> (B), B -> (A,C,F), C -> (B,D,G), F -> (B,G).\
+  \ Da A nun ein Paket von B erhalten hat kennt es diese Verbindung.\n\nIm dritten\
+  \ Schritt kommt das RREQ Paket bei E an, und es antwortet mit einem RREP Paket,\
+  \ das per Unicast an A zurückgesendet wird. \n\n---\n\n- Was passiert wenn der Link\
+  \ zwischen B und C bricht, wenn A Daten nach E sendet?\n-> Dann sendet B ein RERR\
+  \ an A\n\n- Wie wird eine neue Route gefunden?\n-> A sendet einen neuen RREQ. Die\
+  \ TTL von diesem RREQ ist 5, da immer die länge des alten Pfades genutzt wird.\n"

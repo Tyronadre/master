@@ -1,25 +1,20 @@
-title: "Route Discovery in DSR"
-posX: 2
-posY: 1
-icon: "minecraft:paper"
-pre: ["DSR – Einführung"]
-content: |
-  # Route Discovery in DSR
-
-  ---
-  
-  Wenn ein Knoten keine Route kennt, startet er einen **Route Request (RREQ)**.
-  
-  ![rreq](rreq_3.png)
-  
-  ## Ablauf
-
-  1. Sender erstellt ein RREQ  
-  2. RREQ wird als **Broadcast** verschickt  
-  3. Jeder Knoten fügt sich selbst zur Route hinzu  
-
-  Der RREQ enthält am Ende den vollständigen Weg zum Ziel.
-  
-  Um übermäßiges Flooden zu vermeiden, beinhalten RREQ eine Identification Value. Pakete die die selbe Zieladdress und ID haben werden nur einmal pro Node verarbeitet.
-  Außerdem wird die TTL schrittweise erhöht, um nicht direkt das ganze Netzwerk zu flooden.
-  
+"title": "Route Discovery"
+"posX": 1
+"posY": 1
+"icon": "minecraft:paper"
+"pre":
+  - "Einführung"
+"content": "# Route Discovery in DSR\n\n---\n\nWenn ein Knoten keine Route kennt zur\
+  \ gewünschten Zieladdresse kennt, führt er eine Route Discovery durch. Dabei wird\
+  \ ein Route Request Paket **RREQ** erstellt und gesendet.\n\n![Ein RREQ Paket](rreq_3.png)\n\
+  \n---\n\n## Ablauf\n\n1. Sender erstellt ein RREQ  \n2. RREQ wird als **Broadcast**\
+  \ verschickt  \n3. Jeder Knoten fügt sich selbst zur Route hinzu  \n\nDer RREQ enthä\
+  lt am Ende den vollständigen Weg zum Ziel.\n\nUm übermäßiges Flooden zu vermeiden,\
+  \ beinhalten RREQ eine Identification Value. Hat ein Paket die selbe Zieladdress\
+  \ und ID haben werden nur einmal pro Node verarbeitet. Die Zahl der aktuell gespeicherten\
+  \ Einträge wird im HUD jedes Knotens angezeigt, unter `RREQ Cache (IN)`.\n\nAuß\
+  erdem wird die TTL schrittweise erhöht, um nicht direkt das ganze Netzwerk zu flooden.\
+  \ Sie startet bei 1 und wird mit jedem erneuten senden verdoppelt\n---\n\n## Daten\
+  \ im HUD\n\n- `IdentificationValue`: Die ID um zu erkennen ob dieser Knoten dieses\
+  \ Paket schon einmal gesehen hat.\n- `Target`: Die Zieladdress die gesucht wird.\n\
+  - Eine Liste die den bisher zurückgelegten Pfad beschreibt.\n\n---"

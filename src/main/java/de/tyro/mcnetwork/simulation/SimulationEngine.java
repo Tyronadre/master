@@ -17,9 +17,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
@@ -34,6 +37,8 @@ public class SimulationEngine {
     private int receiveWindowMS = 1;
     private int receiveWindowSize = 2;
     private Consumer<INetworkNode> defaultProtocolSetter;
+    private static final Set<IP> ips = new HashSet<>();
+
 
     public static SimulationEngine getInstance(Boolean clientSide) {
         return clientSide ? CLIENT_INSTANCE : SERVER_INSTANCE;
@@ -58,11 +63,31 @@ public class SimulationEngine {
     public static long MS_PER_SIM_TICK = 1;
     private int commRadius;
 
-    public void registerNode(INetworkNode node) {
-        log.debug("Registering node {}. {} @ {}", node, node.getLevel(), Integer.toHexString(hashCode()));
+    public static IP getNextFreeIP() {
+        int[] ip = new int[4];
+        for (int i = 0; i < 4; i++) {
+            for (int j = i; j >= 0; j--) ip[j] = 0;
+            for (int j = 0; j < 255; j++) {
+                ip[3 - i] = j;
 
+                if (Arrays.equals(ip, IP.ZERO.address) || Arrays.equals(ip, IP.BROADCAST.address)) {
+                    continue;
+                }
+                if (ips.stream().noneMatch(it -> Arrays.equals(ip, it.address))) {
+                    return new IP(ip);
+                }
+            }
+        }
+        throw new IllegalStateException("No free IP address found!");
+    }
+
+    public void registerNode(INetworkNode node) {
         defaultProtocolSetter.accept(node);
         nodes.put(node.getIP(), node);
+
+        if (!isClientSide) ips.add(node.getIP());
+
+        log.debug("Registered node {}. {}", node, node.getLevel());
     }
 
     public void registerNetworkFrame(NetworkFrameEntity entity) {
@@ -92,6 +117,7 @@ public class SimulationEngine {
         new ArrayList<>(nodes.values()).forEach(INetworkNode::onServerStop);
         networkFrames.clear();
         nodes.clear();
+        ips.clear();
     }
 
     @SubscribeEvent
@@ -259,7 +285,7 @@ public class SimulationEngine {
         return networkFrames;
     }
 
-    public void setReceiveWindowMS(int value){
+    public void setReceiveWindowMS(int value) {
         this.receiveWindowMS = value;
     }
 
@@ -267,7 +293,7 @@ public class SimulationEngine {
         return receiveWindowMS;
     }
 
-    public void setReceiveWindowSize(int value){
+    public void setReceiveWindowSize(int value) {
         this.receiveWindowSize = value;
     }
 

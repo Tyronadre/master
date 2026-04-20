@@ -1,0 +1,14 @@
+"title": "Task II"
+"posX": 2
+"posY": 3
+"icon": "minecraft:lectern"
+"pre":
+  - "Task I"
+"content": "# Task II\n\nNehmen wir wieder folgendes Netzwerk an:\n\n```\nA--B--C--D\n\
+  \      \\     /\n       E--F\n```\n\n@task[\n  Welcher Knoten erzeugt das RREP?|D;\n\
+  \  Welche Route wird im RREP verwendet?|A, B, C, D;\n  Wie wird das RREP gesendet\
+  \ (unicast/broadcast)?|unicast;\n  Welcher Knoten erhält das RREP zuerst auf dem\
+  \ Rückweg?|C;\n  Welche Adresse steht am Ende der Route?|D;\n  Welcher Knoten speichert\
+  \ die Route zur Destination?|Alle Knoten auf der Route;\n  Welche Information enthä\
+  lt das RREP?| Route von A nach D;\n  Wird der Pfad während des Rückwegs verändert?|Nein;\n\
+  \  Wie viele Hops hat die Route A nach D?|3;\n]\n\n---"

@@ -1,41 +1,27 @@
-title: "Simulation Controller"
-posX: 2
-posY: 1
-icon: "minecraft:clock"
-pre: ["Willkommen zu MCNetwork"]
-content: |
-  # Simulation Controller
-
-  ---
-  
-  Der **Simulation Controller** steuert den Ablauf der Netzwerksimulation.
-
-  Er erlaubt dir, das Verhalten der Protokolle gezielt zu analysieren.
-
-  ---
-  
-  ## Funktionen
-
-  - Simulation **starten / pausieren**
-  - **Geschwindigkeit anpassen**
-  - Protokolle aller Computer ändern.
-
-  ---
-  
-  ![Der Simulation Controller](simulation_controller.png)
-  ![Das Menu](simulation_controller_menu.png)
-
-  ---
-  
-  In der Realität sind Pakte natürlich mit ansatzweise Lichtgeschwindigkeit unterwegs, und alle Zeiteinheiten wie z.B. Timeouts sind davon abhängig.
-  Da damit aber eine Beobachtung der Pakete unmöglich wäre, sind sie in der Simulation extrem verlangsamt. Mithilfe des Items kannst du diesen Faktor steuern, insbesondere um in wichtigen Momementen die Simulation zu verlangsamen oder auch ganz zu pausieren.
-  Außerdem sind nicht alle Beobachtungen genau so wie in der realen Welt. Wenn wir ein Paket mit 300.000 m/s so langsam simulieren würden, dass es beobachtet werden kann, dann wäre ein Timeout von z.B. 5 ms über 17 Tage lang. Dementsprechend wurden die Geschwindkeit von Paketen drastisch reduziert.
-  Die grundsätzlichen Funktionsweisen der Protokolle veränderen sich nicht, es kann aber zu anderen Timeout Bedingungen kommen.
-  
-  Für das Verstehen der Paketbewegungen empfehlen wir generell eine niedrige Simulationsgeschwindigkeit.
-  
-  ---
-  
-  Die zweite wichtige Funktion ist die Auswahl des benutzen Protokolls. Hiermit werden alle Computer auf das gewählte Protokol umgestellt. Mögliche laufenden Commands werden nicht unterbrochen, läuft z.B. ein Ping Command, so wird mit dem nächste Ping direkt eine Route Discovery ausgeführt.
-  
-  ---
+"title": "Simulation Controller"
+"posX": 1
+"posY": 1
+"icon": "mcnetwork:sim_controller"
+"pre":
+  - "Willkommen zu MCNetwork"
+"content": "# Simulation Controller\n\n---\n\nDer **Simulation Controller** steuert\
+  \ den Ablauf der Netzwerksimulation.\n\nEr erlaubt dir, das Verhalten der Protokolle\
+  \ gezielt zu analysieren.\n\n---\n\n## Funktionen\n\n- Simulation **starten / pausieren**\n\
+  - **Geschwindigkeit anpassen**\n- Protokolle aller Computer ändern.\n\n---\n\n![Der\
+  \ Simulation Controller](simulation_controller.png)\n![Das Menu](simulation_controller_menu.png)\n\
+  \n---\n\nIn der Realität sind Pakte natürlich mit ansatzweise Lichtgeschwindigkeit\
+  \ unterwegs, und alle Zeiteinheiten wie z.B. Timeouts sind davon abhängig.\nDa damit\
+  \ aber eine Beobachtung der Pakete unmöglich wäre, sind sie in der Simulation extrem\
+  \ verlangsamt. Mithilfe des Items kannst du diesen Faktor steuern, insbesondere\
+  \ um in wichtigen Momementen die Simulation zu verlangsamen oder auch ganz zu pausieren.\n\
+  Außerdem sind nicht alle Beobachtungen genau so wie in der realen Welt. Wenn wir\
+  \ ein Paket mit 300.000 m/s so langsam simulieren würden, dass es beobachtet werden\
+  \ kann, dann wäre ein Timeout von z.B. 5 ms über 17 Tage lang. Dementsprechend wurden\
+  \ die Geschwindkeit von Paketen drastisch reduziert.\nDie grundsätzlichen Funktionsweisen\
+  \ der Protokolle veränderen sich nicht, es kann aber zu anderen Timeout Bedingungen\
+  \ kommen.\n\nFür das Verstehen der Paketbewegungen empfehlen wir generell eine niedrige\
+  \ Simulationsgeschwindigkeit.\n\n---\n\nDie zweite wichtige Funktion ist die Auswahl\
+  \ des benutzen Protokolls. Hiermit werden alle Computer auf das gewählte Protokol\
+  \ umgestellt. Mögliche laufenden Commands werden nicht unterbrochen, läuft z.B.\
+  \ ein Ping Command, so wird mit dem nächste Ping direkt eine Route Discovery ausgefü\
+  hrt.\n\n---"

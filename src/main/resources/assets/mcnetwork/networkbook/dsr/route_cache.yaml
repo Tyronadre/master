@@ -1,0 +1,30 @@
+"title": "Route Cache"
+"posX": 3
+"posY": 1
+"icon": "minecraft:compass"
+"content": "# Route Cache\n\nRoute Caching ist optional, und das Protokol braucht\
+  \ per Definition nicht unbedingt einen Route Cache um zu funktionieren. Es wird\
+  \ dadurch allerdings wesentlich effizienter.\n\nWill dieser Knoten Daten senden,\
+  \ muss mit Cache oft keine Route Discovery ausgeführt werden, sondern die Kommunikation\
+  \ kann sofort mit einer gespeicherten Route starten.\n\n---\n\nKnoten untersuche\
+  \ jedes Paket, dass Sie weiterleiten. Je nach Paket können dabei bestimmte Informationen\
+  \ aus diesem Paket benutzt werden um einen Route Cache aufzubauen. Da wir ausschließ\
+  lich bidirektionale Verbindungen benutzen, können Knoten\n- den gesamten Pfad aus\
+  \ einem `RREQ` speichern.\n- den Pfad bis zu dem aktuellen Knoten aus einem `SourceRoute`\
+  \ Paket speichern. Dabei wird pro Node eine Topologie des Netzwerks erstellt. Diese\
+  \ Topologie wird als HUD für jeden Computer angezeigt.\n\n![HUD](node_1.png)\n\n\
+  \n- Knoten werden als weiße Punkte mit IP Addresse dargestellt.\n- Links die stabil\
+  \ sind werden grün gezeichnet, Links mit geringer Stabilität, oder solche die bald\
+  \ ungültig werden rot.\n- Mithilfe des Commands `protocolSettings set RENDER_SCALE`\
+  \ kann die Größe des gerendeten Auschnitts bearbeitet werden.\n\n\n---\n\n## Link\
+  \ Stability\n\nDer Route Cache, der implementiert ist, und vom Standard vorgeschlagen\
+  \ wird, ist komplexer als eine einfache Topologie. Für jeden Link wird eine Stabilitä\
+  t berechnet und gespeichert. Diese wird bei Nutzung größer, der Link somit als 'Stabiler'\
+  \ gekennzeichnt.\nIntern wird ein Graph gespeichert, mit dem neue Routen direkt\
+  \ berechnet werden.\nLinks die lange nicht benutzt werden, werden außerdem auch\
+  \ wieder aus dem Graph gelöscht. Jede Nutzung eines Links erhöht diese Dauer um\
+  \ 120 Sekunden. Das Protkoll erfordert nicht, das Links gelöscht werden, empfiehlt\
+  \ es aber.\n\n---\n"
+"pre":
+  - "Route Reply"
+  - "Route Discovery"

@@ -7,13 +7,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.UnknownNullability;
 
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 public class IP implements INBTSerializable<CompoundTag> {
 
-    private static final Set<IP> ips = new HashSet<>();
     public static final IP ZERO = new IP(new int[]{0, 0, 0, 0});
     public static final IP BROADCAST = new IP(new int[]{255, 255, 255, 255});
     int[] address;
@@ -26,7 +23,6 @@ public class IP implements INBTSerializable<CompoundTag> {
         if (address == null || address.length != 4) throw new IllegalArgumentException("Invalid IP address: " + Arrays.toString(address));
         this.address = address;
 
-        ips.add(this);
     }
 
     public IP(String address) {
@@ -37,32 +33,12 @@ public class IP implements INBTSerializable<CompoundTag> {
         this.address = new int[4];
         for (int i = 0; i < split.length; i++) this.address[i] = Integer.parseInt(split[i]);
 
-        ips.add(this);
     }
 
     public static boolean validateIp(String ip) {
         return ip.matches("\\b(?:\\d{1,3}\\.){3}\\d{1,3}\\b");
     }
 
-    public static IP getNextFreeIP() {
-        int[] ip = new int[4];
-        for (int i = 0; i < 4; i++) {
-            for (int j = i; j >= 0; j--) ip[j] = 0;
-            for (int j = 0; j < 255; j++) {
-                ip[3 - i] = j;
-
-                if (Arrays.equals(ip, ZERO.address) || ip.equals(BROADCAST.address)) {
-                    continue;
-                }
-                if (ips.stream().noneMatch(it -> Arrays.equals(ip, it.address))) return new IP(ip);
-            }
-        }
-        throw new IllegalStateException("No free IP address found!");
-    }
-
-    public static void freeAddress(IP ip) {
-        ips.remove(ip);
-    }
 
 
     public int[] asArray() {
@@ -97,7 +73,6 @@ public class IP implements INBTSerializable<CompoundTag> {
     @Override
     public void deserializeNBT(HolderLookup.@NotNull Provider provider, @NotNull CompoundTag nbt) {
         for (int i = 0; i < 4; i++) address[i] = nbt.getInt(String.valueOf(i));
-        ips.add(this);
     }
 
     public int compareTo(IP neighborAddress) {

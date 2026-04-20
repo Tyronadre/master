@@ -56,7 +56,7 @@ public class PingRepPacket extends NetworkPacket implements IApplicationPacket {
                 font.width("T1: " + sendTime + "ms"),
                 font.width("T2: " + (getSimulationEngine().getSimTime() - returnStartTime) + "ms"));
 
-        return new Vec2(width, font.lineHeight * 3);
+        return new Vec2(width, font.lineHeight * 3 + super.getHeaderSize(font).y);
     }
 
     @Override

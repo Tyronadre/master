@@ -1,0 +1,11 @@
+"title": "Task I"
+"posX": 0
+"posY": 3
+"icon": "minecraft:lectern"
+"content": "\"# Task I\n\n![Route Request Paket](rreq2.png)\n\n@task[\nWelche IP-Adresse\
+  \ ist die Source Address im RREQ?|0.0.0.4;\nWelche IP-Adresse ist die Destination\
+  \ Address?|0.0.0.10;\nWelche ID identifiziert diese Anfrage eindeutig?|2;\nWelcher\
+  \ Wert steht im Hop Count beim initialen Senden?|0;\nWelche Wertekombination verhindert\
+  \ die doppelte Verarbeitung?|SourceIP, RREQ ID\n]\n\n---\n  \n\n- Was bedeutet das\
+  \ '?' hinter der Sequence Number der Ziel Addresse?\n- Was passiert wenn hier stattdessen\
+  \ eine Zahl steht?\n\n---\n\n"

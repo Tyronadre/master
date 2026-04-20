@@ -1,47 +1,13 @@
-title: "Request Zone"
-posX: 2
-posY: 1
-icon: "minecraft:map"
-pre: ["LAR – Einführung"]
-content: |
-  # Request Zone
-
-  ---
-  
-  LAR definiert eine sogenannte **Request Zone**.
-
-  ---
-  
-  ## Definition
-
-  Die Request Zone ist der Bereich, in dem das RREQ weitergeleitet wird.
-
-  ---
-  
-  ## Berechnung
-
-  Basierend auf:
-
-  - letzter bekannter Position des Ziels
-  - möglicher Bewegung des Ziels
-
-  ---
-  
-  ![Ein markierter Bereich im Netzwerk, der die Request Zone darstellt](image:lar_request_zone)
-
-  ---
-  
-  ## Verhalten
-
-  - Knoten **innerhalb** der Zone → leiten weiter  
-  - Knoten **außerhalb** → ignorieren das Paket  
-
-  ---
-  
-  ## Effekt
-
-  Deutlich weniger Netzwerkverkehr im Vergleich zu Broadcast.
-
-  ---
-  
-  @task[Was ist die Request Zone?|Der Suchbereich für RREQ;Wer leitet weiter?|Nur Knoten innerhalb der Zone]
+"title": "Request Zone"
+"posX": 2
+"posY": 1
+"icon": "minecraft:map"
+"pre":
+  - "Einführung"
+"content": "# Request Zone\n\n---\n\nLAR definiert eine sogenannte **Request Zone**.\n\
+  \n---\n\n## Definition\n\nDie Request Zone ist der Bereich, in dem das RREQ weitergeleitet\
+  \ wird.\n\n---\n\n## Berechnung\n\nBasierend auf:\n\n- letzter bekannter Position\
+  \ des Ziels\n- möglicher Bewegung des Ziels\n\n---\n\n![Request Zone](schema1.png)\n\n---\n\n##\
+  \ Verhalten\n\n- Knoten **innerhalb** der Zone → leiten weiter  \n- Knoten **auß\
+  erhalb** → ignorieren das Paket  \n\n---\n\n## Effekt\n\nDeutlich weniger Netzwerkverkehr\
+  \ im Vergleich zu Broadcast.\n\n---\n"

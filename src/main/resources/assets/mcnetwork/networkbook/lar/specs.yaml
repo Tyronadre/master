@@ -1,39 +1,11 @@
-title: "Vorteile und Grenzen von LAR"
-posX: 4
-posY: 3
-icon: "minecraft:barrier"
-pre: ["Expected Zone"]
-content: |
-  # Vorteile und Grenzen von LAR
-
-  ---
-  
-  LAR optimiert klassische Routing-Verfahren durch räumliche Einschränkung.
-
-  ---
-  
-  ## Vorteile
-
-  | Vorteil | Beschreibung |
-  |--------|-------------|
-  | Geringer Overhead | Weniger Broadcast |
-  | Effizienz | Schnellere Routensuche |
-  | Skalierbarkeit | Gut für große Netzwerke |
-
-  ---
-  
-  ## Grenzen
-
-  | Problem | Beschreibung |
-  |--------|-------------|
-  | Positionsfehler | Falsche Schätzung |
-  | Mobilität | Schnelle Bewegung erschwert Vorhersage |
-  | Abhängigkeit | Benötigt Positionsdaten |
-
-  ---
-  
-  ![Vergleich zwischen großem Broadcast und eingeschränkter Suche](image:lar_comparison)
-
-  ---
-  
-  @task[Nenne einen Vorteil von LAR|Weniger Overhead;Was ist ein Risiko?|Falsche Positionsschätzung]
+"title": "Erweiterungen"
+"posX": 5
+"posY": 2
+"icon": "minecraft:barrier"
+"pre":
+  - "Route Discovery"
+"content": "# Erweiterungen\n\n- **Adaptive Request Zone**: Beim Weiterleiten des\
+  \ RREQ wird die Request Zone durch den weiterleitenden Knoten geändert, weil dieser\
+  \ aktuellere Informationen über das Ziel hat.  \n- **Query Localization**: Wenn\
+  \ ein bekannter Pfad abbricht, kann der neue nur maximal x mal neue Knoten benutzen.\
+  \ Damit wird dafür gesorgt, das eine neue Route nahe an der alten liegt.\n\n---\n"

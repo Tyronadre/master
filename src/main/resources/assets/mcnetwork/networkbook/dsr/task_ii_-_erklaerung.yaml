@@ -1,0 +1,11 @@
+"title": "Task II - Erklärung"
+"posX": 3
+"posY": 4
+"icon": "minecraft:torch"
+"pre":
+  - "Task II"
+"content": "# Task II - Erklärung\n\nBeim RREP im DSR:\n\n- Das Ziel sendet eine Antwort\
+  \ zurück zur Quelle\n- Die Route ist im Route Request gespeichert\n- Das RREP wird\
+  \ entlang dieses Pfades zurückgesendet\n\nEigenschaften:\n\n- Kein erneutes Berechnen\
+  \ der Route notwendig\n- Jeder Knoten kann die Route cachen\n- Kommunikation erfolgt\
+  \ anschließend entlang dieser festen Route\n\n---"

@@ -106,7 +106,6 @@ public class DSRRouteRequest extends NetworkPacket implements IProtocolPaket {
 
         int y = 0;
 
-
         renderer.drawStringWithAlphaColor(RenderUtil.Align.LEFT, "IdentificationValue", width, y);
         renderer.drawStringWithAlphaColor(RenderUtil.Align.RIGHT, String.valueOf(identificationValue), width, y);
         y+= 10;
@@ -122,6 +121,6 @@ public class DSRRouteRequest extends NetworkPacket implements IProtocolPaket {
     public Vec2 getRenderSize(Font font) {
         var superSize = super.getRenderSize(font);
         var thisWidth = Math.min(100, font.width(addresses.toString())) / 2;
-        return new Vec2(Math.max(superSize.x, thisWidth), superSize.y + 5);
+        return new Vec2(Math.max(superSize.x, thisWidth), superSize.y + 15);
     }
 }

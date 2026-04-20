@@ -1,0 +1,12 @@
+"title": "Sniffer"
+"posX": 4
+"posY": 2
+"icon": "mcnetwork:network_sniffer"
+"pre":
+  - "Datenpakete im Netzwerk"
+"content": "# Paket Sniffer\n\nDieses Tool kann dir helfen, den Paketfluss zu verstehen,\
+  \ oder Pakete die du übersehen hast zu finden.\n\n![GUI](sniffer.png)\n\nAlle Pakete\
+  \ die gesendet werden, werden in diesem Item angezeigt. Du kannst in der Zeile ganz\
+  \ oben Filter setzen, wie z.B. Source und Destination Addresse, oder die Sendezeit\
+  \ eingrenzen. \n\nWenn ein Paket ausgewählt ist, wird es im unteren Bereich mit\
+  \ allen Details angezeigt.\n\n\n---"

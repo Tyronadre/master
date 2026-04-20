@@ -8,8 +8,5 @@
   \ **reaktives** Routing-Protokoll.\n\nDas bedeutet: Routen werden nur dann erstellt,\
   \ wenn sie benötigt werden.\n\n---\n\n## Grundidee\n\n- Kein vollständiges Routing-Wissen\
   \ im Voraus\n- Netzwerk wird nur bei Bedarf durchsucht\n- Fokus auf Effizienz bei\
-  \ dynamischen Netzwerken\n- Alle Nodes verhalten sich gleich\n\n---\n\n## Vorteile\n\
-  \n| Vorteil | Beschreibung |\n|-|-|\n| Geringer Overhead | Keine dauerhaften Updates\
-  \ |\n| Skalierbarkeit | Gut für große Netzwerke |\n| Anpassungsfähigkeit | Reagiert\
-  \ auf Änderungen |\n\n---\n\n## Einordnung\n\n| Typ | Beispiel |\n|-----|----------|\n\
-  | Reaktiv | AODV, DSR |\n| Proaktiv | OLSR |\n\n---\n"
+  \ dynamischen Netzwerken\n- Alle Nodes verhalten sich gleich\n- Setzt bidirektionale\
+  \ Links voraus\n\n![AODV HUD](node1.png)\n\n---\n"

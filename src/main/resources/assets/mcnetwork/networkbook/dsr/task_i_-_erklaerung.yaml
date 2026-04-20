@@ -1,0 +1,12 @@
+"title": "Task I - Erklärung"
+"posX": 1
+"posY": 4
+"icon": "minecraft:torch"
+"pre":
+  - "Task I"
+"content": "# Task I - Erklärung\n\nIm DSR-Protokoll wird ein RREQ verwendet, um eine\
+  \ Route zum Ziel zu finden.\n\nAblauf:\n\n1. Der Startknoten sendet ein Broadcast-RREQ\n\
+  1. Das Paket enthält einen List der vorangegangen Knoten, die den bisher durchlaufenen\
+  \ Pfad speichert.\n1. Jeder Knoten:\n- Prüft, ob er bereits in der Liste enthalten\
+  \ ist\n- Fügt seine eigene Adresse hinzu\n- Leitet das Paket weiter\n\nZiel: vollstä\
+  ndiger Pfad von Quelle zum Ziel wird direkt im Paket gespeichert\n\n---\n"

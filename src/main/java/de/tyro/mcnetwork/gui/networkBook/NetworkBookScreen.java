@@ -82,7 +82,7 @@ public class NetworkBookScreen extends Screen {
     void onSubtopicClicked(SubTopic s) {
         currentSubtopic = s;
         contentPane.setSubtopic(s);
-        Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0f));
+        Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.BOOK_PAGE_TURN, 1.0f));
 
         this.transitionProgress = 0.0f;
     }
@@ -90,6 +90,7 @@ public class NetworkBookScreen extends Screen {
     void closeSubtopic() {
         currentSubtopic = null;
         this.transitionProgress = 0.0f;
+        Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.BOOK_PAGE_TURN, 1.0f));
     }
 
     void onMarkComplete(SubTopic s) {

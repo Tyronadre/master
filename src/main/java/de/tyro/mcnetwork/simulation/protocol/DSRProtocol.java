@@ -19,7 +19,6 @@ import de.tyro.mcnetwork.util.FixedFiFoQueue;
 import net.minecraft.client.gui.Font;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec2;
-import net.minecraft.world.phys.Vec3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,12 +26,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Random;
+import java.util.Set;
 import java.util.StringJoiner;
 
 public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
@@ -158,21 +159,21 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
         switch (packet) {
             case DSRSourceRoute route -> {
                 var nextAddress = route.getNextAddress();
+                routeCache.extendLinksOnUse(route.getAddresses(), SimulationEngine.getInstance(node.getLevel().isClientSide).getSimTime());
                 if (nextAddress == null) {
                     if (route.getPacket() instanceof IApplicationPacket ap) getNode().onApplicationPacketReceived(ap);
                     else if (route.getPacket() instanceof IProtocolPaket pp) onProtocolPacketReceived(pp);
                 } else if (route.getPacket() instanceof TraceRoutePacket tp && packet.getNetworkFrame().getTtl() == 1) {
                     getNode().onApplicationPacketReceived(tp);
                 } else {
+                    if (route.getPacket() instanceof DSRRouteError rerr) {
+                        handleRERR(rerr);
+                    }
+
+
                     if (!createRERR(route, nextAddress))
                         sim.unicast(getNode(), sim.getNode(nextAddress), packet, packet.getNetworkFrame().getTtl() - 1);
                 }
-
-                if (route.getPacket() instanceof DSRRouteError rerr) {
-                    handleRERR(rerr);
-                }
-
-                routeCache.addRoute(route.getAddresses());
             }
             case DSRRouteReply rrep -> {
                 handleRREP(rrep);
@@ -189,7 +190,7 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
     private boolean createRERR(DSRSourceRoute erroringRoute, IP nextAddress) {
         if (sim.getNeighbors(node).stream().anyMatch(it -> it.getIP().equals(nextAddress))) return false;
 
-        routeCache.removeLink(routeCache.getLink(node.getIP(), nextAddress));
+        routeCache.removeLink(node.getIP(), nextAddress);
         // 8.3.4.  Originating a Route Error
         //
         //   When a node is unable to verify reachability of a next-hop node after
@@ -255,6 +256,7 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
     }
 
     private void handleRERR(DSRRouteError rerr) {
+        log.debug("Got " + rerr + " on " + getNode().getLevel());
         // 8.3.5.  Processing a Received Route Error Option
         //   When a node receives a packet containing a Route Error option, that
         //   node MUST process the Route Error option according to the following
@@ -269,7 +271,7 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
         //      a path cache, however, all routes (paths) that use this link are
         //      either truncated before the link or removed completely.
 
-        routeCache.removeLink(routeCache.getLink(rerr.errorSourceAddress, rerr.unreachableNodeAddress));
+        routeCache.removeLink(rerr.errorSourceAddress, rerr.unreachableNodeAddress);
 
         //   -  If the option following the Route Error is an Acknowledgement or
         //      Route Error option sent by this node (that is, with
@@ -913,7 +915,6 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
         sim.broadcast(getNode(), rreq, ttl);
 
         rreqState.nextTry = now + (long) (Math.min(MAX_REQUEST_PERIOD * 1000, REQUEST_PERIOD * Math.pow(2, rreqState.numberOfRREQ)));
-
     }
 
     @Override
@@ -1294,57 +1295,56 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
         // Stability table: node -> stability value (seconds)
         private final Map<IP, Double> stabilityTable = new HashMap<>();
 
+        // Force-Directed Graph node positions: node IP -> 2D position (x, y)
+        private final Map<IP, double[]> graphNodePositions = new HashMap<>();
+
+        // Force-Directed Graph velocities for smooth animations
+        private final Map<IP, double[]> graphNodeVelocities = new HashMap<>();
+
         @Override
         public void render(RenderUtil renderer) {
             var poseStack = renderer.getPoseStack();
-
             long now = sim.getSimTime();
 
             poseStack.pushPose();
-            var offset = getNode().getPos();
-
             poseStack.scale(0.5f, 0.5f, 0.5f);
             renderer.drawStringWithAlphaColor(RenderUtil.Align.LEFT, "Routing Cache", renderer.getWidth() * 2, -10);
             poseStack.scale(2, 2, 2);
 
-
             poseStack.translate(0, 50, -1);
-            var x1R = -50;
-            var y1R = -50;
-            var x2R = 50;
-            var y2R = 50;
+            var x1R = -50.0f;
+            var y1R = -50.0f;
+            var x2R = 50.0f;
+            var y2R = 50.0f;
             renderer.drawLine(x1R, y1R, x1R, y2R, 0xFFFFFFFF);
             renderer.drawLine(x1R, y2R, x2R, y2R, 0xFFFFFFFF);
             renderer.drawLine(x2R, y2R, x2R, y1R, 0xFFFFFFFF);
             renderer.drawLine(x2R, y1R, x1R, y1R, 0xFFFFFFFF);
 
-            var nodesToRender = new ArrayList<INetworkNode>();
-            for (Link link : graph.values().stream().flatMap(it -> it.values().stream()).distinct().toList()) {
+            // Initialize node positions if not already done
+            initializeGraphPositions();
 
+            // Run force simulation to update positions
+            updateForceDirectedGraph();
+
+            // Render links
+            var linksToRender = graph.values().stream().flatMap(it -> it.values().stream()).distinct().toList();
+            for (Link link : linksToRender) {
+                double[] posA = graphNodePositions.get(link.a);
+                double[] posB = graphNodePositions.get(link.b);
+                if (posA == null || posB == null) continue;
 
                 float lifetimeRatio = computeLifetimeRatio(link, now);
-
                 float r = 1.0f - lifetimeRatio;
                 float g = lifetimeRatio;
 
+                // Apply render scale to positions
+                float scaledX1 = (float) (posA[0] * RENDER_SCALE);
+                float scaledY1 = (float) (posA[1] * RENDER_SCALE);
+                float scaledX2 = (float) (posB[0] * RENDER_SCALE);
+                float scaledY2 = (float) (posB[1] * RENDER_SCALE);
 
-                INetworkNode nodeA = sim.getNode(link.a);
-                INetworkNode nodeB = sim.getNode(link.b);
-                if (nodeA == null || nodeB == null) continue;
-                nodesToRender.add(nodeA);
-                nodesToRender.add(nodeB);
-
-                Vec3 posA = nodeA.getPos().subtract(offset).scale(RENDER_SCALE);
-                Vec3 posB = nodeB.getPos().subtract(offset).scale(RENDER_SCALE);
-
-
-                float x1 = (float) posA.x;
-                float y1 = (float) posA.z;
-                float x2 = (float) posB.x;
-                float y2 = (float) posB.z;
-
-                var clipped = clipLine(x1, y1, x2, y2, x1R, y1R, x2R, y2R);
-
+                var clipped = clipLine(scaledX1, scaledY1, scaledX2, scaledY2, x1R, y1R, x2R, y2R);
                 if (clipped != null) {
                     renderer.drawLine(
                             clipped.x1, clipped.y1,
@@ -1354,22 +1354,151 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
                 }
             }
 
-            for (var node : nodesToRender) {
-                var pos = node.getPos().subtract(offset).scale(RENDER_SCALE);
-                float x = (float) pos.x();
-                float y = (float) pos.z();
+            // Render nodes
+            Set<IP> renderedNodes = new HashSet<>();
+            for (Link link : linksToRender) {
+                renderedNodes.add(link.a);
+                renderedNodes.add(link.b);
+            }
+
+            for (IP nodeIP : renderedNodes) {
+                double[] pos = graphNodePositions.get(nodeIP);
+                if (pos == null) continue;
+
+                // Apply render scale to position
+                float x = (float) (pos[0] * RENDER_SCALE);
+                float y = (float) (pos[1] * RENDER_SCALE);
 
                 if (!isInside(x, y, x1R, y1R, x2R, y2R)) continue;
 
+                // Highlight self node
+                boolean isSelf = nodeIP.equals(getNode().getIP());
+                int color = isSelf ? 0xFFFF0000 : 0xFFFFFFFF;
+                float size = isSelf ? 1f : 0.5f;
+
                 poseStack.pushPose();
                 poseStack.scale(0.25f, 0.25f, 0);
-                renderer.drawString(node.getIP().toString(), 0x00ff00, (float) pos.x() * 4 - 15, (float) pos.z() * 4 - 12, false);
+                renderer.drawString(nodeIP.toString(), 0x00ff00, x * 4 - 15, y * 4 - 12, false);
                 poseStack.popPose();
 
-                renderer.fillRectangle((float) (pos.x() - 1), (float) (pos.z() - 1), (float) (pos.x() + 1), (float) (pos.z() + 1), 0xFFFFFFFF);
+                renderer.fillRectangle(x - size, y - size, x + size, y + size, color);
             }
 
             poseStack.popPose();
+        }
+
+        private void initializeGraphPositions() {
+            // Initialize positions for all nodes in the graph
+            for (IP nodeIP : graph.keySet()) {
+                if (!graphNodePositions.containsKey(nodeIP)) {
+                    if (nodeIP.equals(getNode().getIP())) {
+                        // Center node is at origin
+                        graphNodePositions.put(nodeIP, new double[]{0, 0});
+                    } else {
+                        // Random initial positions around center
+                        double angle = Math.random() * 2 * Math.PI;
+                        double distance = 20 + Math.random() * 10;
+                        graphNodePositions.put(nodeIP, new double[]{
+                                distance * Math.cos(angle),
+                                distance * Math.sin(angle)
+                        });
+                    }
+                    graphNodeVelocities.put(nodeIP, new double[]{0, 0});
+                }
+            }
+
+            // Remove positions for nodes no longer in graph
+            graphNodePositions.keySet().removeIf(ip -> !graph.containsKey(ip));
+            graphNodeVelocities.keySet().removeIf(ip -> !graph.containsKey(ip));
+        }
+
+        private void updateForceDirectedGraph() {
+            final double REPULSION_STRENGTH = 300.0;
+            final double ATTRACTION_STRENGTH = 0.1;
+            final double DAMPING = 0.8;
+            final double MAX_VELOCITY = 2.0;
+            final int ITERATIONS = 3;
+
+            for (int iter = 0; iter < ITERATIONS; iter++) {
+                // Reset forces
+                Map<IP, double[]> forces = new HashMap<>();
+                for (IP ip : graphNodePositions.keySet()) {
+                    forces.put(ip, new double[]{0, 0});
+                }
+
+                // Apply repulsive forces
+                List<IP> nodes = new ArrayList<>(graphNodePositions.keySet());
+                for (int i = 0; i < nodes.size(); i++) {
+                    for (int j = i + 1; j < nodes.size(); j++) {
+                        IP n1 = nodes.get(i);
+                        IP n2 = nodes.get(j);
+
+                        double[] pos1 = graphNodePositions.get(n1);
+                        double[] pos2 = graphNodePositions.get(n2);
+
+                        double dx = pos1[0] - pos2[0];
+                        double dy = pos1[1] - pos2[1];
+                        double distSq = dx * dx + dy * dy + 1.0; // +1 to avoid division by zero
+                        double dist = Math.sqrt(distSq);
+
+                        double force = REPULSION_STRENGTH / distSq;
+                        double fx = (force * dx) / dist;
+                        double fy = (force * dy) / dist;
+
+                        forces.get(n1)[0] += fx;
+                        forces.get(n1)[1] += fy;
+                        forces.get(n2)[0] -= fx;
+                        forces.get(n2)[1] -= fy;
+                    }
+                }
+
+                // Apply attractive forces along edges
+                for (Map.Entry<IP, Map<IP, Link>> entry : graph.entrySet()) {
+                    IP from = entry.getKey();
+                    for (IP to : entry.getValue().keySet()) {
+                        if (from.equals(to)) continue;
+
+                        double[] pos1 = graphNodePositions.get(from);
+                        double[] pos2 = graphNodePositions.get(to);
+                        if (pos1 == null || pos2 == null) continue;
+
+                        double dx = pos2[0] - pos1[0];
+                        double dy = pos2[1] - pos1[1];
+                        double dist = Math.sqrt(dx * dx + dy * dy);
+
+                        double force = ATTRACTION_STRENGTH * dist;
+                        double fx = (force * dx) / (dist + 0.001);
+                        double fy = (force * dy) / (dist + 0.001);
+
+                        forces.get(from)[0] += fx;
+                        forces.get(from)[1] += fy;
+                    }
+                }
+
+                // Update positions (keep center node fixed)
+                for (IP nodeIP : graphNodePositions.keySet()) {
+                    if (nodeIP.equals(getNode().getIP())) continue; // Keep center node fixed
+
+                    double[] vel = graphNodeVelocities.get(nodeIP);
+                    double[] force = forces.get(nodeIP);
+
+                    vel[0] = (vel[0] + force[0]) * DAMPING;
+                    vel[1] = (vel[1] + force[1]) * DAMPING;
+
+                    // Clamp velocity
+                    double speed = Math.sqrt(vel[0] * vel[0] + vel[1] * vel[1]);
+                    if (speed > MAX_VELOCITY) {
+                        vel[0] = (vel[0] / speed) * MAX_VELOCITY;
+                        vel[1] = (vel[1] / speed) * MAX_VELOCITY;
+                    }
+
+                    double[] pos = graphNodePositions.get(nodeIP);
+                    pos[0] += vel[0];
+                    pos[1] += vel[1];
+
+                    // No bounds restriction - graph can grow freely
+                }
+            }
         }
 
         private boolean isInside(float x, float y, float minX, float minY, float maxX, float maxY) {
@@ -1517,15 +1646,15 @@ public class DSRProtocol implements IRoutingProtocol, IHudRenderer {
             }
         }
 
-        private void removeLink(Link link) {
-            if (link == null) return;
+        private void removeLink(IP u, IP v) {
+            if (u == null || v == null) return;
 
-            graph.getOrDefault(link.a, Collections.emptyMap()).remove(link.b);
-            graph.getOrDefault(link.b, Collections.emptyMap()).remove(link.a);
+            graph.getOrDefault(u, Collections.emptyMap()).remove(v);
+            graph.getOrDefault(v, Collections.emptyMap()).remove(u);
 
             // Stability decrease on break
-            stabilityTable.computeIfPresent(link.a, (k, v) -> v * STABILITY_DECR_FACTOR);
-            stabilityTable.computeIfPresent(link.b, (k, v) -> v * STABILITY_DECR_FACTOR);
+            stabilityTable.computeIfPresent(u, (k, x) -> x * STABILITY_DECR_FACTOR);
+            stabilityTable.computeIfPresent(v, (k, x) -> x * STABILITY_DECR_FACTOR);
         }
 
 

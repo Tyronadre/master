@@ -1,0 +1,18 @@
+"title": "Task III"
+"posX": 4
+"posY": 3
+"icon": "minecraft:lectern"
+"pre":
+  - "Task II"
+"content": "Nehmen wir folgendes Netzwerk an, in dem A einen Pfad zu E finden will.\n\
+  Schreibe Pfade für Routingtabellen als `Zu X über Y`.\n\nDie TTL beginnt mit 1 und\
+  \ wird um 2 erhöht pro Schritt\n\n```\n A--B----C--D--E\n      \\    / \n      \
+  \ F-G\n```\n\n@task[\n  Wie viele Schritte werden benötigt?|3;\n  An wen wird im\
+  \ ersten Schritt ein RREQ gesendet?|B;\n  Welche Pfade kennt B nach diesem Schritt?|Zu\
+  \ A über A;\n  Welche Pfade kennt A nach diesem Schritt?|Keine;\n  Welche Nodes\
+  \ erhalten den RREQ nachdem die TTL im zweiten Schritt um 2 erhöht wurde?|B, C,\
+  \ D, F, G;\n  Welche Pfade kennt A nach diesem Schritt?|Zu B über B;\n  Welche Pfade\
+  \ kennt G nach diesem Schritt?|Zu C über C, Zu F über F, zu A über F;\n  Welche\
+  \ Pfade kennt A nach dem letzten Schritt?|Zu B über B, Zu E über B;\n]\n\n- Was\
+  \ passiert wenn der Link zwischen B und C abbricht, wenn A Daten nach E sendet?\n\
+  - Wie wird eine neue Route gefunden?\n\n---\n"

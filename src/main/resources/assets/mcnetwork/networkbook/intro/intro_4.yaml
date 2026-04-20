@@ -1,34 +1,23 @@
-title: "Datenpakete im Netzwerk"
-posX: 6
-posY: 1
-icon: "minecraft:paper"
-pre: ["Willkommen zu MCNetwork"]
-content: |
-  # Datenpakete im Netzwerk
-
-  ---
-  
-  **Fliegende Pakete** visualisieren den Datenverkehr zwischen Knoten.
-
-  Sie zeigen in Echtzeit, wie Informationen durch das Netzwerk übertragen werden.
-
-  
-  ![HUD](packet_hud.png)
-
-  ---
-  
-  ## Bedeutung
-
-  Ein Paket ist immer in genau einen Netzwerk Frame eingebunden. Aktuell werden ausschließlich UDP Frames verwendet, um den durch TCP entstehenden Overhead nicht visualisieren und verstehen zu müssen. 
-  In der obersten Zeile wird dabei die Herkunfts- und Zieladresse des Frames gezeigt, sowie die verbleiben Time To Live (TTL).
-  
-  Darunter werden PaketTyp, ID, sowie Herkunfts- und Zieladresse des Pakets angezeigt.
-  Der Rest des HUDs wird mit paketspezifischen Informationen gefüllt.
-  
-  --- 
-  
-  ## Kollision
-  
-  Frames können an ihrer Zieladresse kollidieren, wenn dort in der selben Zeiteinheit bereits zu viele Frames angekommen sind. Diese Frames bleiben einen Moment an der Zieladresse stehen, und werden rot markiert.
-  
-  ![error packet](packet_hud_error.png)
+"title": "Datenpakete im Netzwerk"
+"posX": 3
+"posY": 1
+"icon": "minecraft:paper"
+"pre":
+  - "Willkommen zu MCNetwork"
+"content": "# Datenpakete im Netzwerk\n\n---\n\n**Fliegende Pakete** visualisieren\
+  \ den Datenverkehr zwischen Knoten.\n\nSie zeigen in Echtzeit, wie Informationen\
+  \ durch das Netzwerk übertragen werden.\n\n\n![Frame mit AODV RREQ Paket](packet_hud.png)\n\
+  \n---\n\n## Bedeutung\n\nEin Paket ist immer in genau einen Frame eingebunden. Frames\
+  \ sind die Daten, die direkt zwischen zwei benachbarten Knoten ausgetauscht werden.\
+  \ Pakete können als Ziel Address auch andere Knoten haben. \n\nIm Bild ist ein Frame\
+  \ zu sehen der von *0.0.0.16* zu *0.0.0.9* gesendet wird, und dabei eine verbleibende\
+  \ Lebensdauer (TTL) von 1 hat. Immer wenn ein Paket bei einer Node weitergeleitet\
+  \ wird, so wird diese TTL um 1 reduziert. Erreicht sie 0, so darf ein Paket nicht\
+  \ weitergeleitet werden.\n\nAktuell werden ausschließlich UDP Frames verwendet,\
+  \ um den durch TCP entstehenden Overhead nicht visualisieren und verstehen zu mü\
+  ssen. \n\nDarunter werden PaketTyp, ID, sowie Herkunfts- und Zieladresse des Pakets\
+  \ angezeigt. Der Rest des HUDs wird mit paketspezifischen Informationen gefüllt.\n\
+  \n--- \n\n## Kollision\n\nFrames können an ihrer Zieladresse kollidieren, wenn dort\
+  \ in der selben Zeiteinheit bereits zu viele Frames angekommen sind. Diese Frames\
+  \ bleiben einen Moment an der Zieladresse stehen, und werden rot markiert. \n\n\
+  ![Kollidiertes Paket das nicht vom Zielknoten gelesen werden kann](packet_hud_error.png)\n"

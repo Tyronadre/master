@@ -1,0 +1,19 @@
+"title": "HUD"
+"posX": 5
+"posY": 1
+"icon": "mcnetwork:computer"
+"content": "# HUD\n\n![HUD](node1.png)\n\nIm HUD werden folgende Daten angezeigt:\n\
+  \n- `Seq`: Die aktuelle Sequence Number dieses Knotens\n- `RREQ_ID`: Die ID die\
+  \ in RREQ Paketen gesetzt und erhöht wird, um diese eindeutig zu identifizieren.\n\
+  - `RREQ/s`: Wie viele Route Request Pakete in der letzen Sekunde (der Simulation)\
+  \ gesendet wurden\n- `RERR/s`: Wie viele Route Error Pakete in der letzen Sekunde\
+  \ (der Simulation) gesendet wurden.\n- `Routing Table`: Ziel -> Next Hop, Länge\
+  \ der Route in Hops, Destination Sequence Number, Zeit bis Eintrag ungültig ist.\
+  \ Grün markiert gültige Einträge, Rot ungültige.\n- `Discoveries`: Addressen fü\
+  r die aktuell Routen gesucht werden.\n- `Pending Data`: Datenpakete die an entsprechende\
+  \ Zieladdressen gesendet werden sollen\n- `Seen RREQs`: Wie viele RREQ dieser Knoten\
+  \ empfangen hat\n- `TickActions`: Wie viele Aktionen dieser Knoten in zukünftigen\
+  \ Ticks ausführen wird. Hier ist nicht angegeben welche Aktion in welchem Tick ausgefü\
+  hrt wird, nur die Menge.\n\n---\n"
+"pre":
+  - "Route Maintenance"

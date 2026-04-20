@@ -1,44 +1,11 @@
-title: "LAR – Einführung"
-posX: 0
-posY: 0
-icon: "minecraft:book"
-pre: ["Routing und mobile Netzwerke"]
-content: |
-  # LAR – Einführung
-
-  ---
-  
-  **LAR (Location-Aided Routing)** ist ein **reaktives Routing-Protokoll**, das Positionsinformationen nutzt.
-
-  ---
-  
-  ## Grundidee
-
-  Statt das gesamte Netzwerk zu durchsuchen, wird die Suche **räumlich eingeschränkt**.
-
-  → Nur ein Teil des Netzwerks wird einbezogen
-
-  ---
-  
-  ![Ein Netzwerk, bei dem nur ein bestimmter Bereich für die Routensuche genutzt wird](image:lar_restricted_area)
-
-  ---
-  
-  ## Motivation
-
-  Klassische Verfahren (z. B. AODV, DSR):
-
-  - nutzen Broadcast im gesamten Netzwerk
-  - erzeugen viel Overhead
-
-  LAR reduziert diesen Aufwand gezielt.
-
-  ---
-  
-  ## Voraussetzung
-
-  Knoten benötigen **Positionsinformationen** (z. B. Koordinaten).
-
-  ---
-  
-  @task[Was nutzt LAR zusätzlich?|Positionsinformationen;Was wird reduziert?|Der Suchbereich]
+"title": "Einführung"
+"posX": 0
+"posY": 0
+"icon": "minecraft:book"
+"pre":
+  - "Routing und mobile Netzwerke"
+"content": "# LAR\n\nLAR (Location-Aided Routing) ist ein **reaktives** Routing-Protokoll,\
+  \ das Positionsinformationen nutzt.\n\n- Nodes müssen ein Mittel zur Positionsbestimmung\
+  \ haben, z.B. GPS.\n- Nodes müssen nicht uniform sein.\n- Das Verhalten ist auf\
+  \ DSR basiert, mit zusätzlichen Filtern beim Flooden, basierend auf der Position\
+  \ der Nodes.\n\n---\n\nDieses Protokoll ist aktuell nicht umgesetzt.\n\n---\n"

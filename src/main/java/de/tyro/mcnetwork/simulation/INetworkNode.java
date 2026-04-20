@@ -68,4 +68,6 @@ public interface INetworkNode {
     void setProtocol(IRoutingProtocol routingProtocol);
 
     void onServerStop();
+
+    void setIP(IP ip);
 }

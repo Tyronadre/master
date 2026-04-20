@@ -23,7 +23,7 @@ content: |
   
   ## Ablauf
 
-  - Knoten senden regelmäßig Statusinformationen (Hello, TC)
+  - Knoten senden regelmäßig Statusinformationen
   - Netzwerkzustand wird verteilt
   - Jeder berechnet eigene Routen
   

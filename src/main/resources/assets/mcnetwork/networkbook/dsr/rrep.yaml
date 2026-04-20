@@ -1,27 +1,14 @@
-title: "Route Reply (RREP)"
-posX: 4
-posY: 1
-icon: "minecraft:arrow"
-pre: ["Route Discovery in DSR"]
-content: |
-  # Route Reply (RREP)
-
-  ---
-  
-  Sobald das Ziel erreicht ist, wird eine **Route Reply (RREP)** erzeugt.
-  
-  ![rreq](rreq_3.png)
-  ![rrep](rrep_3.png)
-  
-  ## Ablauf
-
-  - Die Route die im RREQ enthalten ist, wird invertiert und im RREQ Paket gespeichert.
-  - Dieses RREQ Paket wird per Unicast zurück an den Sender geschickt.
-  - Wird auf dem Rückweg durch einen Unidirektionalen Link der Weg unterbrochen, wird von dieser Stelle ein neuer RREQ gestartet. Die Route im RREP wird allerdings nicht geändert.
-  
-  ---
-  
-  ## Aufgabe
-  
-  Baue eine Netzwerk mit drei Knoten, und untersuche RREQ und RREP verhalten
-  
+"title": "Route Reply"
+"posX": 2
+"posY": 0
+"icon": "minecraft:arrow"
+"pre":
+  - "Route Discovery"
+"content": "# Route Reply (RREP)\n\n---\n\nSobald das Ziel erreicht ist, wird eine\
+  \ **Route Reply (RREP)** erzeugt.\n\n![Ein RREQ](rreq_3.png)\n![Der zugehörige RREP](rrep_3.png)\n\
+  \n## Ablauf\n\n- Die Route, die im RREQ enthalten ist, wird **invertiert** und im\
+  \ RREP Paket gespeichert.\n- Dieses RREP Paket wird per **unicast** zurück an den\
+  \ Sender des RREQ geschickt.\n- Wird auf dem Rückweg durch einen **unidirektionalen**\
+  \ Link der Weg unterbrochen, wird von dieser Stelle ein **Route Error** gesendet.\
+  \ Mehr dazu im nächsten Abschnitt.\n\n---\n\n## Aufgabe\n\nBaue eine Netzwerk mit\
+  \ drei Knoten, und untersuche RREQ und RREP verhalten\n"

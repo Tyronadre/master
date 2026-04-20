@@ -61,7 +61,7 @@ public class MarkdownEditorSelectorScreen extends Screen {
         buildEditableList();
     }
 
-    private void buildEditableList() {
+    void buildEditableList() {
         editableItems.clear();
         for (Topic topic : topics) {
             editableItems.add(new EditableItem(topic, null, 0));

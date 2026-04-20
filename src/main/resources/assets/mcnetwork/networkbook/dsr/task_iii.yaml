@@ -1,0 +1,13 @@
+"title": "Task III"
+"posX": 4
+"posY": 3
+"icon": "minecraft:lectern"
+"pre":
+  - "Task II"
+"content": "# Task III\n\nNehmen wir wieder folgendes Netzwerk an:\n```\nA--B--C--D\n\
+  \      \\     /\n       E--F\n```\n\nEine Route von A nach D ist etabliert.\n\n\
+  Diese Antworten findest du in 'Task III - Erklärung'. Du kannst zum ausprobieren\
+  \ diese Netzwerk aufbauen und simulieren.\n\n- Was passiert wenn F ein Paket nach\
+  \ D schicken will?\n- Was passiert wenn B ein Paket nach D schicken will?\n- Was\
+  \ passiert wenn der Link B-C abbricht und A Daten nach D sendet?\n- Was passiert\
+  \ wenn D nun auf die Daten von A antworten will?\n\n---\n"

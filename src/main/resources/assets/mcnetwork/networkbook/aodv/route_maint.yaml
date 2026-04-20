@@ -1,15 +1,18 @@
 "title": "Route Maintenance"
 "posX": 4
-"posY": 2
+"posY": 0
 "icon": "minecraft:barrier"
 "pre":
-  - "Route Reply (RREP)"
+  - "Route Reply"
+  - "Sequence Numbers"
 "content": "# Route Maintenance\n\n---\n\nIn mobilen Netzwerken brechen Verbindungen\
   \ häufig ab.\n\nAODV reagiert darauf mit **Fehlermeldungen (RERR)**.\n\n---\n\n\
-  ## Ablauf\n\n- Verbindung bricht\n- Knoten erkennt Fehler, wenn sie versucht Daten\
-  \ über diesen Link zu senden.\n- **Route Error (RERR)** wird an den Sender des Datenpakets\
+  ## Ablauf\n\n- Link bricht ab\n- Knoten erkennt Fehler, wenn er versucht Daten ü\
+  ber diesen Link zu senden.\n- **Route Error (RERR)** wird an den Sender des Datenpakets\
   \ zurückgeschickt.\n\n---\n\n## Konsequenz\n\n- Betroffene Routen werden gelöscht\n\
-  - Neue Route Discovery kann gestartet werden\n\n---\n\n## Weiters\n\nGespeicherte\
+  - Neue Route Discovery kann gestartet werden\nDie neu gestartete Route Discovery\
+  \ benutzt die Länge der alten Verbindung als TTL, damit eine neuere, wahrscheinlich\
+  \ längere, Route schneller gefunden werden kann.\n\n---\n\n## Weiteres\n\nGespeicherte\
   \ Verbindungen im Routing Table haben eine begrenzte Lebensdauer, nach deren Ablauf\
   \ sie gelöscht werden. Somit wird dafür gesorgt, dass in Netzwerken in denen sich\
   \ Verbindungen oft ändern, nicht durchgehend RERR Pakete gesendet werden müssen.\n\

@@ -1,14 +1,13 @@
-"title": "Route Reply (RREP)"
-"posX": 4
+"title": "Route Reply"
+"posX": 2
 "posY": 0
 "icon": "minecraft:arrow"
 "pre":
-  - "Route Discovery (RREQ)"
+  - "Route Discovery"
 "content": "# Route Reply (RREP)\n\n![Route Reply](rrep1.png)\n\nSobald das Ziel erreicht\
   \ wird, wird eine **Route Reply (RREP)** erzeugt.\n\nDurch die Weiterleitung des\
-  \ **RREQ** ist ein Pfad zum Senderer dessen bekannt. Dieser wird nun Rückwärts entlang\
+  \ **RREQ** ist ein Pfad zum Sender dessen bekannt. Dieser wird nun Rückwärts entlang\
   \ gegangen. Dabei wird die tatsächliche *Sequence Number* für den Zielknoten, der\
   \ im **RREP** enthalten ist, in jedem Knoten auf dem Weg gespeichert.\n\n---\n\n\
   ## Wichtig\n\nBeim Rückweg entsteht eine **gültige Route**:\n\n- Jeder Knoten speichert\
-  \ den nächsten Hop\n- Eine durchgehende Verbindung entsteht\n- Falls Links unidirektional\
-  \ sind, wird ein **RERR** gesendet, und ein neuer Rückweg gefunden.\n\n---\n"
+  \ den nächsten Hop\n- Eine durchgehende Verbindung entsteht\n---\n"

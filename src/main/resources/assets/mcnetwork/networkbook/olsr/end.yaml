@@ -17,7 +17,7 @@ content: |
   | Eigenschaft | Bewertung |
   |------------|----------|
   | Overhead | Hoch (ständige Updates) |
-  | Reaktionszeit | Sehr schnell (nach aufbau der Topologie) |
+  | Reaktionszeit | Sehr schnell (nach Aufbau der Topologie) |
   | Stabilität | Hoch |
   | Skalierung | Gut durch MPR |
 

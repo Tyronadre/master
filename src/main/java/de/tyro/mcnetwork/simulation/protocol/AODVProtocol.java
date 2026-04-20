@@ -557,19 +557,18 @@ public class AODVProtocol implements IRoutingProtocol, IHudRenderer {
         var originator = rreq.getOriginatorIP();
         var revRoute = routingTable.computeIfAbsent(originator, RouteEntry::new);
 
+        //make the reverse route valid if the current one is invalid, or we have a newer seqNumber and copy the new seqNumber
         if (!revRoute.seqValid || rreq.originatorSequenceNumber > revRoute.seqNumber) {
             revRoute.seqNumber = rreq.originatorSequenceNumber;
             revRoute.seqValid = true;
+            revRoute.nextHop = lastHop;
+            revRoute.hopCount = rreq.hopCount;
+            revRoute.valid = true;
+
+            long minimalLifetime = simulator.getSimTime() + 2L * NET_TRAVERSAL_TIME - 2L * rreq.hopCount * NODE_TRAVERSAL_TIME;
+
+            revRoute.lifetime = Math.max(revRoute.lifetime, minimalLifetime);
         }
-
-        revRoute.nextHop = lastHop;
-        revRoute.hopCount = rreq.hopCount;
-        revRoute.valid = true;
-
-        long minimalLifetime = simulator.getSimTime() + 2L * NET_TRAVERSAL_TIME - 2L * rreq.hopCount * NODE_TRAVERSAL_TIME;
-
-        revRoute.lifetime = Math.max(revRoute.lifetime, minimalLifetime);
-
 
         // If a node does generate a RREP, then the node discards the
         // RREQ.  Notice that, if intermediate nodes reply to every transmission
@@ -818,17 +817,18 @@ public class AODVProtocol implements IRoutingProtocol, IHudRenderer {
         }
 
         pendingData.computeIfAbsent(packet.getDestinationIP(), k -> new ArrayList<>()).add(new Pair<>(packet, ttl));
-        discoverRoute(packet.getDestinationIP());
+        if (!discoveries.containsKey(packet.getDestinationIP())) discoverRoute(packet.getDestinationIP());
     }
 
     public Vec2 getRenderSize(Font font) {
         var height = 35;
-        height += 8 * Math.max(1, routingTable.size());
-        height += 14;
-        height += 8 * Math.max(1, discoveries.size());
-        height += 14;
-        height += 8 * Math.max(1, discoveries.size());
-        height += 11;
+        height += 5 * Math.max(2, routingTable.size() + 1);
+        height += 1;
+        height += 5 * Math.max(2, discoveries.size() + 1);
+        height += 1;
+        height += 5 * Math.max(2, discoveries.size() + 1);
+        height += 1;
+        height += 7;
 
         return new Vec2(200, height);
     }
@@ -836,6 +836,7 @@ public class AODVProtocol implements IRoutingProtocol, IHudRenderer {
     @Override
     public void render(RenderUtil renderer) {
         var width = getRenderSize(renderer.getFont()).x;
+        var pose = renderer.getPoseStack();
         float y = 0f;
 
         long now = SimulationEngine.getInstance(true).getSimTime();
@@ -853,6 +854,12 @@ public class AODVProtocol implements IRoutingProtocol, IHudRenderer {
 
         renderer.renderHLineWithAlphaColor(width, y);
         y += 2;
+
+        pose.translate(0, y, 0);
+        pose.pushPose();
+        pose.scale(0.5f, .5f, .5f);
+        width *= 2;
+        y = 0;
 
         renderer.drawString(RenderUtil.Align.CENTER, "Routing Table", 0xAAAAFF, width, y);
         y += 10;
@@ -930,6 +937,8 @@ public class AODVProtocol implements IRoutingProtocol, IHudRenderer {
 
         renderer.drawStringWithAlphaColor(RenderUtil.Align.LEFT, "Seen RREQs=" + seenRreqs.size(), width, y);
         renderer.drawStringWithAlphaColor(RenderUtil.Align.RIGHT, "TickActions=" + tickActions.size(), width, y);
+
+        pose.popPose();
     }
 
     @Override
@@ -944,7 +953,7 @@ public class AODVProtocol implements IRoutingProtocol, IHudRenderer {
             nextRreqAttemptsResetInterval = now + 1000;
         }
 
-        if (nextRerrAttemptsResetInterval >= now) {
+        if (nextRerrAttemptsResetInterval <= now) {
             nextRerrAttemptsResetInterval = now + 1000;
             rerrInLastSecond = 0;
         }

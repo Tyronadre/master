@@ -34,10 +34,10 @@ public class NetworkPacketCodecGenerator {
         );
 
         register(PingPacket.class,
-                (buf, uuid, originatorIP, destinationIP) -> new PingPacket(uuid, originatorIP, destinationIP, 0),
+                (buf, uuid, originatorIP, destinationIP) -> new PingPacket(uuid, originatorIP, destinationIP, buf.readLong()),
                 (buf, packet) -> {
-                },
-                (packet, onClientSide) -> packet.sendStartTime = SimulationEngine.getInstance(onClientSide).getSimTime()
+                    buf.writeLong(0);
+                }
         );
 
         register(PingRepPacket.class,
@@ -46,12 +46,12 @@ public class NetworkPacketCodecGenerator {
                         ip1,
                         ip2,
                         buf.readInt(),
-                        0,
+                        buf.readLong(),
                         buf.readUUID()),
                 (buf, packet) -> buf
                         .writeInt(packet.sendTime)
-                        .writeUUID(packet.replyUUID),
-                (packet, onClientSide) -> packet.returnStartTime = SimulationEngine.getInstance(onClientSide).getSimTime()
+                        .writeLong(packet.returnStartTime)
+                        .writeUUID(packet.replyUUID)
         );
 
         register(TraceRoutePacket.class,

@@ -1,0 +1,32 @@
+"title": "Sequence Numbers"
+"posX": 2
+"posY": 1
+"icon": "minecraft:copper_bulb"
+"content": "# Sequence Numbers\n\nDie Sequence Number ist ein wichtiger Teil des Protokols\
+  \ und dient zur Verhinderung von Loops. Eine Sequence Number gibt an wie 'aktuell'\
+  \ die vorhandenen Daten über einen Knoten sind.\n\n- Ein Knoten speichet für jede\
+  \ Zieladdresse im Routing Table ein zugehörige (Destination) Sequence Number (DSN).\n\
+  - Beim senden eines RREQ Pakets wird die eigene Seq.Num. des Knotens erhöht.\n\n\
+  ---\nNehmen wir folgendes Netzwerk an:\n```\nS - A - B - C - D\n```\nS startet nun\
+  \ eine RREQ zu D.\n- Zunächst ist die DSN nicht bekannt und die entsprechende Flag\
+  \ im Paket wird gesetzt.\n- Beim weiterleiten wird die SQ von S jeweils um 1 erhö\
+  ht. \n- Da wir S drei mal RREQ senden muss, bevor dieser bei D ankommt (da die TTL\
+  \ schrittweise erhöht wird), speichert D für S die SQ 3 und antwortet dann mit einem\
+  \ RREP in dem die DSN 1 angegeben wird.\n- Dieses RREP Paket wird an S zurückgesendet,\
+  \ und S kann nun in  seiner Routing Table `Zu D über A` speichern, wobei D die DSN\
+  \ 1 zugeordnet bekommt.\n\n- Wird zu einerm späteren Zeitpunkt erneut eine Route\
+  \ zu D gesucht, wird diesmal das RREQ Paket für D die DSN 1 angeben.\n\n---\n\n\n\
+  Empfängt ein Knoten ein RREQ mit einer Sequence Number die kleiner ist, als er bereits\
+  \ gespeichert hat, wird sie im weitergeleiteten Paket auf die gespeicherte, also\
+  \ höhere, gesetzt.\n\n---\n## Verhindern von Loops durch Sequence Numbers\n\nNehmen\
+  \ wir folgendes Netzwerk an:\n```\n        B\n      /  \\\nS - A    C - D\n    \
+  \  \\  /\n        E\n```\n\nNehmen wir an die Verbindung `C - D` bricht ab. \n-\
+  \ Wir nehmen an das A noch nicht weiß, dass diese unterbrochen ist.\n- C sendet\
+  \ nun ein RREQ Paket. Node A empfängt dieses nun z.B über `C-E-A`\n- A antwortet\
+  \ nun mit einem RREP Paket über B, da vorher über diesen Knoten D erreichbar war.\n\
+  - Es entsteht nun ein Loop `A-B-C-E-A-...`\n\nDurch Sequence Numbers hat der RREQ\
+  \ von C eine aktuellere, als der Eintrag in der Routing Tabelle von A. Somit wird\
+  \ A nicht auf diesen RREQ Anworten, und es kommt nicht mehr zu Loops.\n\n---\n"
+"pre":
+  - "Route Reply"
+  - "Route Discovery"

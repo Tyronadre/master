@@ -1,44 +1,19 @@
-title: "Computer"
-posX: 4
-posY: 1
-icon: "minecraft:observer"
-pre: ["Willkommen zu MCNetwork"]
-content: |
-  # Computerblock als Netzwerkknoten
-
-  ![Computer](computer.png)
-
-  ---
-  
-  Der **Computerblock** repräsentiert einen Computer im Netzwerk. 
-  
-  Aus topologischer Sicht ist jeder Block eine eigenständige **Node**, die:
-
-  - Daten senden und empfangen kann
-  - Routing-Entscheidungen trifft
-  - Teil eines größeren Netzwerks ist
-
-  ---
-  
-  ## Terminal
-
-  Jeder Computerblock besitzt ein **Terminal**.
-  
-  ![Terminal](terminal.png)
-  
-  Mit diesem können Informationen abgefragt werden oder verschieden Netzwerkbefehle ausgeführt werden.
-
-  Dazu zählen z.B.:
-  - Ping
-  - Traceroute
-  - IpConfig
-
-  Commands können mit Tab vervollständigt werden, und mit Pfeiltasten können vorher ausgeführte Commands durchgelaufen werden.
-  Mit STRG+C können laufende Commands unterbrochen werden.
-  
-  ---
-  
-  ## HUD-Display
-  
-  ![HUD](computer_hud.png)
-  Ein Computerblock besitzt ein HUD - Display das Informationen zum aktuellen Protkoll anzeigt.
+"title": "Computer"
+"posX": 2
+"posY": 1
+"icon": "mcnetwork:computer"
+"pre":
+  - "Willkommen zu MCNetwork"
+"content": "# Computerblock als Netzwerkknoten\n\n![Computer](computer.png)\n\n---\n\
+  \nDer **Computerblock** repräsentiert einen Computer im Netzwerk. \n\nAus topologischer\
+  \ Sicht ist jeder Block eine eigenständige **Node**, die:\n\n- Daten senden und\
+  \ empfangen kann\n- Routing-Entscheidungen trifft\n- Teil eines größeren Netzwerks\
+  \ ist\n\n---\n\n## Terminal\n\nJeder Computerblock besitzt ein **Terminal**. Du\
+  \ kannst den Computer rechtsklicken um es zu Öffnen.\n\n![Terminal](terminal.png)\n\
+  \nMit diesem können Informationen abgefragt werden oder verschieden Netzwerkbefehle\
+  \ ausgeführt werden.\n\nDazu zählen z.B.:\n- Ping\n- Traceroute\n- IpConfig\n\n\
+  Commands können mit Tab vervollständigt werden, und mit Pfeiltasten können vorher\
+  \ ausgeführte Commands durchgelaufen werden.\nMit STRG+C können laufende Commands\
+  \ unterbrochen werden.\n\n---\n\n## HUD-Display\n\nWird angezeigt, wenn du einen\
+  \ Computer anguckst.\n\n![HUD](computer_hud.png)\nEin Computerblock besitzt ein\
+  \ HUD - Display das Informationen zum aktuellen Protkoll anzeigt.\n"

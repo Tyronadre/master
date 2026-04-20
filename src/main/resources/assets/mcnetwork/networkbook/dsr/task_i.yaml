@@ -1,0 +1,11 @@
+"title": "Task I"
+"posX": 0
+"posY": 3
+"icon": "minecraft:lectern"
+"content": "# Task I \n\nNehmen wir folgendes Netzwerk an, in dem Daten von A nach\
+  \ D gesendet werden sollen.\n\n```\nA--B--C--D\n     \\      /\n      E-- F\n```\n\
+  \n@task[\n  Welcher Knoten startet die Route Discovery?|A;\n  Welcher Knoten ist\
+  \ das Ziel?|D;\n  Welcher Knoten erhält das RREQ zuerst von A?|B;\n  Welche Adresse\
+  \ wird nach dem ersten Weiterleiten hinzugefügt?|B;\n  Welcher Knoten verwirft ein\
+  \ RREQ bei erneutem Empfang?|alle;\n  Wie wird das RREQ Paket im Netzwerk verteilt?|Broadcast;\n\
+  \  Welcher Knoten fügt sich zuletzt vor dem Ziel ein?|C\n]\n\n---\n"

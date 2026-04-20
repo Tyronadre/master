@@ -1,5 +1,6 @@
 package de.tyro.mcnetwork.block.entity;
 
+import com.mojang.logging.LogUtils;
 import de.tyro.mcnetwork.entity.NetworkFrameEntity;
 import de.tyro.mcnetwork.network.payload.NewNetworkPacketPayload;
 import de.tyro.mcnetwork.simulation.ApplicationMessageBus;
@@ -17,6 +18,7 @@ import de.tyro.mcnetwork.terminal.Terminal;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
@@ -26,19 +28,21 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
-    //server
-    private final IP ipAddress = IP.getNextFreeIP();
+    private static final Logger log = LogUtils.getLogger();
     private IRoutingProtocol routingProtocol;
 
     //client
     private Terminal terminal;
     private ApplicationMessageBus applicationMessageBus;
     private ReceiveWindow receiveWindow;
+    //server
+    private IP ipAddress = IP.ZERO;
 
     public ComputerBlockEntity(BlockPos pos, BlockState state) {
         super(BlockEntityRegistry.COMPUTER_BE.get(), pos, state);
@@ -46,12 +50,16 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
 
     @Override
     public void onLoad() {
+        log.debug("onLoad");
         if (level == null) return;
+        var sim = SimulationEngine.getInstance(level.isClientSide);
 
         terminal = new Terminal(this);
         applicationMessageBus = new ApplicationMessageBus(this);
-        SimulationEngine.getInstance(level.isClientSide).registerNode(this);
-        receiveWindow = new ReceiveWindow(5, 2);
+        receiveWindow = new ReceiveWindow(sim.getReceiveWindowMS(), sim.getReceiveWindowSize());
+
+        if (!ipAddress.equals(IP.ZERO))
+            SimulationEngine.getInstance(level.isClientSide).registerNode(this);
     }
 
     @Override
@@ -119,6 +127,7 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
             applicationMessageBus.handle(packet);
         }
     }
+
 
     @Override
     public ApplicationMessageBus getApplicationBus() {
@@ -194,6 +203,11 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
         this.terminal.interrupt();
     }
 
+    @Override
+    public void setIP(IP ip) {
+        this.ipAddress = ip;
+    }
+
     class ReceiveWindow {
         private final long windowSizeMs;
         private final int maxPacketsPerWindow;
@@ -222,27 +236,46 @@ public class ComputerBlockEntity extends BlockEntity implements INetworkNode {
         }
     }
 
-    @Override
-    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.saveAdditional(tag, registries);
-        if (this.ipAddress == null) return;
-        tag.put("ip", this.ipAddress.serializeNBT(registries));
-    }
 
     @Override
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.loadAdditional(tag, registries);
-        ipAddress.deserializeNBT(registries, tag.getCompound("ip"));
+        log.debug("loadAdditional");
 
+        super.loadAdditional(tag, registries);
+        ipAddress = new IP();
+        ipAddress.deserializeNBT(registries, tag.getCompound("ip"));
+    }
+
+    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+        log.debug("saveAdditional");
+
+        super.saveAdditional(tag, registries);
+        tag.put("ip", ipAddress.serializeNBT(registries));
     }
 
     @Override
     public @Nullable Packet<ClientGamePacketListener> getUpdatePacket() {
+        log.debug("getUpdatePacket");
+        if (level != null && !level.isClientSide && ipAddress.equals(IP.ZERO)) {
+            ipAddress = SimulationEngine.getNextFreeIP();
+        }
         return ClientboundBlockEntityDataPacket.create(this);
     }
 
     @Override
+    public void onDataPacket(Connection net, ClientboundBlockEntityDataPacket pkt, HolderLookup.Provider lookupProvider) {
+        log.debug("onDataPacket");
+        if (this.level != null && this.level.isClientSide) {
+            super.onDataPacket(net, pkt, lookupProvider);
+            SimulationEngine.getInstance(true).registerNode(this);
+        }
+    }
+
+    @Override
     public @NotNull CompoundTag getUpdateTag(HolderLookup.Provider registries) {
+        log.debug("getUpdateTag");
+
+
         return saveWithoutMetadata(registries);
     }
 

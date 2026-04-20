@@ -5,6 +5,7 @@ import de.tyro.mcnetwork.network.configuration.SimulationConfigurationTask;
 import de.tyro.mcnetwork.network.payload.ConfigAckPayload;
 import de.tyro.mcnetwork.network.payload.NewNetworkFramePayload;
 import de.tyro.mcnetwork.network.payload.NewNetworkPacketPayload;
+import de.tyro.mcnetwork.network.payload.RegisterNetworkNodePayload;
 import de.tyro.mcnetwork.network.payload.SetProtocolPayload;
 import de.tyro.mcnetwork.network.payload.SimulationEngineSettingsPayload;
 import de.tyro.mcnetwork.network.payload.TerminalUpdatePayload;
@@ -71,6 +72,12 @@ public class NetworkHandler {
                 NewNetworkPacketPayload.getType(),
                 NewNetworkPacketPayload.STEAM_CODEC,
                 NewNetworkPacketPayload::handle
+        );
+
+        registrar.playToClient(
+                RegisterNetworkNodePayload.TYPE,
+                RegisterNetworkNodePayload.STREAM_CODEC,
+                RegisterNetworkNodePayload::handle
         );
     }
 

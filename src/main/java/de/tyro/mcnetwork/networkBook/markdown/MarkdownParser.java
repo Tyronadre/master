@@ -124,7 +124,11 @@ public class MarkdownParser {
             //image
             Matcher img = imagePattern.matcher(line);
             if (img.find()) {
-                doc.addImageBlock(resourceLocation.withSuffix("/" + img.group(2)), img.group(1));
+                try {
+                    doc.addImageBlock(resourceLocation.withSuffix("/" + img.group(2)), img.group(1));
+                } catch (Exception ignored) {
+
+                }
                 i++;
                 continue;
             }

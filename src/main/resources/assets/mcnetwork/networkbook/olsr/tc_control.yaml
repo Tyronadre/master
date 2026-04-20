@@ -10,13 +10,13 @@ content: |
 
   OLSR verwendet **TC Messages**, um Topologieinformationen über mehrere Hops hinweg im gesamten Netzwerk zu verteilen.
 
-  ![TC Message](tc_msg.png)
+  ![TC Message](tc_message.png)
 
   ---
 
-  Nachdem über HELLO Messages die lokale Nachbarschaft (1-Hop und 2-Hop) bekannt ist und MPRs bestimmt wurden, beginnt die eigentliche **Netzwerk-weite Verteilung von Routinginformationen**.
+  Nachdem über HELLO Messages die lokale Nachbarschaft (1-Hop und 2-Hop) bekannt ist und MPRs bestimmt wurden, beginnt die eigentliche Netzwerk weite Verteilung von Routinginformationen.
 
-  Dabei sendet **nur eine Teilmenge der Nodes**, nämlich die als MPR ausgewählten Nodes, regelmäßig TC Messages.
+  Dabei sendet nur eine Teilmenge der Nodes, nämlich die als MPR ausgewählten Nodes, regelmäßig TC Messages.
 
   ---
 
@@ -142,8 +142,8 @@ content: |
   - Daraus wird der Routing Table berechnet
   
   ---
-    
-    ![routing 3](node_2.png)
+  
+    ![Routingtabelle](node_2.png)
   
   --- 
   

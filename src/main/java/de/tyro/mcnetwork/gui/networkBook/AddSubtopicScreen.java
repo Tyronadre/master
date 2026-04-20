@@ -25,7 +25,7 @@ public class AddSubtopicScreen extends Screen {
     private static final int PADDING = 16;
     private static final int INPUT_HEIGHT = 20;
 
-    private final Screen previousScreen;
+    private final MarkdownEditorSelectorScreen previousScreen;
     private final Topic topic;
     int panelWidth = 300;
     int panelHeight = 250;
@@ -34,7 +34,7 @@ public class AddSubtopicScreen extends Screen {
     private EditBox posYInput;
     private EditBox iconInput;
 
-    public AddSubtopicScreen(Screen previousScreen, Topic topic) {
+    public AddSubtopicScreen(MarkdownEditorSelectorScreen previousScreen, Topic topic) {
         super(Component.literal("Add Subtopic"));
         this.previousScreen = previousScreen;
         this.topic = topic;
@@ -199,6 +199,7 @@ public class AddSubtopicScreen extends Screen {
 
             // Return to previous screen
             Minecraft.getInstance().setScreen(previousScreen);
+            previousScreen.buildEditableList();
         } else {
             Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_LOOM_TAKE_RESULT, 1.0f));
         }

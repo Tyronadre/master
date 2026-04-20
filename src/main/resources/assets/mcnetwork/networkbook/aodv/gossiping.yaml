@@ -1,0 +1,22 @@
+"title": "Zusätzliche Features"
+"posX": 4
+"posY": 1
+"icon": "minecraft:compass"
+"content": "# Gossiping\n\nDas ganze Netzwerk bei einem RREQ zu Flooden ist relativ\
+  \ ineffizient.\n\nAODV kann hierfür Gossiping einsetzen, um die Menge der gesendeten\
+  \ Pakete zu reduzieren.\n\nDabei wird je mehr Nachbarn und je mehr Pakete eine Node\
+  \ bekommt, die Wahrscheinlichkeit kleiner, das Paket weiterzuleiten.\n\n```\n  upon\
+  \ reception of message m at node n:\n\n  if message m received for the first time\
+  \ then\n    if hop count k less or equal k0 then\n      broadcast(m) with probability\
+  \ 1\n    else\n      broadcast(m) with probability p1\n    end if\n  end if\n```\n\
+  ---\n\n# Multipath\n\n- Empfangene RREQ Pakete werden in jeder Node gespeichert.\
+  \ \n- Die Zielnode sendet an jeden Nachbarn von dem es ein RREQ Paket erhält, eine\
+  \ RREP Antwort.\n- Für jedes empfangene RREP Paket auf dem Rückweg, wird entsprechend\
+  \ dem aktuellsten Hinweg zurückgegeben, und der zugehörige RREQ Eintrag gelöscht.\n\
+  - Somit sind nach dieser Discovery mehrere Wege von Start zu Ziel Knoten vorhanden,\
+  \ und das Netzwerk ist resillienter.\n\n---\n\n# Local Repair\n\n- Nodes geben,\
+  \ wenn entsprechend möglich, direkt andere bekannte Pfade zurück, anstelle ein RERR\
+  \ bis an die Source Node zu senden, der dann einen neue Route Discovery auslöst.\n\
+  \n--- "
+"pre":
+  - "Route Maintenance"

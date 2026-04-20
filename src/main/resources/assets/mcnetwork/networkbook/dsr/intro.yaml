@@ -1,21 +1,20 @@
-title: DSR – Einführung
-posX: 0
-posY: 0
-icon: minecraft:book
-pre: [ Routing und mobile Netzwerke ]
-content: "# DSR – Einführung\n\n---\n\nDSR (Dynamic Source Routing) ist ein **reaktives**\
+"title": "Einführung"
+"posX": 0
+"posY": 0
+"icon": "minecraft:book"
+"pre":
+  - "Routing und mobile Netzwerke"
+"content": "# DSR – Einführung\n\n---\n\nDSR (Dynamic Source Routing) ist ein **reaktives**\
   \ Routing-Protokoll.\nDas heißt: Routen werden nur bei Bedarf aufgebaut.\n\n## Zentrale\
-  \ Besonderheit\n\nDSR speichert den **kompletten Pfad** im Paket selbst.\n\n→ Dieses\
-  \ Verfahren nennt man **Source Routing**\nJedes Datenpaket wird in einem `DSR SourceRoute`\
-  \ Paket 'eingepackt' in dem die Route vorgegeben wird.\n\n![Source Route Paket mit\
-  \ Ping Paket](dsr_source_route_option.png)\n  \n\n## Konsequenz\n\n- Kein Bedarf\
-  \ für klassische Routingtabellen\n- Jedes Paket kann im Netzwerk weitergeleitet\
-  \ werden, indem die im Paket gespeicherte Route abgelaufen wird.\n- Wenn eine Node\
-  \ ein Paket versenden will, muss zunächst eine Route bekannt sein, oder gefunden\
-  \ werden.\n- Wenn der Pfad den ein Paket laufen will unterbrochen ist, muss ein\
-  \ Fehlermechanismus eingreifen, der die Origin Node über diesen Fehler aufklärt.\n\
-  \n---\n\n## Route Cache\n\nDamit nicht durchgehend und für jede Anfrage neue RREQ\
-  \ gestellt werden müssen, untersuchen Nodes jedes Paket, das Sie weiterleiten. Dabei\
-  \ wird pro Node eine Topologie des Netzwerks erstellt. Diese Topologie wird als\
-  \ HUD für jeden Computer angezeigt.\nWie genau der Route Cache aufgebaut wird, wird\
-  \ in den folgenden Abschnitten erklärt.\n"
+  \ Besonderheit\n\nDSR speichert den **kompletten Pfad** im Paket selbst.\n\n![Source\
+  \ Route nach RFC Standard](dsr_source_route_option.png)\n\n→ Dieses Verfahren nennt\
+  \ man **Source Routing**\nJedes Datenpaket wird in einem `DSR SourceRoute` Paket\
+  \ 'eingepackt' in dem die Route vorgegeben wird.\n\n![Source Route mit Ping Paket\
+  \ in Game](route_pkt.png)\n\nHier ist ein Ping Paket von Knoten 0.0.0.1 zu Knoten\
+  \ 0.0.0.3. Die beiden Knoten sind benachbart, also ist die Route einfach [0.0.0.1,\
+  \ 0.0.0.3].\n\n---  \n\n## Konsequenz\n\n- Kein Bedarf für klassische Routingtabellen\n\
+  - Jedes Paket kann im Netzwerk weitergeleitet werden, indem die im Paket gespeicherte\
+  \ Route abgelaufen wird.\n- Wenn eine Node ein Paket versenden will, muss zunächst\
+  \ eine Route bekannt sein, oder gefunden werden.\n- Wenn der Pfad den ein Paket\
+  \ laufen will unterbrochen ist, muss ein Fehlermechanismus eingreifen, der die Origin\
+  \ Node über diesen Fehler aufklärt.\n\n---\n"

@@ -1,0 +1,11 @@
+"title": "Task I - Erklärung"
+"posX": 1
+"posY": 4
+"icon": "minecraft:torch"
+"pre":
+  - "Task I"
+"content": "# Task I - Erklaerung\n\nAdd your content here.\n\n- Was bedeutet das\
+  \ '?' hinter der Sequence Number der Ziel Addresse?\n-> Es zeigt an das die Sequence\
+  \ Number der Ziel Address nicht bekannt ist. Somit wird jeder Pfad akzeptiert. \n\
+  - Was passiert wenn hier stattdessen eine Zahl steht?\n-> Dann muss eine Antwort\
+  \ eine höhere Sequence Number haben, um erlaubt zu sein.\n\n---\n\n"

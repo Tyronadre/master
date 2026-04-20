@@ -25,19 +25,19 @@ public class CommandRegistry {
     }
 
     private void registerDefaults() {
-        register("ping", PingCommand::new);
-        register("clear", ClearCommand::new);
-        register("traceroute", TraceRouteCommand::new);
-        register("tracert", TraceRouteCommand::new);
-        register("help", HelpCommand::new);
-        register("setprotocol", SetProtocolCommand::new);
-        register("ipconfig", IpConfigCommand::new);
-        register("routingprotocolsettings", ProtocolSettingsCommand::new);
-        register("protocolvars", ProtocolVarsCommand::new);
+        register(PingCommand::new);
+        register(ClearCommand::new);
+        register(TraceRouteCommand::new);
+        register(TraceRouteCommand::new);
+        register(HelpCommand::new);
+        register(SetProtocolCommand::new);
+        register(IpConfigCommand::new);
+        register(ProtocolSettingsCommand::new);
+        register(ProtocolVarsCommand::new);
     }
 
-    public void register(String name, CommandFactory command) {
-        commands.put(name.toLowerCase(Locale.ROOT), command);
+    public void register(CommandFactory command) {
+        commands.put(command.create(null, null).getName().toLowerCase(Locale.ROOT), command);
     }
 
     /**

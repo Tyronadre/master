@@ -1,44 +1,17 @@
-title: "Route Discovery in LAR"
-posX: 4
-posY: 1
-icon: "minecraft:paper"
-pre: ["Request Zone"]
-content: |
-  # Route Discovery in LAR
-
-  ---
-  
-  Der Ablauf ähnelt DSR, aber mit Einschränkung:
-
-  → Nur Knoten in der Request Zone beteiligen sich.
-
-  ---
-  
-  ## Ablauf
-
-  1. Sender kennt ungefähre Zielposition  
-  2. Request Zone wird berechnet  
-  3. RREQ wird nur innerhalb dieser Zone verbreitet  
-
-  ---
-  
-  ![Ein Broadcast, der sich nur innerhalb eines bestimmten Bereichs ausbreitet](image:lar_limited_broadcast)
-
-  ---
-  
-  ## Ergebnis
-
-  - Weniger Pakete im Netzwerk
-  - Schnellere Suche bei guter Positionsschätzung
-
-  ---
-  
-  ## Risiko
-
-  Wenn die Schätzung falsch ist:
-
-  - Ziel wird möglicherweise nicht gefunden
-
-  ---
-  
-  @task[Wo wird das RREQ verbreitet?|Nur in der Request Zone;Was passiert bei falscher Schätzung?|Route wird evtl. nicht gefunden]
+"title": "Route Discovery"
+"posX": 4
+"posY": 1
+"icon": "minecraft:paper"
+"pre":
+  - "Request Zone"
+  - "Expected Zone"
+"content": "# Route Discovery\n\nFür jeden Ziel Knoten D gibt es eine 'Expected Zone'.\
+  \ Es wird davon ausgegangen das der Knoten sich innerhalb dieser Zone befindet.\
+  \ Diese Zonen sind abhängig von vorherigen Information und Bewegungsvektoren des\
+  \ Knoten.\n\nRREQ werden nur innerhalb einer limitieren 'Request Zone' weitergeleitet,\
+  \ die die Expected Zone und die Position des Sender miteinschließt.\n\n![Zonen](schema1.png)\n\
+  \nX: Letzte bekannte Position von D\n\nY/D: Tatsächliche Position von D\n\nr = (t1\
+  \ - t0) x v, wobei v die vermutete Geschwindigkeit ist.\n\nHier leitet also B das\
+  \ RREQ Paket weiter, A aber nicht.\n\nSchlägt eine Route Discovery fehl, so wird\
+  \ sie nach einem Timeout mit einer größeren Request Zone erneut gestartet.\n\nAnsonsten\
+  \ funktioniert das Routing äquivalent zu DSR.\n\n---\n"
