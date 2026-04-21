@@ -5,13 +5,13 @@
 "pre":
   - "Zusammenfassung"
 "content": "# Vergleich DSR\n\n## Gemeinsamkeiten\n\n- Reaktives Routing Protokol\n\
-  - On-Demand Route Discovery\n- Route Discovery funktioniert mit RREQ und RREQ Paketen\n\
-  - Broadcasting für Route Discovery\n\n## Unterschiede\n\n|AODV|DSR|\n||\n|Unterstü\
-  tzt standartmäßig nur bidirektionale Links|Unterstützt uni- und bidirektionale Links|\n\
-  |Lernt pro RREQ-RREP Zyklus einen Pfad|Lernt pro Zyklus alle Pfade zwischen Source\
-  \ und Destination|\n|Kennt standartmäßig nur einen Pfad zwischen Source und Destination|Kann\
-  \ alternative Pfade speichern|\n|Ungenutzte Pfade werden gelöscht|Ungenutzte Pfade\
-  \ bleiben erhalten (je nach Routing Table unterschiedlich)|\n|Nach 6 Sekunden|In\
+  - On-Demand Route Discovery\n- Route Discovery funktioniert mit* RREQ* und *RREP*\
+  \ Paketen\n- Broadcasting für Route Discovery\n\n## Unterschiede\n\n|AODV|DSR|\n\
+  ||\n|Unterstützt standartmäßig nur bidirektionale Links|Unterstützt uni- und bidirektionale\
+  \ Links|\n|Lernt pro RREQ-RREP Zyklus einen Pfad|Lernt pro Zyklus alle Pfade zwischen\
+  \ Source und Destination|\n|Kennt standartmäßig nur einen Pfad zwischen Source und\
+  \ Destination|Kann alternative Pfade speichern|\n|Ungenutzte Pfade werden gelöscht|Ungenutzte\
+  \ Pfade bleiben erhalten (je nach Routing Table unterschiedlich)|\n|Nach 6 Sekunden|In\
   \ dieser Implementation erhöht jede Nutzung die Dauer bis zum löschen um 120 Sekunden|\n\
   |Benutzt immer den neusten bekannten Pfad|Besitzt standartmäßig keine Informationen\
   \ wie 'aktuell' ein Pfad ist|\n|Routing Pakte haben eine feste Größe|Routing Pakete\

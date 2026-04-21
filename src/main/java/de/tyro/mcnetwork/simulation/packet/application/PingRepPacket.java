@@ -3,6 +3,7 @@ package de.tyro.mcnetwork.simulation.packet.application;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.tyro.mcnetwork.client.RenderUtil;
 import de.tyro.mcnetwork.simulation.IP;
+import de.tyro.mcnetwork.simulation.SimulationEngine;
 import de.tyro.mcnetwork.simulation.packet.IApplicationPacket;
 import de.tyro.mcnetwork.simulation.packet.INetworkPacket;
 import de.tyro.mcnetwork.simulation.packet.NetworkPacket;
@@ -17,6 +18,7 @@ public class PingRepPacket extends NetworkPacket implements IApplicationPacket {
     public final int sendTime;
     public long returnStartTime;
     public final UUID replyUUID;
+    public long offset;
 
     public PingRepPacket(IP sourceIp, IP destinationIp, int sendTime, long returnStartTime, UUID replyUUID) {
         super(sourceIp, destinationIp);
@@ -25,11 +27,12 @@ public class PingRepPacket extends NetworkPacket implements IApplicationPacket {
         this.replyUUID = replyUUID;
     }
 
-    public PingRepPacket(UUID uuid, IP originatorIP, IP destinationIP, int sendTime, long returnStartTime, UUID uuid1) {
+    public PingRepPacket(UUID uuid, IP originatorIP, IP destinationIP, int sendTime, long returnStartTime, UUID uuid1, long offset) {
         super(uuid, originatorIP, destinationIP);
         this.sendTime = sendTime;
         this.returnStartTime = returnStartTime;
         this.replyUUID = uuid1;
+        this.offset = SimulationEngine.getInstance(true).getSimTime() - offset;
     }
 
     @Override
@@ -46,7 +49,7 @@ public class PingRepPacket extends NetworkPacket implements IApplicationPacket {
     protected void renderPacketContent(RenderUtil renderer, PoseStack poseStack, float width) {
         renderer.drawStringWithAlphaColor(RenderUtil.Align.LEFT, "Rep: " + replyUUID.toString().substring(0, 8), width, 0);
         renderer.drawStringWithAlphaColor(RenderUtil.Align.LEFT, "T1: " + sendTime + "ms", width, 8);
-        renderer.drawStringWithAlphaColor(RenderUtil.Align.LEFT, "T2: " + (getSimulationEngine().getSimTime() - returnStartTime) + "ms", width, 16);
+        renderer.drawStringWithAlphaColor(RenderUtil.Align.LEFT, "T2: " + (getSimulationEngine().getSimTime() - returnStartTime - offset) + "ms", width, 16);
     }
 
     @Override
@@ -61,6 +64,6 @@ public class PingRepPacket extends NetworkPacket implements IApplicationPacket {
 
     @Override
     public INetworkPacket copy() {
-        return new PingRepPacket(getId(), getOriginatorIP(), getDestinationIP(), sendTime, returnStartTime, replyUUID);
+        return new PingRepPacket(getId(), getOriginatorIP(), getDestinationIP(), sendTime, returnStartTime, replyUUID, offset);
     }
 }

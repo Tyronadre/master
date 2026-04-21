@@ -7,7 +7,7 @@ public class Config {
 
     public static final ModConfigSpec.BooleanValue DEV_MODE = BUILDER
             .comment("Developer Mode")
-            .define("devMode", true);
+            .define("devMode", false);
 
     static final ModConfigSpec SPEC = BUILDER.build();
 

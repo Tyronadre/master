@@ -100,7 +100,7 @@ public class SimulationControllerScreen extends AbstractContainerScreen<Simulati
         y += 15;
 
         // Protocol buttons
-        String[] protocols = {"AODV", "DSR", "LAR", "OLSR"};
+        String[] protocols = {"AODV", "DSR", "OLSR"};
         int spacing = 1;
         int buttonWidth = (120 - spacing * protocols.length) / 4;
 

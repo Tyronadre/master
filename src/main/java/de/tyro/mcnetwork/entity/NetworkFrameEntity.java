@@ -199,7 +199,6 @@ public class NetworkFrameEntity extends Entity implements IEntityWithComplexSpaw
             to = NetworkUtil.getBlockEntityAt(ComputerBlockEntity.class, level(), payload.to());
             ttl = payload.ttl();
             packet = payload.packet();
-            NetworkPacketCodecRegistry.handlerOf(packet.getClass()).handle(packet, level().isClientSide());
             packet.setFrame(this);
             this.simulationPosition = from.getPos();
 
@@ -209,6 +208,8 @@ public class NetworkFrameEntity extends Entity implements IEntityWithComplexSpaw
             initialized = true;
             state = State.TRAVELING;
             interferedTicks = 0;
+
+            NetworkPacketCodecRegistry.handlerOf(packet.getClass()).handle(packet, level().isClientSide());
         } catch (Exception e) {
             this.discard();
         }

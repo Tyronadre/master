@@ -42,12 +42,12 @@ public class NetworkSnifferScreen extends Screen {
         int x = 50;
         int y = 5;
 
-        timestampFilterBefore = new EditBox(font, x, y, 35, 20, Component.literal("Before Timestamp"));
-        timestampFilterBefore.setHint(Component.literal("Before Timestamp"));
+        timestampFilterBefore = new EditBox(font, x, y, 35, 20, Component.literal("Bef."));
+        timestampFilterBefore.setHint(Component.literal("Bef."));
         addRenderableWidget(timestampFilterBefore);
         x += 40;
-        timestampFilterAfter = new EditBox(font, x, y, 35, 20, Component.literal("After Timestamp"));
-        timestampFilterAfter.setHint(Component.literal("After Timestamp"));
+        timestampFilterAfter = new EditBox(font, x, y, 35, 20, Component.literal("Aft."));
+        timestampFilterAfter.setHint(Component.literal("Aft."));
         addRenderableWidget(timestampFilterAfter);
         x += 50;
 

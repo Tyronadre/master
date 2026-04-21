@@ -34,9 +34,15 @@ public class NetworkPacketCodecGenerator {
         );
 
         register(PingPacket.class,
-                (buf, uuid, originatorIP, destinationIP) -> new PingPacket(uuid, originatorIP, destinationIP, buf.readLong()),
+                (buf, uuid, originatorIP, destinationIP) -> new PingPacket(uuid, originatorIP, destinationIP, buf.readLong(), buf.readLong()),
                 (buf, packet) -> {
-                    buf.writeLong(0);
+                    buf.writeLong(packet.sendStartTime);
+                    buf.writeLong(SimulationEngine.getInstance(false).getSimTime());
+                },
+                (packet, onClientSide) -> {
+                    if (!onClientSide) {
+                        packet.sendStartTime = SimulationEngine.getInstance(false).getSimTime();
+                    }
                 }
         );
 
@@ -47,11 +53,16 @@ public class NetworkPacketCodecGenerator {
                         ip2,
                         buf.readInt(),
                         buf.readLong(),
-                        buf.readUUID()),
+                        buf.readUUID(),
+                        buf.readLong()),
                 (buf, packet) -> buf
                         .writeInt(packet.sendTime)
                         .writeLong(packet.returnStartTime)
                         .writeUUID(packet.replyUUID)
+                        .writeLong(SimulationEngine.getInstance(false).getSimTime()),
+                (packet, onClientSide) -> {
+                    if (!onClientSide) throw new IllegalStateException("PingRep cannot be send to the server");
+                }
         );
 
         register(TraceRoutePacket.class,
@@ -59,10 +70,17 @@ public class NetworkPacketCodecGenerator {
                         uuid,
                         originatorIP,
                         destinationIP,
-                        0),
-                (buf, packet) -> {
-                },
-                (packet, onClientSide) -> packet.sendStartTime = SimulationEngine.getInstance(onClientSide).getSimTime()
+                        buf.readLong(),
+                        buf.readLong()),
+                (buf, packet) -> buf
+                        .writeLong(packet.sendStartTime)
+                        .writeLong(SimulationEngine.getInstance(false).getSimTime())
+                ,
+                (packet, onClientSide) -> {
+                    if (!onClientSide) {
+                        packet.sendStartTime = SimulationEngine.getInstance(false).getSimTime();
+                    }
+                }
         );
 
         register(TraceRouteReplyPacket.class,
@@ -71,14 +89,20 @@ public class NetworkPacketCodecGenerator {
                         ip1,
                         ip2,
                         buf.readInt(),
-                        0,
+                        buf.readLong(),
                         buf.readUUID(),
-                        buf.readInt()),
+                        buf.readInt(),
+                        buf.readLong()
+                ),
                 (buf, packet) -> buf
                         .writeInt(packet.sendTime)
+                        .writeLong(packet.returnStartTime)
                         .writeUUID(packet.replyUUID)
-                        .writeInt(packet.hopCount),
-                (packet, onClientSide) -> packet.returnStartTime = SimulationEngine.getInstance(onClientSide).getSimTime()
+                        .writeInt(packet.hopCount)
+                        .writeLong(SimulationEngine.getInstance(false).getSimTime()),
+                (packet, onClientSide) -> {
+                    if (!onClientSide) throw new IllegalStateException("PingRep cannot be send to the server");
+                }
         );
 
         register(AODVRREQPacket.class,
