@@ -13,6 +13,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import org.lwjgl.glfw.GLFW;
 
+import static de.tyro.mcnetwork.Config.DEV_MODE;
+
 public class NetworkBookScreen extends Screen {
 
     private final Minecraft mc = Minecraft.getInstance();
@@ -59,10 +61,11 @@ public class NetworkBookScreen extends Screen {
         contentPane.setCompletionListener(this::onMarkComplete);
 
         // Add edit button (only in dev environments)
-        this.addRenderableWidget(Button.builder(Component.literal("Edit"), button -> this.onEditClicked())
-                .pos(this.width - 60, 8)
-                .size(50, 16)
-                .build());
+        if (DEV_MODE.getAsBoolean())
+            this.addRenderableWidget(Button.builder(Component.literal("Edit"), button -> this.onEditClicked())
+                    .pos(this.width - 60, 8)
+                    .size(50, 16)
+                    .build());
 
         this.initialized = true;
     }

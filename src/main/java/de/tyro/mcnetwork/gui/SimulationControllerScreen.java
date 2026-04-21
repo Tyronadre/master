@@ -25,14 +25,14 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import static de.tyro.mcnetwork.Config.DEV_MODE;
+
 public class SimulationControllerScreen extends AbstractContainerScreen<SimulationControllerMenu> {
     Player player;
     public Button receiveWindowEnabledButton;
-    public ExtendedSlider receiveWindowSizeMsButton;
     public Button simulationEnabledButton;
     public LogSlider simulationSpeedSlider;
     public ExtendedSlider simulationCommunicationRadius;
-    private Button[] protocolButtons;
 
     public SimulationControllerScreen(SimulationControllerMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
@@ -50,7 +50,7 @@ public class SimulationControllerScreen extends AbstractContainerScreen<Simulati
         int x = this.leftPos;
         int y = this.topPos;
 
-        var receiveWindowTitle = this.addRenderableWidget(new Label(x, y, 120, 20, "Packet Collision"));
+        this.addRenderableWidget(new Label(x, y, 120, 20, "Packet Collision"));
         y += 15;
 
         receiveWindowEnabledButton = this.addRenderableWidget(Button.builder(
@@ -61,7 +61,7 @@ public class SimulationControllerScreen extends AbstractContainerScreen<Simulati
                 .build());
         y += 20;
 
-        receiveWindowSizeMsButton = this.addRenderableWidget(new ExtendedSlider(
+        var receiveWindowMsButton = this.addRenderableWidget(new ExtendedSlider(
                 x,
                 y,
                 120,
@@ -73,8 +73,9 @@ public class SimulationControllerScreen extends AbstractContainerScreen<Simulati
                 1,
                 true));
         y += 20;
+        receiveWindowMsButton.setTooltip(Tooltip.create(Component.literal("How long it takes to 'receive' Frames. Each frame blocks for this amount of time.")));
 
-        var receiveWindowMaxPacketsPerWindow = this.addRenderableWidget(new ExtendedSlider(
+        var receiveWindowSizeButton = this.addRenderableWidget(new ExtendedSlider(
                 x,
                 y,
                 120,
@@ -86,11 +87,12 @@ public class SimulationControllerScreen extends AbstractContainerScreen<Simulati
                 2,
                 true));
         y += 15;
+        receiveWindowSizeButton.setTooltip(Tooltip.create(Component.literal("How many packets can be received simultaneously.")));
 
         // ---- OTHER ----- //
 
         y += 15;
-        var otherLabel = this.addRenderableWidget(new Label(x, y, 120, 15, "Other"));
+        this.addRenderableWidget(new Label(x, y, 120, 15, "Other"));
         y += 20;
 
         var protocolLabel = this.addRenderableWidget(new Label(x, y, 120, 20, "Set all protocols"));
@@ -102,11 +104,10 @@ public class SimulationControllerScreen extends AbstractContainerScreen<Simulati
         int spacing = 1;
         int buttonWidth = (120 - spacing * protocols.length) / 4;
 
-        protocolButtons = new Button[protocols.length];
 
         for (int i = 0; i < protocols.length; i++) {
             final String protocol = protocols[i];
-            protocolButtons[i] = this.addRenderableWidget(Button.builder(
+            this.addRenderableWidget(Button.builder(
                             Component.literal(protocols[i]),
                             btn -> PacketDistributor.sendToServer(new SetProtocolPayload(protocol + "Protocol", null)))
                     .bounds(x + i * (buttonWidth + spacing), y, buttonWidth, 15)
@@ -115,34 +116,36 @@ public class SimulationControllerScreen extends AbstractContainerScreen<Simulati
 
         y += 20;
 
-        var reloadQuestButton = this.addRenderableWidget(Button.builder(
-                        Component.literal("Reload Quests"),
-                        btn -> TopicManager.getInstance().reloadTopics())
-                .bounds(x, y, 120, 15)
-                .build()
-        );
+        if (DEV_MODE.getAsBoolean()) {
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Reload Quests"),
+                            btn -> TopicManager.getInstance().reloadTopics())
+                    .bounds(x, y, 120, 15)
+                    .build()
+            );
+        }
 
         // ----- SIMULATION INFORMATION ----- //
         x += imageWidth / 2 + 10;
         y = topPos;
 
-        var simInfoLabel = this.addRenderableWidget(new Label(x, y, 120, 15, "Simulation Info"));
+        this.addRenderableWidget(new Label(x, y, 120, 15, "Simulation Info"));
         y += 20;
 
-        var simTime = this.addRenderableWidget(new Label(x, y, 120, 15, () -> "Simulation Time " + sim.getSimTime()));
+        this.addRenderableWidget(new Label(x, y, 120, 15, () -> "Simulation Time " + sim.getSimTime()));
         y += 20;
 
-        var simNodes = this.addRenderableWidget(new Label(x, y, 120, 15, () -> "Registered Nodes: " + sim.getNodeList().size()));
+        this.addRenderableWidget(new Label(x, y, 120, 15, () -> "Registered Nodes: " + sim.getNodeList().size()));
         y += 20;
 
-        var simFrames = this.addRenderableWidget(new Label(x, y, 120, 15, () -> "Registered Frames: " + sim.getFrameList().size()));
+        this.addRenderableWidget(new Label(x, y, 120, 15, () -> "Registered Frames: " + sim.getFrameList().size()));
         y += 25;
 
 
         // ----- SIMULATION SETTINGS ----- //
 
 
-        var simSettingsLabel = this.addRenderableWidget(new Label(x, y, 120, 15, "Simulation Settings"));
+        this.addRenderableWidget(new Label(x, y, 120, 15, "Simulation Settings"));
         y += 15;
 
         simulationEnabledButton = this.addRenderableWidget(Button.builder(
@@ -151,6 +154,7 @@ public class SimulationControllerScreen extends AbstractContainerScreen<Simulati
                 .bounds(x, y, 120, 15)
                 .build());
         y += 20;
+        simulationEnabledButton.setTooltip(Tooltip.create(Component.literal("Pauses/Unpauses the Simulation")));
 
         simulationSpeedSlider = this.addRenderableWidget(new LogSlider(
                 x,
@@ -171,6 +175,7 @@ public class SimulationControllerScreen extends AbstractContainerScreen<Simulati
                 PacketDistributor.sendToServer(SimulationEngineSettingsPayload.Builder(sim).commRadius((int) getValue()).build());
             }
         });
+        simulationCommunicationRadius.setTooltip(Tooltip.create(Component.literal("How far a packet can travel between nodes. You might need to reset all protocols when changing this value, to stop unwanted side effects.")));
         y += 20;
 
     }
@@ -226,7 +231,7 @@ public class SimulationControllerScreen extends AbstractContainerScreen<Simulati
         }
 
         @Override
-        protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
+        protected void updateWidgetNarration(@NotNull NarrationElementOutput narrationElementOutput) {
 
         }
     }
