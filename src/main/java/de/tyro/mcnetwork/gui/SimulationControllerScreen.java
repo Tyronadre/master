@@ -162,11 +162,12 @@ public class SimulationControllerScreen extends AbstractContainerScreen<Simulati
                 120,
                 15,
                 0.001,
-                5,
+                1,
                 sim.getSimSpeed(),
                 (value) -> String.format("Sim. Speed: %.3fx", value),
                 (value) -> PacketDistributor.sendToServer(SimulationEngineSettingsPayload.Builder(sim).simSpeed(value).build())
         ));
+        simulationSpeedSlider.setTooltip(Tooltip.create(Component.literal("After changing the speed, it can take a moment for the packets and nodes to normalize to this new speed. E.g. you could see extensively more packets for a moment when slowing down the simulation.")));
         y += 20;
 
         simulationCommunicationRadius = this.addRenderableWidget(new ExtendedSlider(x, y, 120, 15, Component.literal("Comm. Range"), Component.empty(), 5, 25, sim.getCommRange(), true) {
@@ -176,7 +177,6 @@ public class SimulationControllerScreen extends AbstractContainerScreen<Simulati
             }
         });
         simulationCommunicationRadius.setTooltip(Tooltip.create(Component.literal("How far a packet can travel between nodes. You might need to reset all protocols when changing this value, to stop unwanted side effects.")));
-        y += 20;
 
     }
 
