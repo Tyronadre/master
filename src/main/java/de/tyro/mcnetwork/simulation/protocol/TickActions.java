@@ -1,11 +1,13 @@
 package de.tyro.mcnetwork.simulation.protocol;
 
 import com.mojang.logging.LogUtils;
+import de.tyro.mcnetwork.simulation.SimulationEngine;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class TickActions {
     private static final Logger log = LogUtils.getLogger();
@@ -67,6 +69,6 @@ public class TickActions {
 
     @Override
     public String toString() {
-        return TickActions.class.getSimpleName() + "[actions=" + size() + "]";
+        return TickActions.class.getSimpleName() + "time: " + SimulationEngine.getInstance(true).getSimTime() + "); Actions: [" + actions.stream().map(it -> String.valueOf(it.tick)).collect(Collectors.joining(", ")) + "]";
     }
 }

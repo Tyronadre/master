@@ -4,7 +4,9 @@ import de.tyro.mcnetwork.simulation.protocol.IRoutingProtocol;
 import de.tyro.mcnetwork.terminal.Terminal;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class ProtocolVarsCommand extends Command {
     public ProtocolVarsCommand(Terminal terminal, String[] args) {
@@ -27,11 +29,66 @@ public class ProtocolVarsCommand extends Command {
             field.setAccessible(true);
             try {
                 Object value = field.get(protocol);
-                println("- " + field.getName() + ": " + value);
+                List<String> formattedLines = printFormattedValue(value, "  ");
+
+                if (formattedLines.isEmpty()) {
+                    println("- " + field.getName() + ": null");
+
+                } else if (formattedLines.size() == 1) {
+                    println("- " + field.getName() + ": " + formattedLines.getFirst());
+
+                } else {
+                    println("- " + field.getName() + ":");
+                    for (String line : formattedLines) {
+                        println(line);
+                    }
+                }
+
             } catch (IllegalAccessException e) {
                 println("- " + field.getName() + ": <inaccessible>");
             }
         }
+    }
+
+    private List<String> printFormattedValue(Object value, String indent) {
+        List<String> lines = new ArrayList<>();
+        if (value == null) {
+            lines.add(indent + "null");
+        } else if (value instanceof Map<?, ?> map) {
+            if (map.isEmpty()) {
+                lines.add(indent + "{}");
+            } else {
+                lines.add(indent + "Map:");
+                for (Map.Entry<?, ?> entry : map.entrySet()) {
+                    List<String> subLines = printFormattedValue(entry.getValue(), indent + "  ");
+                    if (subLines.size() == 1) {
+                        lines.add(indent + "  " + entry.getKey() + ": " + subLines.get(0));
+                    } else {
+                        lines.add(indent + "  " + entry.getKey() + ":");
+                        for (String subLine : subLines) {
+                            lines.add(indent + "    " + subLine);
+                        }
+                    }
+                }
+            }
+        } else if (value instanceof List<?> list) {
+            if (list.isEmpty()) {
+                lines.add(indent + "[]");
+            } else {
+                lines.add(indent + "List:");
+                for (Object item : list) {
+                    List<String> subLines = printFormattedValue(item, indent + "  ");
+                    if (subLines.size() == 1) {
+                        lines.add(indent + "  " + subLines.get(0));
+                    } else {
+                        lines.addAll(subLines.stream().map(subLine -> indent + "  " + subLine).toList());
+                    }
+                }
+            }
+        } else {
+            lines.add(indent + value);
+        }
+        return lines;
     }
 
     @Override

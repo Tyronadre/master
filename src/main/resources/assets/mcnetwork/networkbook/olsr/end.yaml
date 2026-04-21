@@ -1,39 +1,15 @@
-title: "Zusammenfassung"
-posX: 4
-posY: 0
-icon: "minecraft:lantern"
-pre: ["Topology Control Messages"]
-content: |
-  # Zusammenfassung
-
-  ---
-  
-  OLSR verhält sich als proaktives Protokol anders als die vorher besprochenen reaktive Protokolle.
-
-  ---
-  
-  ## Eigenschaften
-
-  | Eigenschaft | Bewertung |
-  |------------|----------|
-  | Overhead | Hoch (ständige Updates) |
-  | Reaktionszeit | Sehr schnell (nach Aufbau der Topologie) |
-  | Stabilität | Hoch |
-  | Skalierung | Gut durch MPR |
-
-  ---
-    
-  ## Beobachtungen in MCNetwork
-
-  - Sofortige Kommunikation möglich
-  - Hohe Grundlast durch Updates
-  - Stabil bei häufiger Kommunikation
-
-  ---
-  
-  ## Einordnung
-
-  OLSR eignet sich besonders für:
-
-  - Netzwerke mit konstantem Traffic
-  - Szenarien mit stabiler Kommunikation
+"title": "Zusammenfassung"
+"posX": 4
+"posY": 0
+"icon": "minecraft:lantern"
+"pre":
+  - "Topology Control Messages"
+"content": "# Zusammenfassung\n\n---\n\nOLSR verhält sich als proaktives Protokol\
+  \ anders als die vorher besprochenen reaktive Protokolle.\n\n---\n\n## Eigenschaften\n\
+  \n| Eigenschaft | Bewertung |\n|------------|----------|\n| Overhead | Hoch (stä\
+  ndige Updates) |\n| Reaktionszeit | Sehr schnell (nach Aufbau der Topologie) |\n\
+  | Stabilität | Hoch |\n| Skalierung | Gut durch MPR |\n\n---\n  \n## Beobachtungen\
+  \ in MCNetwork\n\n- Sofortige Kommunikation möglich\n- Hohe Grundlast durch Updates\n\
+  - Stabil bei häufiger Kommunikation\n\n---\n\n## Einordnung\n\nOLSR eignet sich\
+  \ besonders für:\n\n- Netzwerke mit konstantem Traffic, in denen es einen 'Backbone'\
+  \ gibt\n"

@@ -11,9 +11,11 @@
   \ ist\n\n---\n\n## Terminal\n\nJeder Computerblock besitzt ein **Terminal**. Du\
   \ kannst den Computer rechtsklicken um es zu Öffnen.\n\n![Terminal](terminal.png)\n\
   \nMit diesem können Informationen abgefragt werden oder verschieden Netzwerkbefehle\
-  \ ausgeführt werden.\n\nDazu zählen z.B.:\n- Ping\n- Traceroute\n- IpConfig\n\n\
-  Commands können mit Tab vervollständigt werden, und mit Pfeiltasten können vorher\
-  \ ausgeführte Commands durchgelaufen werden.\nMit STRG+C können laufende Commands\
-  \ unterbrochen werden.\n\n---\n\n## HUD-Display\n\nWird angezeigt, wenn du einen\
-  \ Computer anguckst.\n\n![HUD](computer_hud.png)\nEin Computerblock besitzt ein\
-  \ HUD - Display das Informationen zum aktuellen Protkoll anzeigt.\n"
+  \ ausgeführt werden.\n\nDazu zählen z.B.:\n- Ping\n- Traceroute\n- IpConfig: Aktuelle\
+  \ Informationen zur Node\n- protocolVars: Zeigt alle internen (java) Variablen mit\
+  \ Werten des Routingprotokolls an.\n- ....\n\nHelp zeigt dir alle vorhandenen Commands\
+  \ an.\n\nCommands können mit Tab vervollständigt werden, und mit Pfeiltasten kö\
+  nnen vorher ausgeführte Commands durchgelaufen werden.\nMit STRG+C können laufende\
+  \ Commands unterbrochen werden.\n\n---\n\n## HUD-Display\n\nWird angezeigt, wenn\
+  \ du einen Computer anguckst.\n\n![HUD](computer_hud.png)\nEin Computerblock besitzt\
+  \ ein HUD - Display das Informationen zum aktuellen Protkoll anzeigt.\n"

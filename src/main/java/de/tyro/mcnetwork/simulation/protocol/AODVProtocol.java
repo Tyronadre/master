@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class AODVProtocol implements IRoutingProtocol, IHudRenderer {
@@ -154,13 +155,13 @@ public class AODVProtocol implements IRoutingProtocol, IHudRenderer {
         // RREP, all data packets destined for the corresponding destination
         // SHOULD be dropped from the buffer and a Destination Unreachable
         // message SHOULD be delivered to the application.
-        if (state.rreqInLastSecond > RREQ_RETRIES && state.ttl >= NET_DIAMETER) {
+        if (state.rreqAttempts > RREQ_RETRIES && state.ttl >= NET_DIAMETER) {
             dropBufferedPackets(destIp);
             notifyDestinationUnreachable(destIp);
             discoveries.remove(destIp);
             return;
         }
-        tickActions.add(now + (long) (int) Math.pow(2, state.rreqAttempts) * NET_TRAVERSAL_TIME, () -> discoverRoute(destIp));
+        tickActions.add(now + (long) Math.min((int) Math.pow(2, state.rreqAttempts) * NET_TRAVERSAL_TIME, 5000), () -> discoverRoute(destIp));
         state.rreqAttempts++;
 
         // Data packets waiting for a route (i.e., waiting for a RREP after a
@@ -686,8 +687,9 @@ public class AODVProtocol implements IRoutingProtocol, IHudRenderer {
 
         if (rerrType == 1) {
             unreachableEntries = routingTable.values().stream().filter(entry -> entry.destination.equals(unreachableNode) || entry.nextHop.equals(unreachableNode)).toList();
-
         } else if (rerrType == 2) {
+            var unreachable = routingTable.get(unreachableNode);
+            if (unreachable == null) return;
             unreachableEntries = List.of(routingTable.get(unreachableNode));
         } else if (rerrType == 3) {
             unreachableEntries = routingTable.values().stream().filter(entry -> rerr.unreachable.containsKey(entry.destination) && entry.nextHop == rerr.getNetworkFrame().getFrom().getIP()).toList();
@@ -994,6 +996,20 @@ public class AODVProtocol implements IRoutingProtocol, IHudRenderer {
             this.destination = destination;
             valid = false;
         }
+
+        @Override
+        public String toString() {
+            return new StringJoiner(", ", RouteEntry.class.getSimpleName() + "[", "]")
+                    .add("destination=" + destination)
+                    .add("nextHop=" + nextHop)
+                    .add("hopCount=" + hopCount)
+                    .add("seqNumber=" + seqNumber)
+                    .add("valid=" + valid)
+                    .add("seqValid=" + seqValid)
+                    .add("lifetime=" + lifetime)
+                    .add("precursors=" + precursors)
+                    .toString();
+        }
     }
 
     private class RouteDiscoveryState {
@@ -1010,6 +1026,15 @@ public class AODVProtocol implements IRoutingProtocol, IHudRenderer {
             nextRreqAttemptsResetInterval = SimulationEngine.getInstance(node.getLevel().isClientSide).getSimTime() + 1000;
         }
 
+        @Override
+        public String toString() {
+            return new StringJoiner(", ", RouteDiscoveryState.class.getSimpleName() + "[", "]")
+                    .add("rreqAttempts=" + rreqAttempts)
+                    .add("rreqInLastSecond=" + rreqInLastSecond)
+                    .add("nextRreqAttemptsResetInterval=" + nextRreqAttemptsResetInterval)
+                    .add("ttl=" + ttl)
+                    .toString();
+        }
     }
 
 
@@ -1017,5 +1042,4 @@ public class AODVProtocol implements IRoutingProtocol, IHudRenderer {
     public ProtocolSettings getSettings() {
         return settings;
     }
-
 }

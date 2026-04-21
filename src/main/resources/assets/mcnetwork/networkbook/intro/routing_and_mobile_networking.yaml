@@ -4,22 +4,29 @@
 "icon": "minecraft:compass"
 "pre":
   - "Willkommen zu MCNetwork"
-"content": "# Routing und mobile Netzwerke\n\n---\n\n**Routing** beschreibt den Prozess,\
-  \ mit dem ein Datenpaket seinen Weg durch ein Netzwerk findet.\n\nEin Netzwerk kann\
-  \ als **Graph** betrachtet werden:\n\n- Knoten (Nodes) = Computer\n- Kanten (Edges)\
-  \ = Verbindungen\n\n## Pfade und Entscheidungen\n\nEin Paket kann oft mehrere Wege\
-  \ zum Ziel nehmen.\n\nRouting-Protokolle entscheiden:\n\n- welcher Pfad gewählt\
-  \ wird\n- wann ein neuer Pfad gesucht wird\n- wie mit Fehlern umgegangen wird\n\n\
-  ---\n\n## Mobile Netzwerke (MANET)\n\nIn einem **mobilen Netzwerk** können sich\
-  \ die Knoten bewegen.\n\nDas bedeutet:\n\n- Verbindungen entstehen und verschwinden\n\
-  - Topologien ändern sich ständig\n- stabile Routen sind nicht garantiert\n\n---\n\
-  \n![Ein Netzwerk](network.png)\n\n---\n\n## Herausforderungen\n\n| Problem | Beschreibung\
-  \ |\n|--------|-------------|\n| Dynamik | Netzwerk ändert sich laufend |\n| Reichweite\
-  \ | Knoten sind nur lokal verbunden |\n| Ausfälle | Verbindungen brechen ab |\n\
-  | Overhead | Kommunikation für Routing kostet Ressourcen |\n\n---\n\n## Routing-Strategien\n\
-  \nEs gibt unterschiedliche Ansätze:\n\n- **Reaktiv** (z. B. AODV, DSR)  \n  → Routen\
-  \ werden bei Bedarf gesucht\n\n- **Proaktiv** (z. B. OLSR)  \n  → Routen werden\
-  \ ständig aktuell gehalten\n\n- **Geografisch** (z. B. LAR)  \n  → Positionen werden\
-  \ genutzt\n\n---\n\n## Bedeutung für MCNetwork\n\nIn der Simulation kannst du beobachten:\n\
-  \n- wie sich Routen verändern\n- wie Protokolle auf Unterbrechungen reagieren\n\n\
-  ---\n- welche Strategie effizienter ist"
+"content": "# Routing und mobile Netzwerke\n\n---\n\n**Routing** beschreibt sehr einfach\
+  \ gesagt den Prozess, mit dem ein Datenpaket seinen Weg durch ein Netzwerk findet.\n\
+  \nEin Netzwerk kann als **Graph** betrachtet werden:\n\n- Knoten (Nodes) = Computer\n\
+  - Kanten (Edges) = Verbindungen\n\n## Pfade und Entscheidungen\n\nEin Paket kann\
+  \ oft mehrere Wege zum Ziel nehmen.\n\nRouting-Protokolle entscheiden:\n\n- welcher\
+  \ Pfad gewählt wird\n- wann ein neuer Pfad gesucht wird\n- wie mit Fehlern umgegangen\
+  \ wird\n\n---\n\n## Mobile Netzwerke (MANET)\n\nIn einem **mobilen Netzwerk** kö\
+  nnen sich die Knoten bewegen und Verbindungen plötzlich abbrechen. Außerdem kann\
+  \ es unidirektionale Verbindungen geben, über die nur in eine Richtung Daten gesendet\
+  \ werden können. Außerdem gelten übliche Probleme wie in anderen Wireless Netzwerken,\
+  \ wie z.B. Paketkollision. Oft haben die Knoten in einem MANET auch begrenzte Resource,\
+  \ sie laufen z.B. über Batterie, und wollen möglichst wenig Energie verbrauchen.\n\
+  \nDas bedeutet:\n\n- Verbindungen entstehen und verschwinden\n- Topologien ändern\
+  \ sich ständig\n- stabile Routen sind nicht garantiert\n\n![Ein Netzwerk](network.png)\n\
+  \n---\n\n## Herausforderungen\n\n| Problem | Beschreibung |\n|--------|-------------|\n\
+  | Dynamik | Netzwerk ändert sich laufend |\n| Reichweite | Knoten sind nur lokal\
+  \ verbunden |\n| Ausfälle | Verbindungen brechen ab |\n| Overhead | Kommunikation\
+  \ für Routing kostet Ressourcen |\n\n---\n\n## Routing-Strategien\n\nEs gibt unterschiedliche\
+  \ Ansätze:\n\n- **Reaktiv** (z. B. AODV, DSR)  \n  → Routen werden bei Bedarf gesucht\n\
+  \n- **Proaktiv** (z. B. OLSR)  \n  → Routen werden ständig aktuell gehalten\n\n\
+  - **Geografisch** (z. B. LAR)  \n  → Positionen werden genutzt\n\n---\n\n## Besonderheiten\
+  \ der Simulation in diesem Mod\n\n- Es sind drei MANET Protkolle umgesetzt: *DSR,\
+  \ AODV, OLSR*\n- Es gibt auschließlich bidirektionale Verbindungen\n- Aktuell gibt\
+  \ es nur statische 'Computer' Blöcke, die sich nicht bewegen. Um Verbindungsabbrü\
+  che zu simulieren, baue einfach entsprechend Blöcke ab bevor ein Paket an sie gesendet\
+  \ wird.\n\n---\n"

@@ -1,153 +1,52 @@
-title: "Topology Control Messages"
-posX: 4
-posY: 1
-icon: "minecraft:comparator"
-pre: ["Hello Messages"]
-content: |
-  # TC Messages (Topology Control)
-
-  ---
-
-  OLSR verwendet **TC Messages**, um Topologieinformationen über mehrere Hops hinweg im gesamten Netzwerk zu verteilen.
-
-  ![TC Message](tc_message.png)
-
-  ---
-
-  Nachdem über HELLO Messages die lokale Nachbarschaft (1-Hop und 2-Hop) bekannt ist und MPRs bestimmt wurden, beginnt die eigentliche Netzwerk weite Verteilung von Routinginformationen.
-
-  Dabei sendet nur eine Teilmenge der Nodes, nämlich die als MPR ausgewählten Nodes, regelmäßig TC Messages.
-
-  ---
-
-  ## Inhalt einer TC Message
-
-  Eine TC Message enthält:
-
-  - die **Originator Address** (die sendende Node)
-  - eine **Sequenznummer (ANSN)** zur Ordnung der Nachrichten
-  - eine Liste von Nodes aus dem **MPR-Selector-Set**
-
-  Wichtig:  
-  Eine Node bewirbt **nicht ihre MPRs**, sondern die Nodes, **die sie als MPR ausgewählt haben**.
-
-  ---
-
-  ## Verarbeitung einer TC Message
-
-  Beim Empfang einer TC Message führt eine Node folgende Schritte aus:
-
-  ---
-
-  ### 1. Prüfung des Absenders
-
-  Zunächst wird überprüft:
-
-  - Ist der **Sender ein symmetrischer Nachbar**?
-
-  Falls **nein**, wird die Nachricht verworfen.
-
-  Dadurch wird sichergestellt, dass nur vertrauenswürdige, direkt erreichbare Nodes berücksichtigt werden.
-
-  ---
-
-  ### 2. Duplikaterkennung & Reihenfolge
-
-  Jede TC Message besitzt eine Sequenznummer.
-
-  - Wurde bereits eine neuere Nachricht vom selben Originator empfangen → **verwerfen**
-  - Ältere Einträge im Topology Set → **löschen**
-
-  Dadurch bleibt die Topologie konsistent und aktuell.
-
-  ---
-
-  ### 3. Aktualisierung des Topology Sets
-
-  Für jede beworbene Node wird ein Eintrag erzeugt oder aktualisiert: `(T_dest_addr, T_last_addr, T_seq, T_time)`
-
-  - `T_dest_addr`: Zielnode (beworbener Nachbar)
-  - `T_last_addr`: Originator der TC Message
-  - `T_seq`: Sequenznummer
-  - `T_time`: Gültigkeitsdauer
-
-   Interpretation:
-    > „Node X sagt: Ich erreiche Node Y direkt.“
-  
-  ---
-  
-  ### 4. Weiterleitung (Flooding über MPRs)
-  
-  TC Messages werden nicht von allen Nodes weitergeleitet, sondern nur von bestimmten:
-  
-    - Eine Node leitet weiter, wenn:
-        - der Sender in ihrem **MPR-Selector-Set** ist
-  
-  Dadurch entsteht ein **optimiertes Flooding**, bei dem:
-  
-    - Redundanz reduziert wird
-    - trotzdem alle Nodes erreicht werden
-  
-  ---
-  
-  ## Wirkung im Netzwerk
-    
-    Durch TC Messages entsteht ein globales Bild der Topologie.
-  
-  Beispiel: ' A - B - C - D ' 
-
-  - B sendet TC: „A ist mein Selector“
-  - C sendet TC: „B ist mein Selector“
-  - D sendet ggf. nichts (kein Selector)
-
-  Node A erhält über mehrere Hops:
-  
-    - Information über B (direkt)
-    - Information über C (über B)
-    - Information über D (über C)
-  
-  ---
-  
-  ## Zusammenspiel mit Routing
-  
-  Das **Topology Set** wird anschließend verwendet, um den Routing Table zu berechnen:
-  
-    - Kanten entstehen aus:
-        - direkten Nachbarn
-        - 2-Hop Nachbarn
-        - TC Einträgen
-  
-  Ergebnis:
-    Ein vollständiger Routing Graph über das gesamte Netzwerk.
-  
-  ---
-  
-  ## Intuition
-  
-  HELLO Messages liefern:
-  
-    - **lokales Wissen** (Nachbarn, 2-Hop, MPR)
-  
-  TC Messages liefern:
-  
-    - **globales Wissen** (wer erreicht wen über mehrere Hops)
-  
-  ---
-  
-  ## Zusammenfassung
-  
-  - TC Messages verbreiten Topologieinformationen im Netzwerk
-  - Nur MPRs senden und selektierte Nodes leiten weiter
-  - Das Topology Set speichert gerichtete Kanten
-  - Daraus wird der Routing Table berechnet
-  
-  ---
-  
-    ![Routingtabelle](node_2.png)
-  
-  --- 
-  
-  # Aufgaben
-  
-  Baue ein Netzwerk mit mindestens 4 Nodes die nur jeweils eine Verbindung haben, und untersuche welche Arten von TC Paketen gesendet werden, und wie sich die Routing Tabellen verhalten.
-
+"title": "Topology Control Messages"
+"posX": 4
+"posY": 1
+"icon": "minecraft:comparator"
+"pre":
+  - "Hello Messages"
+"content": "# TC Messages (Topology Control)\n\n---\n\nOLSR verwendet **TC Messages**,\
+  \ um Topologieinformationen über mehrere Hops hinweg im gesamten Netzwerk zu verteilen.\n\
+  \n![TC Message](tc_message.png)\n\n---\n\nNachdem über HELLO Messages die lokale\
+  \ Nachbarschaft (1-Hop und 2-Hop) bekannt ist und MPRs bestimmt wurden, beginnt\
+  \ die eigentliche Netzwerk weite Verteilung von Routinginformationen.\n\nDabei sendet\
+  \ nur eine Teilmenge der Nodes, nämlich die als MPR ausgewählten Nodes, regelmäß\
+  ig TC Messages.\n\n---\n\n## Inhalt einer TC Message\n\nEine TC Message enthält:\n\
+  \n- die **Originator Address** (die sendende Node)\n- eine **Sequenznummer (ANSN)**\
+  \ zur Ordnung der Nachrichten (Zahl rechts von ANSN)\n- eine Liste von Nodes aus\
+  \ dem **MPR-Selector-Set** (Addressen unter ANSN)\n\nWichtig:  \nEine Node bewirbt\
+  \ **nicht ihre MPRs**, sondern die Nodes, **die sie als MPR ausgewählt haben**.\n\
+  \n---\n\n## Verarbeitung einer TC Message\n\nBeim Empfang einer TC Message führt\
+  \ eine Node folgende Schritte aus:\n\n---\n\n### 1. Prüfung des Absenders\n\nZunä\
+  chst wird überprüft:\n\n- Ist der **Sender ein symmetrischer Nachbar**?\n\nFalls\
+  \ **nein**, wird die Nachricht verworfen.\n\nDadurch wird sichergestellt, dass nur\
+  \ vertrauenswürdige, direkt erreichbare Nodes berücksichtigt werden.\n\n---\n\n\
+  ### 2. Duplikaterkennung & Reihenfolge\n\nJede TC Message besitzt eine Sequenznummer.\n\
+  \n- Wurde bereits eine neuere Nachricht vom selben Originator empfangen → **verwerfen**\n\
+  - Ältere Einträge im Topology Set → **löschen**\n\nDadurch bleibt die Topologie\
+  \ konsistent und aktuell.\n\n---\n\n### 3. Aktualisierung des Topology Sets\n\n\
+  Für jede beworbene Node wird ein Eintrag erzeugt oder aktualisiert: `(T_dest_addr,\
+  \ T_last_addr, T_seq, T_time)`\n\n- `T_dest_addr`: Zielnode (beworbener Nachbar)\n\
+  - `T_last_addr`: Originator der TC Message\n- `T_seq`: Sequenznummer\n- `T_time`:\
+  \ Gültigkeitsdauer\n\n Interpretation:\n  > „Node X sagt: Ich erreiche Node Y direkt.“\
+  \n\n---\n\n### 4. Weiterleitung (Flooding über MPRs)\n\nTC Messages werden nicht\
+  \ von allen Nodes weitergeleitet, sondern nur von bestimmten:\n\n  - Eine Node leitet\
+  \ weiter, wenn:\n      - der Sender in ihrem **MPR-Selector-Set** ist\n\nDadurch\
+  \ entsteht ein **optimiertes Flooding**, bei dem:\n\n  - Redundanz reduziert wird\n\
+  \  - trotzdem alle Nodes erreicht werden\n\n---\n\n## Wirkung im Netzwerk\n  \n\
+  \  Durch TC Messages entsteht ein globales Bild der Topologie.\n\nBeispiel: `A -\
+  \ B - C - D`\n\n- B sendet TC: „A ist mein Selector“\n- C sendet TC: „B ist mein\
+  \ Selector“\n- D sendet ggf. nichts (kein Selector)\n\nNode A erhält über mehrere\
+  \ Hops:\n\n  - Information über B (direkt)\n  - Information über C (über B)\n  -\
+  \ Information über D (über C)\n\n---\n\n## Zusammenspiel mit Routing\n\nDas **Topology\
+  \ Set** wird anschließend verwendet, um den Routing Table zu berechnen:\n\n  - Kanten\
+  \ entstehen aus:\n      - direkten Nachbarn\n      - 2-Hop Nachbarn\n      - TC\
+  \ Einträgen\n\nErgebnis:\n  Ein vollständiger Routing Graph über das gesamte Netzwerk.\n\
+  \n---\n\n## Intuition\n\nHELLO Messages liefern:\n\n  - **lokales Wissen** (Nachbarn,\
+  \ 2-Hop, MPR)\n\nTC Messages liefern:\n\n  - **globales Wissen** (wer erreicht wen\
+  \ über mehrere Hops)\n\n---\n\n## Zusammenfassung\n\n- TC Messages verbreiten Topologieinformationen\
+  \ im Netzwerk\n- Nur MPRs senden und selektierte Nodes leiten weiter\n- Das Topology\
+  \ Set speichert gerichtete Kanten\n- Daraus wird der Routing Table berechnet\n\n\
+  ---\n\n  ![Routingtabelle](node_2.png)\n\n--- \n\n# Aufgaben\n\nBaue ein Netzwerk\
+  \ mit mindestens 4 Nodes die nur jeweils zwei Verbindung haben (`A-B-C-D`), und\
+  \ untersuche welche Arten von TC Paketen gesendet werden, und wie sich die Routing\
+  \ Tabellen verhalten.\n\n---\n"

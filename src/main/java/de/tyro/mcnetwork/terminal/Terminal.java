@@ -65,6 +65,9 @@ public class Terminal {
                 runningCommand.execute();
             } catch (InterruptedException ignored) {
                 printLine("^C");
+            } catch (Exception e) {
+                printLine("Error Executing command: ");
+                printLine(e.getMessage());
             } finally {
                 runningCommand = null;
                 runningCommandThread = null;
@@ -103,7 +106,7 @@ public class Terminal {
     /* ---------------- Rendering API ---------------- */
 
     public List<String> getVisibleLines() {
-        return Collections.unmodifiableList(outputBuffer);
+        return new ArrayList<>(outputBuffer);
     }
 
     public String getPrompt() {

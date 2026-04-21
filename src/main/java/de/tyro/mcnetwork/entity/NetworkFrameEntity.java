@@ -26,11 +26,7 @@ import org.slf4j.Logger;
 public class NetworkFrameEntity extends Entity implements IEntityWithComplexSpawn {
     static Logger logger = LogUtils.getLogger();
 
-    public enum State {
-        TRAVELING,
-        ARRIVED,
-        INTERFERED
-    }
+    private final SimulationEngine sim;
 
     private State state = State.TRAVELING;
     private int interferedTicks = 0;
@@ -57,19 +53,14 @@ public class NetworkFrameEntity extends Entity implements IEntityWithComplexSpaw
     private INetworkPacket packet;
     private boolean initialized = false;
     private Vec3 simulationPosition; // Position calculated from simulation
-
-    public static double M_PER_NS = 300000; //~lightspeed
-
     public NetworkFrameEntity(Level level, Vec3 pos) {
         super(EntityRegistry.NETWORK_FRAME_ENTITY.get(), level);
         this.setPos(pos);
         this.noPhysics = true;
+        sim = SimulationEngine.getInstance(level.isClientSide);
     }
 
-    public NetworkFrameEntity(Level level) {
-        this(level, Vec3.ZERO);
-    }
-
+    public static double M_PER_NS = 300000; //~lightspeed
 
     public NetworkFrameEntity(Level level, INetworkNode from, INetworkNode to, int ttl, INetworkPacket packet) {
         this(level, from.getPos());
@@ -81,10 +72,55 @@ public class NetworkFrameEntity extends Entity implements IEntityWithComplexSpaw
         this.packet = packet;
         this.simulationPosition = from.getPos();
         packet.setFrame(this);
-        var sim = SimulationEngine.getInstance(level.isClientSide);
         sim.registerNetworkFrame(this);
 
+
         initialized = true;
+    }
+
+    public NetworkFrameEntity(Level level) {
+        this(level, Vec3.ZERO);
+    }
+
+    public void simTick() {
+        if (!initialized) return;
+
+        if (state == State.TRAVELING) {
+            if (sim.getNode(to.getIP()) == null) {
+                //node was destroyed while packet traveled. we just resend it over the protocol, as that should trigger a rerr
+                from.getRoutingProtocol().send(this.packet, this.ttl);
+                state = State.LINK_BREAK;
+                move(MoverType.SELF, simulationPosition);
+                return;
+            }
+
+            simulationPosition = simulationPosition.add(getSimDeltaMovement());
+
+            if (hasArrived()) {
+                setPos(simulationPosition);
+
+                state = State.ARRIVED;
+
+                try {
+                    to.onFrameReceive(this);
+                    if (state == State.ARRIVED) {
+                        sim.removeNetworkFrame(this);
+                        discard();
+                    }
+                } catch (Exception e) {
+                    logger.error(e.getLocalizedMessage(), e);
+                }
+            }
+        }
+
+
+        if (state == State.INTERFERED || state == State.LINK_BREAK) {
+            interferedTicks++;
+            if (interferedTicks > 100) {
+                SimulationEngine.getInstance(level().isClientSide).removeNetworkFrame(this);
+                discard();
+            }
+        }
     }
 
     @Override
@@ -99,36 +135,10 @@ public class NetworkFrameEntity extends Entity implements IEntityWithComplexSpaw
     protected void addAdditionalSaveData(CompoundTag compound) {
     }
 
-    public void simTick() {
-        if (!initialized) return;
-
-        if (state == State.TRAVELING) {
-            simulationPosition = simulationPosition.add(getSimDeltaMovement());
-
-            if (hasArrived()) {
-                setPos(simulationPosition);
-
-                state = State.ARRIVED;
-
-                try {
-                    to.onFrameReceive(this);
-                    if (state == State.ARRIVED) {
-                        SimulationEngine.getInstance(level().isClientSide).removeNetworkFrame(this);
-                        discard();
-                    }
-                } catch (Exception e) {
-                    logger.error(e.getLocalizedMessage(), e);
-                }
-            }
-        }
-
-        if (state == State.INTERFERED) {
-            interferedTicks++;
-            if (interferedTicks > 100) {
-                SimulationEngine.getInstance(level().isClientSide).removeNetworkFrame(this);
-                discard();
-            }
-        }
+    public enum State {
+        TRAVELING,
+        ARRIVED,
+        LINK_BREAK, INTERFERED
     }
 
     @Override
